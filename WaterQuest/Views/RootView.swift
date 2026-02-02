@@ -6,10 +6,13 @@ struct RootView: View {
     var body: some View {
         if hasOnboarded {
             MainTabView()
+                
         } else {
             OnboardingView {
                 hasOnboarded = true
             }
+            
+            
         }
     }
 }

@@ -50,6 +50,7 @@ struct PreviewEnvironment<Content: View>: View {
         ZStack {
             Theme.background.ignoresSafeArea()
             content
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .environmentObject(store)
         .environmentObject(healthKit)

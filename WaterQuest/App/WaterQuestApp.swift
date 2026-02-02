@@ -16,20 +16,21 @@ struct WaterQuestApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootView()
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Theme.background)
-                .ignoresSafeArea()
-                .environmentObject(store)
-                .environmentObject(healthKit)
-                .environmentObject(notifier)
-                .environmentObject(locationManager)
-                .environmentObject(weatherClient)
-                .preferredColorScheme(.dark)
-                .task {
-                    await notifier.refreshAuthorizationStatus()
-                    locationManager.requestLocation()
-                }
+            ZStack {
+                Theme.background.ignoresSafeArea()
+                RootView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+            .environmentObject(store)
+            .environmentObject(healthKit)
+            .environmentObject(notifier)
+            .environmentObject(locationManager)
+            .environmentObject(weatherClient)
+            .preferredColorScheme(.dark)
+            .task {
+                await notifier.refreshAuthorizationStatus()
+                locationManager.requestLocation()
+            }
         }
     }
 }

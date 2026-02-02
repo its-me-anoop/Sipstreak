@@ -25,10 +25,6 @@ struct OnboardingView: View {
     var body: some View {
         ZStack(alignment: .top) {
             Theme.background.ignoresSafeArea()
-            WaveView()
-                .opacity(0.35)
-                .frame(height: 220)
-                .offset(y: 260)
 
             VStack(spacing: 16) {
                 TabView(selection: $pageIndex) {
