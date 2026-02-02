@@ -1,0 +1,29 @@
+import SwiftUI
+
+struct MascotView: View {
+    var body: some View {
+        ZStack {
+            Image(systemName: "drop.fill")
+                .resizable()
+                .scaledToFit()
+                .foregroundColor(Theme.lagoon)
+                .shadow(color: Theme.lagoon.opacity(0.4), radius: 12, x: 0, y: 6)
+
+            VStack(spacing: 6) {
+                HStack(spacing: 8) {
+                    Circle()
+                        .fill(Color.black.opacity(0.8))
+                        .frame(width: 6, height: 6)
+                    Circle()
+                        .fill(Color.black.opacity(0.8))
+                        .frame(width: 6, height: 6)
+                }
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(Color.black.opacity(0.7))
+                    .frame(width: 18, height: 5)
+            }
+            .offset(y: 8)
+        }
+        .frame(width: 80, height: 100)
+    }
+}
