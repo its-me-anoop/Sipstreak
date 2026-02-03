@@ -110,7 +110,11 @@ struct SettingsView: View {
                 store.updateProfile { profile in
                     profile.weightKg = unit.kg(from: value)
                 }
-            }), in: unit == .metric ? 40...140 : 90...300, step: unit == .metric ? 1 : 2)
+            }), in: unit == .metric ? 40...140 : 90...300, step: unit == .metric ? 1 : 2) { editing in
+                if !editing {
+                    Haptics.selection()
+                }
+            }
             .tint(Theme.mint)
         }
     }
@@ -129,6 +133,9 @@ struct SettingsView: View {
             }
             .pickerStyle(.segmented)
             .tint(Theme.lagoon)
+            .onChange(of: store.profile.unitSystem) {
+                Haptics.selection()
+            }
         }
     }
 
@@ -159,12 +166,16 @@ struct SettingsView: View {
                         Spacer()
                         valuePill("\(String(format: "%.0f", customGoalValue)) \(store.profile.unitSystem.volumeUnit)", color: Theme.sun)
                     }
-                    Slider(value: $customGoalValue, in: store.profile.unitSystem == .metric ? 1500...4500 : 50...150, step: store.profile.unitSystem == .metric ? 50 : 2)
+                    Slider(value: $customGoalValue, in: store.profile.unitSystem == .metric ? 1500...4500 : 50...150, step: store.profile.unitSystem == .metric ? 50 : 2) { editing in
+                        if !editing {
+                            Haptics.selection()
+                        }
+                    }
                         .tint(Theme.sun)
                     Text("Updates immediately and feeds quests")
                         .font(Theme.bodyFont(size: 12))
                         .foregroundColor(.white.opacity(0.55))
-                        .onChange(of: customGoalValue) { value in
+                        .onChange(of: customGoalValue) { _, value in
                             store.updateProfile { profile in
                                 profile.customGoalML = profile.unitSystem.ml(from: value)
                             }
@@ -185,6 +196,7 @@ struct SettingsView: View {
 
             manualWeatherCard
         }
+        .animation(.spring(response: 0.45, dampingFraction: 0.85), value: customGoalEnabled)
     }
 
     private var manualWeatherCard: some View {
@@ -201,13 +213,21 @@ struct SettingsView: View {
                 Text("Temperature")
                     .font(Theme.bodyFont(size: 12))
                     .foregroundColor(.white.opacity(0.6))
-                Slider(value: $manualTemp, in: -5...40, step: 1)
+                Slider(value: $manualTemp, in: -5...40, step: 1) { editing in
+                    if !editing {
+                        Haptics.selection()
+                    }
+                }
                     .tint(Theme.lagoon)
 
                 Text("Humidity")
                     .font(Theme.bodyFont(size: 12))
                     .foregroundColor(.white.opacity(0.6))
-                Slider(value: $manualHumidity, in: 10...95, step: 5)
+                Slider(value: $manualHumidity, in: 10...95, step: 5) { editing in
+                    if !editing {
+                        Haptics.selection()
+                    }
+                }
                     .tint(Theme.lagoon)
             }
 
@@ -215,11 +235,14 @@ struct SettingsView: View {
                 Spacer()
                 Button("Apply") {
                     let snapshot = WeatherSnapshot(temperatureC: manualTemp, humidityPercent: manualHumidity, condition: "Manual")
-                    store.updateManualWeather(snapshot)
+                    withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
+                        store.updateManualWeather(snapshot)
+                    }
                 }
                 .font(Theme.bodyFont(size: 13))
                 .buttonStyle(.bordered)
                 .tint(Theme.lagoon)
+                .hapticTap()
             }
         }
         .padding(12)
@@ -233,8 +256,8 @@ struct SettingsView: View {
                 timePicker(title: "Wake", systemImage: "sunrise.fill", tint: Theme.sun, date: $wakeTime)
                 timePicker(title: "Sleep", systemImage: "moon.stars.fill", tint: Theme.mint, date: $sleepTime)
             }
-            .onChange(of: wakeTime) { _ in updateSchedule() }
-            .onChange(of: sleepTime) { _ in updateSchedule() }
+            .onChange(of: wakeTime) { updateSchedule() }
+            .onChange(of: sleepTime) { updateSchedule() }
         }
     }
 
@@ -260,6 +283,9 @@ struct SettingsView: View {
                 }
             }
             .tint(Theme.lagoon)
+            .onChange(of: store.profile.dailyReminderCount) {
+                Haptics.selection()
+            }
         }
     }
 
@@ -336,6 +362,9 @@ struct SettingsView: View {
             }
         }
         .toggleStyle(SwitchToggleStyle(tint: tint))
+        .onChange(of: isOn.wrappedValue) {
+            Haptics.selection()
+        }
     }
 
     private func permissionRow(title: String, subtitle: String, systemImage: String, status: StatusIndicator, action: @escaping () -> Void) -> some View {
@@ -361,6 +390,7 @@ struct SettingsView: View {
             .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.white.opacity(0.08)))
         }
         .buttonStyle(.plain)
+        .hapticTap()
     }
 
     private func iconBubble(systemImage: String, tint: Color) -> some View {
@@ -404,6 +434,9 @@ struct SettingsView: View {
                 .datePickerStyle(.compact)
                 .labelsHidden()
                 .tint(tint)
+                .onChange(of: date.wrappedValue) {
+                    Haptics.selection()
+                }
         }
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)

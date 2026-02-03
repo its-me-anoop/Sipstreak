@@ -27,11 +27,14 @@ struct InsightsView: View {
 
                                 ProgressView(value: min(1, day.totalML / max(1, store.dailyGoal.totalML)))
                                     .tint(Theme.mint)
+                                    .animation(.easeInOut(duration: 0.5), value: day.totalML)
 
                                 Text(Formatters.shortVolume(ml: day.totalML, unit: store.profile.unitSystem) + " " + store.profile.unitSystem.volumeUnit)
                                     .font(Theme.bodyFont(size: 12))
                                     .foregroundColor(.white.opacity(0.7))
                                     .frame(width: 70, alignment: .trailing)
+                                    .contentTransition(.numericText())
+                                    .animation(.easeInOut(duration: 0.4), value: day.totalML)
                             }
                         }
                     }
@@ -108,6 +111,8 @@ struct InsightsView: View {
             Text(Formatters.volumeString(ml: value, unit: store.profile.unitSystem))
                 .font(Theme.bodyFont(size: highlight ? 16 : 14))
                 .foregroundColor(highlight ? Theme.sun : .white)
+                .contentTransition(.numericText())
+                .animation(.spring(response: 0.35, dampingFraction: 0.82), value: value)
         }
     }
 

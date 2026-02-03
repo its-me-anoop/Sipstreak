@@ -17,9 +17,12 @@ struct AchievementsView: View {
                             .foregroundColor(.white)
                         Spacer()
                         Button("Refresh") {
-                            store.refreshQuests()
+                            withAnimation(.spring(response: 0.45, dampingFraction: 0.85)) {
+                                store.refreshQuests()
+                            }
                         }
                         .buttonStyle(.bordered)
+                        .hapticTap()
                     }
 
                     VStack(alignment: .leading, spacing: 12) {
@@ -40,6 +43,7 @@ struct AchievementsView: View {
                     LazyVGrid(columns: columns, spacing: 12) {
                         ForEach(store.gameState.achievements) { achievement in
                             AchievementBadgeView(achievement: achievement)
+                                .transition(.scale.combined(with: .opacity))
                         }
                     }
                 }
@@ -48,6 +52,8 @@ struct AchievementsView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .animation(.spring(response: 0.5, dampingFraction: 0.82), value: store.gameState.achievements)
+        .animation(.spring(response: 0.5, dampingFraction: 0.82), value: store.gameState.quests)
     }
 }
 

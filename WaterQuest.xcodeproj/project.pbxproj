@@ -10,6 +10,7 @@
 		00E5359EB56D89B045DDBDF1 /* AddIntakeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FBC0C7A2F89C0FD52822D48 /* AddIntakeView.swift */; };
 		0252DDA30195EA614A439A3C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9FC934C6863AFC8E01D302CE /* Assets.xcassets */; };
 		07B278F93A38A595542E5E2F /* Achievement.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAA7C7B6DF9BEEE2624F08AE /* Achievement.swift */; };
+		A1E4F7B0C3D6E9F2A5B8C1D4 /* AchievementCelebrationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2F5A8C1D4E7F0A3B6C9D2E5 /* AchievementCelebrationView.swift */; };
 		0A5C95DCB74AE59638E495D3 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98496F0A352BC5A580943E39 /* OnboardingView.swift */; };
 		0A6AF1AF6B3D3222F30C3E85 /* WeatherSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ADBD4C5BD2E2C34CE93AC27 /* WeatherSnapshot.swift */; };
 		0A98E6835256CBC9D3B2DF65 /* HydrationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32F4A1403ABF41DCCE395C3D /* HydrationStore.swift */; };
@@ -36,6 +37,7 @@
 		B91FE976DAC2A0581CD3D1F2 /* QuestCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E9EF4DEEA3946532D058B8E /* QuestCard.swift */; };
 		BBBF0A2E700E876678D8DA69 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD0B42119D7BD312FCDAF766 /* SettingsView.swift */; };
 		C0AC658494F0FF61381C286D /* InsightsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB90E806138FFE1C09E7187A /* InsightsView.swift */; };
+		C3D6E9F2A5B8C1D4E7F0A3B6 /* Haptics.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4E7F0A3B6C9D2E5F8A1B4C7 /* Haptics.swift */; };
 		C55AEDA72862AE982B3B6E79 /* AchievementBadgeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67F4E6C8E0FC1E4A6D3765EB /* AchievementBadgeView.swift */; };
 		CAA880E64AF96B5C0988D2A3 /* WorkoutSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BE15D5810B84C7C96E0EA4C /* WorkoutSummary.swift */; };
 		DFEBF0DC3353892C6D5C935D /* AchievementsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19211A94C2ECCF53FAF30E8D /* AchievementsView.swift */; };
@@ -75,12 +77,14 @@
 		9FC934C6863AFC8E01D302CE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A37EBA9FC9F1233C2BC105DD /* PersistenceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceService.swift; sourceTree = "<group>"; };
 		AAA7C7B6DF9BEEE2624F08AE /* Achievement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Achievement.swift; sourceTree = "<group>"; };
+		B2F5A8C1D4E7F0A3B6C9D2E5 /* AchievementCelebrationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AchievementCelebrationView.swift; sourceTree = "<group>"; };
 		ACD53555ACD00A8A78268A7F /* MascotView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MascotView.swift; sourceTree = "<group>"; };
 		B2126EAEDD87BD49B24C7BE2 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
 		B4AE7C21F7B60BC9212AFC46 /* WaterQuestApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaterQuestApp.swift; sourceTree = "<group>"; };
 		B9CBD2C7DC27199FF61EB613 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		BA6BBE42CB2309F2A4A2380A /* NotificationScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationScheduler.swift; sourceTree = "<group>"; };
 		BD7043107E62B2C04F4C58EB /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
+		D4E7F0A3B6C9D2E5F8A1B4C7 /* Haptics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Haptics.swift; sourceTree = "<group>"; };
 		DD7B235512DB0FFF29E820AE /* GameState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameState.swift; sourceTree = "<group>"; };
 		EB90E806138FFE1C09E7187A /* InsightsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightsView.swift; sourceTree = "<group>"; };
 		F021A59BB7CB33328B5ABBC4 /* Formatters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Formatters.swift; sourceTree = "<group>"; };
@@ -132,6 +136,8 @@
 			isa = PBXGroup;
 			children = (
 				67F4E6C8E0FC1E4A6D3765EB /* AchievementBadgeView.swift */,
+				B2F5A8C1D4E7F0A3B6C9D2E5 /* AchievementCelebrationView.swift */,
+				D4E7F0A3B6C9D2E5F8A1B4C7 /* Haptics.swift */,
 				ACD53555ACD00A8A78268A7F /* MascotView.swift */,
 				8B9CF2D397867B06457E11FA /* PrimaryButton.swift */,
 				7B8BDAA9F823F748DDAD26EB /* ProgressRing.swift */,
@@ -271,6 +277,7 @@
 			files = (
 				07B278F93A38A595542E5E2F /* Achievement.swift in Sources */,
 				C55AEDA72862AE982B3B6E79 /* AchievementBadgeView.swift in Sources */,
+				A1E4F7B0C3D6E9F2A5B8C1D4 /* AchievementCelebrationView.swift in Sources */,
 				DFEBF0DC3353892C6D5C935D /* AchievementsView.swift in Sources */,
 				00E5359EB56D89B045DDBDF1 /* AddIntakeView.swift in Sources */,
 				F9760161C65BFA2368DB8094 /* DashboardView.swift in Sources */,
@@ -283,6 +290,7 @@
 				35CC573F0348943EF21D693D /* HealthKitManager.swift in Sources */,
 				0E54D9CCCA944AAEB6EA20F8 /* HydrationEntry.swift in Sources */,
 				0A98E6835256CBC9D3B2DF65 /* HydrationStore.swift in Sources */,
+				C3D6E9F2A5B8C1D4E7F0A3B6 /* Haptics.swift in Sources */,
 				C0AC658494F0FF61381C286D /* InsightsView.swift in Sources */,
 				5315257190E860C18C6545B0 /* LocationManager.swift in Sources */,
 				EB9033481146A1C9561176DB /* MainTabView.swift in Sources */,
@@ -328,7 +336,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.waterquest.hydration;
 				PRODUCT_NAME = WaterQuest;
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -409,7 +417,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.waterquest.hydration;
 				PRODUCT_NAME = WaterQuest;
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};

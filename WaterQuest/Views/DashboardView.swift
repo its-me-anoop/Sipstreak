@@ -31,6 +31,7 @@ struct DashboardView: View {
         .task {
             await refreshSignals()
         }
+        .animation(.spring(response: 0.5, dampingFraction: 0.82), value: store.gameState.quests)
     }
 
     private var header: some View {
@@ -60,10 +61,14 @@ struct DashboardView: View {
                     Text(Formatters.percentString(progress))
                         .font(Theme.titleFont(size: 28))
                         .foregroundColor(.white)
+                        .contentTransition(.numericText())
+                        .animation(.spring(response: 0.4, dampingFraction: 0.82), value: progress)
                     Text("\(Formatters.volumeString(ml: store.todayTotalML, unit: store.profile.unitSystem)) / \(Formatters.volumeString(ml: goal.totalML, unit: store.profile.unitSystem))")
                         .font(Theme.bodyFont(size: 13))
                         .foregroundColor(.white.opacity(0.6))
                         .multilineTextAlignment(.center)
+                        .contentTransition(.numericText())
+                        .animation(.spring(response: 0.4, dampingFraction: 0.82), value: store.todayTotalML)
                 }
             }
 
@@ -92,7 +97,9 @@ struct DashboardView: View {
             HStack(spacing: 12) {
                 ForEach(buttons, id: \.self) { amount in
                     Button("+\(amount) \(unit.volumeUnit)") {
-                        store.addIntake(amount: Double(amount), source: .manual)
+                        withAnimation(.spring(response: 0.5, dampingFraction: 0.85)) {
+                            store.addIntake(amount: Double(amount), source: .manual)
+                        }
                     }
                     .font(Theme.bodyFont(size: 14))
                     .padding(.vertical, 10)
@@ -102,6 +109,7 @@ struct DashboardView: View {
                             .fill(Theme.lagoon.opacity(0.25))
                     )
                     .foregroundColor(.white)
+                    .hapticTap()
                 }
             }
         }

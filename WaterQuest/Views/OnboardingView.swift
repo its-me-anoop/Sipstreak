@@ -42,6 +42,7 @@ struct OnboardingView: View {
                             withAnimation { pageIndex -= 1 }
                         }
                         .buttonStyle(.bordered)
+                        .hapticTap()
                     }
 
                     Button(pageIndex == 3 ? "Start Quest" : "Next") {
@@ -122,6 +123,9 @@ struct OnboardingView: View {
                     .toggleStyle(SwitchToggleStyle(tint: Theme.mint))
                     .font(Theme.bodyFont(size: 16))
                     .foregroundColor(.white)
+                    .onChange(of: customGoalEnabled) {
+                        Haptics.selection()
+                    }
 
                 if customGoalEnabled {
                     sliderSection(
@@ -141,12 +145,18 @@ struct OnboardingView: View {
                     .toggleStyle(SwitchToggleStyle(tint: Theme.lagoon))
                     .font(Theme.bodyFont(size: 16))
                     .foregroundColor(.white)
+                    .onChange(of: remindersEnabled) {
+                        Haptics.selection()
+                    }
 
                 if remindersEnabled {
                     Stepper(value: $reminderCount, in: 3...12) {
                         Text("\(reminderCount) reminders/day")
                             .font(Theme.bodyFont(size: 14))
                             .foregroundColor(.white)
+                    }
+                    .onChange(of: reminderCount) {
+                        Haptics.selection()
                     }
                 }
             }
@@ -165,26 +175,35 @@ struct OnboardingView: View {
                     .toggleStyle(SwitchToggleStyle(tint: Theme.sun))
                     .font(Theme.bodyFont(size: 16))
                     .foregroundColor(.white)
+                    .onChange(of: prefersWeather) {
+                        Haptics.selection()
+                    }
 
                 Toggle("Sync workouts & water with Health", isOn: $prefersHealthKit)
                     .toggleStyle(SwitchToggleStyle(tint: Theme.mint))
                     .font(Theme.bodyFont(size: 16))
                     .foregroundColor(.white)
+                    .onChange(of: prefersHealthKit) {
+                        Haptics.selection()
+                    }
 
                 Button("Enable Health & Activity") {
                     Task { await healthKit.requestAuthorization() }
                 }
                 .buttonStyle(.borderedProminent)
+                .hapticTap()
 
                 Button("Enable Location") {
                     locationManager.requestPermission()
                 }
                 .buttonStyle(.bordered)
+                .hapticTap()
 
                 Button("Enable Notifications") {
                     Task { await notifier.requestAuthorization() }
                 }
                 .buttonStyle(.bordered)
+                .hapticTap()
             }
             .padding(.horizontal, 24)
         }
@@ -235,6 +254,9 @@ struct OnboardingView: View {
                 .foregroundColor(.white.opacity(0.6))
             Picker(title, selection: selection, content: content)
                 .pickerStyle(.segmented)
+                .onChange(of: selection.wrappedValue) {
+                    Haptics.selection()
+                }
         }
     }
 
@@ -243,10 +265,16 @@ struct OnboardingView: View {
             Text(title)
                 .font(Theme.bodyFont(size: 13))
                 .foregroundColor(.white.opacity(0.6))
-            Slider(value: value, in: range, step: step)
+            Slider(value: value, in: range, step: step) { editing in
+                if !editing {
+                    Haptics.selection()
+                }
+            }
             Text(String(format: "%.0f", value.wrappedValue))
                 .font(Theme.titleFont(size: 18))
                 .foregroundColor(.white)
+                .contentTransition(.numericText())
+                .animation(.spring(response: 0.35, dampingFraction: 0.82), value: value.wrappedValue)
         }
     }
 
@@ -258,6 +286,9 @@ struct OnboardingView: View {
             DatePicker("", selection: date, displayedComponents: .hourAndMinute)
                 .datePickerStyle(.compact)
                 .labelsHidden()
+                .onChange(of: date.wrappedValue) {
+                    Haptics.selection()
+                }
         }
         .padding(12)
         .background(

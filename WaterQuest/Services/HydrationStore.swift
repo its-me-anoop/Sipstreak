@@ -7,8 +7,10 @@ final class HydrationStore: ObservableObject {
     @Published var manualWeather: WeatherSnapshot?
     @Published var lastWeather: WeatherSnapshot?
     @Published var lastWorkout: WorkoutSummary
+    @Published var activeAchievement: Achievement?
 
     private let persistence = PersistenceService.shared
+    private var pendingAchievements: [Achievement] = []
 
     init() {
         let state = persistence.load(PersistedState.self, fallback: .default)
@@ -18,6 +20,7 @@ final class HydrationStore: ObservableObject {
         self.manualWeather = state.manualWeather
         self.lastWeather = state.lastWeather
         self.lastWorkout = state.lastWorkout
+        self.activeAchievement = nil
         GamificationEngine.ensureAchievements(state: &self.gameState)
         GamificationEngine.refreshDailyQuests(state: &self.gameState, goalML: dailyGoal.totalML)
     }
@@ -39,6 +42,7 @@ final class HydrationStore: ObservableObject {
     }
 
     func addIntake(amount: Double, unitSystem: UnitSystem? = nil, source: HydrationSource = .manual) {
+        let previouslyUnlocked = Set(gameState.achievements.filter { $0.isUnlocked }.map { $0.id })
         let units = unitSystem ?? profile.unitSystem
         let ml = units.ml(from: amount)
         let entry = HydrationEntry(date: Date(), volumeML: ml, source: source)
@@ -46,6 +50,8 @@ final class HydrationStore: ObservableObject {
         GamificationEngine.refreshDailyQuests(state: &gameState, goalML: dailyGoal.totalML)
         GamificationEngine.applyIntake(state: &gameState, entry: entry, todayTotalML: todayTotalML, goalML: dailyGoal.totalML, allEntries: entries)
         persist()
+        let newlyUnlocked = gameState.achievements.filter { $0.isUnlocked && !previouslyUnlocked.contains($0.id) }
+        enqueueAchievements(newlyUnlocked)
     }
 
     func deleteEntry(_ entry: HydrationEntry) {
@@ -86,6 +92,14 @@ final class HydrationStore: ObservableObject {
         persist()
     }
 
+    func dismissActiveAchievement() {
+        if pendingAchievements.isEmpty {
+            activeAchievement = nil
+        } else {
+            activeAchievement = pendingAchievements.removeFirst()
+        }
+    }
+
     private func persist() {
         let state = PersistedState(
             entries: entries,
@@ -96,6 +110,14 @@ final class HydrationStore: ObservableObject {
             lastWorkout: lastWorkout
         )
         persistence.save(state)
+    }
+
+    private func enqueueAchievements(_ achievements: [Achievement]) {
+        guard !achievements.isEmpty else { return }
+        pendingAchievements.append(contentsOf: achievements)
+        if activeAchievement == nil {
+            activeAchievement = pendingAchievements.removeFirst()
+        }
     }
 }
 

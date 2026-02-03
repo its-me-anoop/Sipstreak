@@ -20,10 +20,16 @@ struct AddIntakeView: View {
                     Text("Amount (\(store.profile.unitSystem.volumeUnit))")
                         .font(Theme.bodyFont(size: 14))
                         .foregroundColor(.white.opacity(0.7))
-                    Slider(value: $amount, in: amountRange, step: amountStep)
+                    Slider(value: $amount, in: amountRange, step: amountStep) { editing in
+                        if !editing {
+                            Haptics.selection()
+                        }
+                    }
                     Text(String(format: "%.0f", amount))
                         .font(Theme.titleFont(size: 30))
                         .foregroundColor(.white)
+                        .contentTransition(.numericText())
+                        .animation(.spring(response: 0.35, dampingFraction: 0.82), value: amount)
                 }
                 .padding(18)
                 .background(
@@ -34,13 +40,16 @@ struct AddIntakeView: View {
                 HStack(spacing: 12) {
                     ForEach(presetAmounts, id: \.self) { preset in
                         Button("\(preset)") {
-                            amount = Double(preset)
+                            withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
+                                amount = Double(preset)
+                            }
                         }
                         .font(Theme.bodyFont(size: 14))
                         .padding(.vertical, 10)
                         .padding(.horizontal, 14)
                         .background(Capsule().fill(Theme.lagoon.opacity(0.25)))
                         .foregroundColor(.white)
+                        .hapticTap()
                     }
                 }
 
@@ -75,7 +84,9 @@ struct AddIntakeView: View {
     }
 
     private func addIntake() {
-        store.addIntake(amount: amount, source: .manual)
+        withAnimation(.spring(response: 0.5, dampingFraction: 0.85)) {
+            store.addIntake(amount: amount, source: .manual)
+        }
         Task {
             await healthKit.saveWaterIntake(ml: store.profile.unitSystem.ml(from: amount))
         }

@@ -25,17 +25,24 @@ struct QuestCard: View {
             ProgressView(value: progress)
                 .tint(Theme.mint)
                 .background(Color.white.opacity(0.1))
+                .animation(.easeInOut(duration: 0.5), value: progress)
 
             if quest.isCompleted {
                 Text("Quest complete!")
                     .font(Theme.bodyFont(size: 12))
                     .foregroundColor(Theme.sun)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
         .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 20)
                 .fill(Theme.card)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20)
+                        .stroke(Theme.sun.opacity(quest.isCompleted ? 0.35 : 0.08), lineWidth: 1)
+                )
         )
+        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: quest.isCompleted)
     }
 }
