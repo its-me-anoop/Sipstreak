@@ -22,11 +22,11 @@ struct SplashScreenView: View {
 
                 Text("WaterQuest")
                     .font(Theme.titleFont(size: 34))
-                    .foregroundColor(.white)
+                    .foregroundColor(Theme.textPrimary)
 
                 Text("Hydrate. Level up.")
                     .font(Theme.bodyFont(size: 14))
-                    .foregroundColor(.white.opacity(0.6))
+                    .foregroundColor(Theme.textSecondary)
 
                 ProgressView()
                     .tint(Theme.mint)

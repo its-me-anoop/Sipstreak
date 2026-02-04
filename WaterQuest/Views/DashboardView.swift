@@ -20,6 +20,7 @@ struct DashboardView: View {
     @State private var motionManager = CMMotionManager()
     @State private var isInitialLoadComplete = false
     @State private var loadingPulse = false
+    @State private var entryToEdit: HydrationEntry? = nil
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -43,6 +44,9 @@ struct DashboardView: View {
                         .opacity(cardsOpacity)
 
                     quickAdd
+                        .opacity(cardsOpacity)
+
+                    logSection
                         .opacity(cardsOpacity)
 
                     statsGrid
@@ -93,6 +97,13 @@ struct DashboardView: View {
         }
         .animation(Theme.fluidSpring, value: store.gameState.quests)
         .modifier(SensoryFeedbackModifier(trigger: rippleTrigger))
+        .sheet(item: $entryToEdit) { entry in
+            EditLogEntryView(entry: entry, unitSystem: store.profile.unitSystem) { updated in
+                store.updateEntry(id: updated.id, volumeML: updated.volumeML, note: updated.note)
+            } onDelete: {
+                store.deleteEntry(entry)
+            }
+        }
     }
 
     // MARK: - Animated Background
@@ -136,13 +147,7 @@ struct DashboardView: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text(greeting)
                     .font(Theme.titleFont(size: 28))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.white, .white.opacity(0.85)],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
+                    .foregroundColor(Theme.textPrimary)
 
                 HStack(spacing: 8) {
                     Image(systemName: "star.fill")
@@ -151,10 +156,10 @@ struct DashboardView: View {
 
                     Text("Level \(store.gameState.level)")
                         .font(Theme.bodyFont(size: 14))
-                        .foregroundColor(.white.opacity(0.8))
+                        .foregroundColor(Theme.textSecondary)
 
                     Text("•")
-                        .foregroundColor(.white.opacity(0.4))
+                        .foregroundColor(Theme.textTertiary)
 
                     Text("\(store.gameState.xp) XP")
                         .font(Theme.bodyFont(size: 14))
@@ -226,12 +231,12 @@ struct DashboardView: View {
                             }
                             Text("Droplet says")
                                 .font(Theme.bodyFont(size: 11))
-                                .foregroundColor(.white.opacity(0.5))
+                                .foregroundColor(Theme.textTertiary)
                         }
 
                         Text(tip.message)
                             .font(Theme.bodyFont(size: 14))
-                            .foregroundColor(.white.opacity(0.9))
+                            .foregroundColor(Theme.textPrimary)
                             .lineLimit(2)
                             .fixedSize(horizontal: false, vertical: true)
                     }
@@ -264,7 +269,7 @@ struct DashboardView: View {
         VStack(alignment: .leading, spacing: 14) {
             Text("Quick Add")
                 .font(Theme.titleFont(size: 18))
-                .foregroundColor(.white)
+                .foregroundColor(Theme.textPrimary)
 
             let unit = store.profile.unitSystem
             let buttons = unit == .metric ? [200, 350, 500, 750] : [8, 12, 16, 24]
@@ -272,9 +277,13 @@ struct DashboardView: View {
             HStack(spacing: 10) {
                 ForEach(buttons, id: \.self) { amount in
                     QuickAddPill(amount: amount, unit: unit.volumeUnit) {
-                        withAnimation(Theme.fluidSpring) {
-                            store.addIntake(amount: Double(amount), source: .manual)
+                        let entry = withAnimation(Theme.fluidSpring) {
+                            let entry = store.addIntake(amount: Double(amount), source: .manual)
                             rippleTrigger.toggle()
+                            return entry
+                        }
+                        Task {
+                            await healthKit.saveWaterIntake(ml: entry.volumeML, date: entry.date, entryID: entry.id)
                         }
                         Task {
                             try? await Task.sleep(for: .milliseconds(500))
@@ -288,9 +297,19 @@ struct DashboardView: View {
     }
 
     // MARK: - Weather Widget
+    private var activeWeatherSnapshot: WeatherSnapshot? {
+        if let current = weather.currentWeather {
+            return current
+        }
+        if let stored = store.activeWeather, !stored.conditionKey.isEmpty {
+            return stored
+        }
+        return nil
+    }
+
     @ViewBuilder
     private var weatherWidget: some View {
-        if store.profile.prefersWeatherGoal, let snapshot = weather.currentWeather {
+        if store.profile.prefersWeatherGoal, let snapshot = activeWeatherSnapshot {
             let isLive = weather.status != .failed
             LiquidGlassCard(cornerRadius: 20, tintColor: Theme.lagoon.opacity(0.3), isInteractive: false) {
                 HStack(spacing: 16) {
@@ -309,18 +328,18 @@ struct DashboardView: View {
                         HStack(spacing: 6) {
                             Text("\(Int(snapshot.temperatureC))°C")
                                 .font(Theme.titleFont(size: 22))
-                                .foregroundColor(.white)
+                                .foregroundColor(Theme.textPrimary)
                             if !snapshot.condition.isEmpty {
                                 Text(snapshot.condition)
                                     .font(Theme.bodyFont(size: 14))
-                                    .foregroundColor(.white.opacity(0.7))
+                                    .foregroundColor(Theme.textSecondary)
                             }
                         }
                         Text(isLive
                             ? "Humidity \(Int(snapshot.humidityPercent))%"
                             : "Humidity \(Int(snapshot.humidityPercent))% · Estimated")
                             .font(Theme.bodyFont(size: 12))
-                            .foregroundColor(.white.opacity(0.55))
+                            .foregroundColor(Theme.textTertiary)
                     }
 
                     Spacer()
@@ -329,7 +348,7 @@ struct DashboardView: View {
                     VStack(spacing: 2) {
                         Text("Goal")
                             .font(Theme.bodyFont(size: 11))
-                            .foregroundColor(.white.opacity(0.5))
+                            .foregroundColor(Theme.textTertiary)
                         Text(Formatters.volumeString(ml: store.dailyGoal.totalML, unit: store.profile.unitSystem))
                             .font(Theme.titleFont(size: 16))
                             .foregroundColor(Theme.mint)
@@ -347,6 +366,8 @@ struct DashboardView: View {
                 }
                 .padding(16)
             }
+        } else if store.profile.prefersWeatherGoal {
+            weatherPlaceholder
         }
     }
 
@@ -377,10 +398,10 @@ struct DashboardView: View {
                 VStack(alignment: .leading, spacing: 3) {
                     Text("Weather")
                         .font(Theme.titleFont(size: 16))
-                        .foregroundColor(.white.opacity(0.7))
+                        .foregroundColor(Theme.textSecondary)
                     Text(message)
                         .font(Theme.bodyFont(size: 13))
-                        .foregroundColor(.white.opacity(0.45))
+                        .foregroundColor(Theme.textTertiary)
                 }
                 Spacer()
             }
@@ -395,10 +416,10 @@ struct DashboardView: View {
             VStack(alignment: .leading, spacing: 14) {
                 Text("Today's Context")
                     .font(Theme.titleFont(size: 18))
-                    .foregroundColor(.white)
+                    .foregroundColor(Theme.textPrimary)
 
                 HStack(spacing: 12) {
-                    if store.profile.prefersWeatherGoal, let snapshot = weather.currentWeather {
+                    if store.profile.prefersWeatherGoal, let snapshot = activeWeatherSnapshot {
                         FluidStatCard(
                             label: "Weather",
                             value: weatherValue(snapshot: snapshot),
@@ -444,7 +465,7 @@ struct DashboardView: View {
             HStack {
                 Text("Daily Quests")
                     .font(Theme.titleFont(size: 18))
-                    .foregroundColor(.white)
+                    .foregroundColor(Theme.textPrimary)
 
                 Spacer()
 
@@ -462,6 +483,43 @@ struct DashboardView: View {
                         insertion: .move(edge: .trailing).combined(with: .opacity),
                         removal: .move(edge: .leading).combined(with: .opacity)
                     ))
+            }
+        }
+    }
+
+    // MARK: - Today's Log
+    @ViewBuilder
+    private var logSection: some View {
+        let sorted = store.todayEntries.sorted { $0.date > $1.date }
+        if !sorted.isEmpty {
+            VStack(alignment: .leading, spacing: 14) {
+                Text("Today's Log")
+                    .font(Theme.titleFont(size: 18))
+                    .foregroundColor(Theme.textPrimary)
+
+                LiquidGlassCard(cornerRadius: 20, tintColor: Theme.lagoon.opacity(0.2), isInteractive: false) {
+                    VStack(spacing: 0) {
+                        ForEach(Array(sorted.enumerated()), id: \.element.id) { index, entry in
+                            LogEntryRow(
+                                entry: entry,
+                                unitSystem: store.profile.unitSystem,
+                                isLast: index == sorted.count - 1
+                            )
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                Haptics.selection()
+                                entryToEdit = entry
+                            }
+                        }
+                        .onDelete(perform: { offsets in
+                            let toDelete = offsets.map { sorted[$0] }
+                            withAnimation(Theme.fluidSpring) {
+                                toDelete.forEach { store.deleteEntry($0) }
+                            }
+                            Haptics.impact(.medium)
+                        })
+                    }
+                }
             }
         }
     }
@@ -504,9 +562,15 @@ struct DashboardView: View {
         isRefreshing = true
 
         if store.profile.prefersHealthKit {
+            await healthKit.refreshAuthorizationStatus()
             let summary = await healthKit.fetchTodayWorkoutSummary()
             await MainActor.run {
                 store.updateWorkout(summary)
+            }
+            if let healthKitEntries = await healthKit.fetchTodayWaterEntries() {
+                await MainActor.run {
+                    store.syncHealthKitEntries(healthKitEntries)
+                }
             }
         }
 
@@ -550,11 +614,11 @@ struct DashboardView: View {
 
                 Text("Preparing your dashboard")
                     .font(Theme.titleFont(size: 16))
-                    .foregroundColor(.white)
+                    .foregroundColor(Theme.textPrimary)
 
                 Text("Syncing hydration and quests…")
                     .font(Theme.bodyFont(size: 13))
-                    .foregroundColor(.white.opacity(0.6))
+                    .foregroundColor(Theme.textSecondary)
             }
             .padding(.horizontal, 24)
         }
@@ -657,18 +721,18 @@ struct ProgressCardContent: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(label)
                     .font(Theme.bodyFont(size: 11))
-                    .foregroundColor(.white.opacity(0.5))
+                    .foregroundColor(Theme.textTertiary)
 
                 HStack(spacing: 4) {
                     Text(value)
                         .font(Theme.titleFont(size: 18))
-                        .foregroundColor(.white)
+                        .foregroundColor(Theme.textPrimary)
                         .contentTransition(.numericText())
 
                     if !unit.isEmpty {
                         Text(unit)
                             .font(Theme.bodyFont(size: 12))
-                            .foregroundColor(.white.opacity(0.6))
+                            .foregroundColor(Theme.textSecondary)
                     }
                 }
             }
@@ -736,18 +800,18 @@ struct iOS26ProgressCard: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(label)
                     .font(Theme.bodyFont(size: 11))
-                    .foregroundColor(.white.opacity(0.5))
+                    .foregroundColor(Theme.textTertiary)
 
                 HStack(spacing: 4) {
                     Text(value)
                         .font(Theme.titleFont(size: 18))
-                        .foregroundColor(.white)
+                        .foregroundColor(Theme.textPrimary)
                         .contentTransition(.numericText())
 
                     if !unit.isEmpty {
                         Text(unit)
                             .font(Theme.bodyFont(size: 12))
-                            .foregroundColor(.white.opacity(0.6))
+                            .foregroundColor(Theme.textSecondary)
                     }
                 }
             }
@@ -846,7 +910,7 @@ struct LiquidFillGauge: View {
                     }
                     .overlay(
                         Circle()
-                            .strokeBorder(Color.white.opacity(0.22), lineWidth: 1)
+                            .strokeBorder(Theme.glassBorder.opacity(0.88), lineWidth: 1)
                             .frame(width: diameter, height: diameter)
                     )
                 }
@@ -860,17 +924,17 @@ struct LiquidFillGauge: View {
                 VStack(spacing: 6) {
                     Text(Formatters.percentString(progress))
                         .font(Theme.titleFont(size: 30))
-                        .foregroundColor(.white)
+                        .foregroundColor(Theme.textPrimary)
                         .contentTransition(.numericText())
 
                     Text("\(Formatters.volumeString(ml: todayTotalML, unit: unitSystem))")
                         .font(Theme.bodyFont(size: 13))
-                        .foregroundColor(.white.opacity(0.8))
+                        .foregroundColor(Theme.textSecondary)
                         .contentTransition(.numericText())
 
                     Text("of \(Formatters.volumeString(ml: goalTotalML, unit: unitSystem))")
                         .font(Theme.bodyFont(size: 11))
-                        .foregroundColor(.white.opacity(0.5))
+                        .foregroundColor(Theme.textTertiary)
                 }
                 .frame(width: innerDiameter * 0.9)
                 .padding(.top, ringInset * 0.1)
@@ -900,6 +964,217 @@ struct SensoryFeedbackModifier: ViewModifier {
         } else {
             content
         }
+    }
+}
+
+// MARK: - Log Entry Row
+private struct LogEntryRow: View {
+    let entry: HydrationEntry
+    let unitSystem: UnitSystem
+    let isLast: Bool
+
+    private static let timeFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "h:mm a"
+        return f
+    }()
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 14) {
+                ZStack {
+                    Circle()
+                        .fill(Theme.lagoon.opacity(0.18))
+                        .frame(width: 42, height: 42)
+
+                    Text(Formatters.shortVolume(ml: entry.volumeML, unit: unitSystem))
+                        .font(Theme.titleFont(size: 15))
+                        .foregroundColor(Theme.lagoon)
+                }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(Formatters.volumeString(ml: entry.volumeML, unit: unitSystem))
+                        .font(Theme.bodyFont(size: 15))
+                        .foregroundColor(Theme.textPrimary)
+
+                    if let note = entry.note, !note.isEmpty {
+                        Text(note)
+                            .font(Theme.bodyFont(size: 13))
+                            .foregroundColor(Theme.textSecondary)
+                    }
+                }
+
+                Spacer()
+
+                VStack(alignment: .trailing, spacing: 3) {
+                    Text(LogEntryRow.timeFormatter.string(from: entry.date))
+                        .font(Theme.bodyFont(size: 13))
+                        .foregroundColor(Theme.textTertiary)
+
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundColor(Theme.textTertiary)
+                }
+            }
+            .padding(.vertical, 12)
+            .padding(.horizontal, 16)
+
+            if !isLast {
+                Rectangle()
+                    .fill(Theme.glassBorder.opacity(0.4))
+                    .frame(height: 0.5)
+                    .padding(.leading, 72)
+            }
+        }
+    }
+}
+
+// MARK: - Edit Log Entry Sheet
+private struct EditLogEntryView: View {
+    let entry: HydrationEntry
+    let unitSystem: UnitSystem
+    let onSave: (HydrationEntry) -> Void
+    let onDelete: () -> Void
+
+    @State private var amount: Double = 0
+    @State private var note: String = ""
+    @State private var showDeleteConfirm = false
+    @Environment(\.dismiss) private var dismiss
+
+    private var amountRange: ClosedRange<Double> {
+        unitSystem == .metric ? 100...1200 : 4...40
+    }
+
+    private var amountStep: Double {
+        unitSystem == .metric ? 25 : 1
+    }
+
+    var body: some View {
+        NavigationView {
+            ZStack {
+                Theme.background.ignoresSafeArea()
+
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 24) {
+                        LiquidGlassCard(cornerRadius: 24, tintColor: Theme.lagoon.opacity(0.2), isInteractive: false) {
+                            VStack(spacing: 16) {
+                                Text("Amount (\(unitSystem.volumeUnit))")
+                                    .font(Theme.bodyFont(size: 14))
+                                    .foregroundColor(Theme.textSecondary)
+
+                                Text(String(format: "%.0f", amount))
+                                    .font(.system(size: 56, weight: .bold, design: .rounded))
+                                    .foregroundStyle(
+                                        LinearGradient(
+                                            colors: [Theme.textPrimary, Theme.lagoon],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                                    .contentTransition(.numericText())
+                                    .animation(.spring(response: 0.35, dampingFraction: 0.82), value: amount)
+
+                                Slider(value: $amount, in: amountRange, step: amountStep) { editing in
+                                    if editing { Haptics.selection() }
+                                }
+                                .tint(Theme.lagoon)
+
+                                HStack {
+                                    Text(String(format: "%.0f", amountRange.lowerBound))
+                                        .font(Theme.bodyFont(size: 11))
+                                        .foregroundColor(Theme.textTertiary)
+                                    Spacer()
+                                    Text(String(format: "%.0f", amountRange.upperBound))
+                                        .font(Theme.bodyFont(size: 11))
+                                        .foregroundColor(Theme.textTertiary)
+                                }
+                            }
+                            .padding(24)
+                        }
+
+                        LiquidGlassCard(cornerRadius: 20, isInteractive: false) {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Note (optional)")
+                                    .font(Theme.bodyFont(size: 13))
+                                    .foregroundColor(Theme.textSecondary)
+
+                                TextField("e.g., Morning coffee, Post-workout…", text: $note)
+                                    .font(Theme.bodyFont(size: 15))
+                                    .foregroundColor(Theme.textPrimary)
+                                    .tint(Theme.lagoon)
+                                    .padding(12)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .fill(Theme.glassLight)
+                                    )
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .strokeBorder(Theme.glassBorder.opacity(0.4), lineWidth: 1)
+                                    )
+                            }
+                            .padding(18)
+                        }
+
+                        LiquidGlassButton("Save Changes", icon: "checkmark.circle.fill", style: .primary, size: .large) {
+                            saveEntry()
+                        }
+                        .frame(maxWidth: .infinity)
+
+                        Button(action: { showDeleteConfirm = true }) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "trash.fill")
+                                    .font(.system(size: 14))
+                                Text("Delete Entry")
+                                    .font(Theme.bodyFont(size: 15))
+                            }
+                            .foregroundColor(Theme.coral)
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.top, 4)
+
+                        Spacer(minLength: 40)
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 20)
+                }
+            }
+            .navigationTitle("Edit Log")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Cancel") { dismiss() }
+                        .font(Theme.bodyFont(size: 15))
+                        .foregroundColor(Theme.textSecondary)
+                        .buttonStyle(.plain)
+                }
+            }
+            .confirmationDialog("Delete this entry?", isPresented: $showDeleteConfirm, titleVisibility: .visible) {
+                Button("Delete", role: .destructive) {
+                    Haptics.impact(.medium)
+                    onDelete()
+                    dismiss()
+                }
+                Button("Cancel", role: .cancel) {}
+            }
+        }
+        .onAppear {
+            amount = unitSystem.amount(fromML: entry.volumeML)
+            note = entry.note ?? ""
+        }
+    }
+
+    private func saveEntry() {
+        Haptics.impact(.medium)
+        let ml = unitSystem.ml(from: amount)
+        let updated = HydrationEntry(
+            id: entry.id,
+            date: entry.date,
+            volumeML: ml,
+            source: entry.source,
+            note: note.trimmingCharacters(in: .whitespaces).isEmpty ? nil : note.trimmingCharacters(in: .whitespaces)
+        )
+        onSave(updated)
+        dismiss()
     }
 }
 

@@ -191,7 +191,7 @@ struct OnboardingView: View {
                 
                 Text("A playful hydration adventure with quests, streaks, and smart goals that adapt to your day.")
                     .font(Theme.bodyFont(size: 17))
-                    .foregroundColor(.white.opacity(0.8))
+                    .foregroundColor(Theme.textSecondary)
                     .multilineTextAlignment(.center)
                     .lineSpacing(4)
                     .padding(.horizontal, 32)
@@ -574,11 +574,11 @@ struct PageHeader: View {
             
             Text(title)
                 .font(Theme.titleFont(size: 28))
-                .foregroundColor(.white)
+                .foregroundColor(Theme.textPrimary)
             
             Text(subtitle)
                 .font(Theme.bodyFont(size: 15))
-                .foregroundColor(.white.opacity(0.7))
+                .foregroundColor(Theme.textSecondary)
                 .multilineTextAlignment(.center)
         }
         .padding(.bottom, 8)
@@ -598,7 +598,7 @@ struct FeaturePill: View {
             Text(text)
                 .font(Theme.bodyFont(size: 13))
         }
-        .foregroundColor(.white)
+        .foregroundColor(Theme.textPrimary)
         .padding(.horizontal, 14)
         .padding(.vertical, 8)
         .modifier(GlassButtonModifier(tint: color))
@@ -677,11 +677,11 @@ struct GlassTextField: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .font(Theme.bodyFont(size: 14))
-                .foregroundColor(.white.opacity(0.7))
+                .foregroundColor(Theme.textSecondary)
             
             TextField(placeholder, text: $text)
                 .font(Theme.bodyFont(size: 17))
-                .foregroundColor(.white)
+                .foregroundColor(Theme.textPrimary)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 14)
                 .background(
@@ -689,7 +689,7 @@ struct GlassTextField: View {
                         .fill(.ultraThinMaterial)
                         .overlay(
                             RoundedRectangle(cornerRadius: 16)
-                                .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                                .stroke(Theme.glassBorder.opacity(0.4), lineWidth: 1)
                         )
                 )
         }
@@ -706,7 +706,7 @@ struct GlassSegmentedPicker<T: Hashable, Content: View>: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .font(Theme.bodyFont(size: 14))
-                .foregroundColor(.white.opacity(0.7))
+                .foregroundColor(Theme.textSecondary)
             
             Picker(title, selection: $selection) {
                 ForEach(options, id: \.self) { option in
@@ -733,13 +733,13 @@ struct GlassSlider: View {
             HStack {
                 Text(title)
                     .font(Theme.bodyFont(size: 14))
-                    .foregroundColor(.white.opacity(0.7))
+                    .foregroundColor(Theme.textSecondary)
                 
                 Spacer()
                 
                 Text("\(Int(value)) \(unit)")
                     .font(Theme.titleFont(size: 18))
-                    .foregroundColor(.white)
+                    .foregroundColor(Theme.textPrimary)
                     .contentTransition(.numericText())
                     .animation(.spring(response: 0.3, dampingFraction: 0.8), value: value)
             }
@@ -757,7 +757,7 @@ struct GlassSlider: View {
                 .fill(.ultraThinMaterial)
                 .overlay(
                     RoundedRectangle(cornerRadius: 20)
-                        .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                        .stroke(Theme.glassBorder.opacity(0.4), lineWidth: 1)
                 )
         )
     }
@@ -774,11 +774,11 @@ struct GlassToggle: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
                     .font(Theme.bodyFont(size: 16))
-                    .foregroundColor(.white)
+                    .foregroundColor(Theme.textPrimary)
                 
                 Text(subtitle)
                     .font(Theme.bodyFont(size: 13))
-                    .foregroundColor(.white.opacity(0.6))
+                    .foregroundColor(Theme.textSecondary)
             }
             
             Spacer()
@@ -796,7 +796,7 @@ struct GlassToggle: View {
                 .fill(.ultraThinMaterial)
                 .overlay(
                     RoundedRectangle(cornerRadius: 20)
-                        .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                        .stroke(Theme.glassBorder.opacity(0.4), lineWidth: 1)
                 )
         )
     }
@@ -816,7 +816,7 @@ struct GlassTimePicker: View {
                     .foregroundColor(tint)
                 Text(title)
                     .font(Theme.bodyFont(size: 14))
-                    .foregroundColor(.white.opacity(0.7))
+                    .foregroundColor(Theme.textSecondary)
             }
             
             DatePicker("", selection: $date, displayedComponents: .hourAndMinute)
@@ -834,7 +834,7 @@ struct GlassTimePicker: View {
                 .fill(.ultraThinMaterial)
                 .overlay(
                     RoundedRectangle(cornerRadius: 20)
-                        .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                        .stroke(Theme.glassBorder.opacity(0.4), lineWidth: 1)
                 )
         )
     }
@@ -849,7 +849,7 @@ struct GlassStepper: View {
         HStack {
             Text(title)
                 .font(Theme.bodyFont(size: 16))
-                .foregroundColor(.white)
+                .foregroundColor(Theme.textPrimary)
             
             Spacer()
             
@@ -862,7 +862,7 @@ struct GlassStepper: View {
                 } label: {
                     Image(systemName: "minus")
                         .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.white)
+                        .foregroundColor(Theme.textPrimary)
                         .frame(width: 32, height: 32)
                 }
                 .modifier(GlassCircleModifier())
@@ -870,7 +870,7 @@ struct GlassStepper: View {
                 
                 Text("\(value)")
                     .font(Theme.titleFont(size: 20))
-                    .foregroundColor(.white)
+                    .foregroundColor(Theme.textPrimary)
                     .frame(minWidth: 30)
                     .contentTransition(.numericText())
                     .animation(.spring(response: 0.3, dampingFraction: 0.8), value: value)
@@ -883,7 +883,7 @@ struct GlassStepper: View {
                 } label: {
                     Image(systemName: "plus")
                         .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.white)
+                        .foregroundColor(Theme.textPrimary)
                         .frame(width: 32, height: 32)
                 }
                 .modifier(GlassCircleModifier())
@@ -896,7 +896,7 @@ struct GlassStepper: View {
                 .fill(.ultraThinMaterial)
                 .overlay(
                     RoundedRectangle(cornerRadius: 20)
-                        .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                        .stroke(Theme.glassBorder.opacity(0.4), lineWidth: 1)
                 )
         )
     }
@@ -919,13 +919,13 @@ struct PermissionButton: View {
                 
                 Text("Enable \(title)")
                     .font(Theme.bodyFont(size: 16))
-                    .foregroundColor(.white)
+                    .foregroundColor(Theme.textPrimary)
                 
                 Spacer()
                 
                 Image(systemName: "chevron.right")
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.white.opacity(0.5))
+                    .foregroundColor(Theme.textTertiary)
             }
             .padding(14)
             .background(
@@ -933,7 +933,7 @@ struct PermissionButton: View {
                     .fill(.ultraThinMaterial)
                     .overlay(
                         RoundedRectangle(cornerRadius: 20)
-                            .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                            .stroke(Theme.glassBorder.opacity(0.4), lineWidth: 1)
                     )
             )
         }

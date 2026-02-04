@@ -20,7 +20,7 @@ struct QuestCard: View {
                     if quest.isCompleted {
                         Image(systemName: "checkmark")
                             .font(.system(size: 16, weight: .bold))
-                            .foregroundColor(Theme.sun)
+                            .foregroundColor(Theme.sunText)
                             .scaleEffect(showCheckmark ? 1 : 0)
                     } else {
                         Image(systemName: questIcon)
@@ -32,12 +32,12 @@ struct QuestCard: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(quest.title)
                         .font(Theme.titleFont(size: 15))
-                        .foregroundColor(.white)
-                        .strikethrough(quest.isCompleted, color: .white.opacity(0.5))
+                        .foregroundColor(Theme.textPrimary)
+                        .strikethrough(quest.isCompleted, color: Theme.textTertiary)
 
                     Text(quest.detail)
                         .font(Theme.bodyFont(size: 12))
-                        .foregroundColor(.white.opacity(0.6))
+                        .foregroundColor(Theme.textSecondary)
                         .lineLimit(2)
                 }
 
@@ -51,7 +51,7 @@ struct QuestCard: View {
                         .font(Theme.bodyFont(size: 11))
                         .fontWeight(.semibold)
                 }
-                .foregroundColor(Theme.sun)
+                .foregroundColor(Theme.sunText)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 6)
                 .background(
@@ -69,7 +69,7 @@ struct QuestCard: View {
                 ZStack(alignment: .leading) {
                     // Background track
                     RoundedRectangle(cornerRadius: 4)
-                        .fill(Color.white.opacity(0.1))
+                        .fill(Theme.glassLight)
 
                     // Progress fill with gradient
                     RoundedRectangle(cornerRadius: 4)
@@ -98,7 +98,7 @@ struct QuestCard: View {
                         .font(Theme.bodyFont(size: 12))
                         .fontWeight(.medium)
                 }
-                .foregroundColor(Theme.sun)
+                .foregroundColor(Theme.sunText)
                 .transition(.asymmetric(
                     insertion: .scale(scale: 0.8).combined(with: .opacity),
                     removal: .opacity

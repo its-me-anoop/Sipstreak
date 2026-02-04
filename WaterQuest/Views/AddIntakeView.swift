@@ -97,11 +97,11 @@ struct AddIntakeView: View {
 
             Text("Log a Drink")
                 .font(Theme.titleFont(size: 28))
-                .foregroundColor(.white)
+                .foregroundColor(Theme.textPrimary)
 
             Text("Stay hydrated, stay healthy")
                 .font(Theme.bodyFont(size: 14))
-                .foregroundColor(.white.opacity(0.6))
+                .foregroundColor(Theme.textSecondary)
         }
     }
 
@@ -112,7 +112,7 @@ struct AddIntakeView: View {
                 // Amount label
                 Text("Amount (\(store.profile.unitSystem.volumeUnit))")
                     .font(Theme.bodyFont(size: 14))
-                    .foregroundColor(.white.opacity(0.7))
+                    .foregroundColor(Theme.textSecondary)
 
                 // Large amount display
                 ZStack {
@@ -130,7 +130,7 @@ struct AddIntakeView: View {
                         .font(.system(size: 64, weight: .bold, design: .rounded))
                         .foregroundStyle(
                             LinearGradient(
-                                colors: [.white, Theme.glassAccent],
+                                colors: [Theme.textPrimary, Theme.lagoon],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
@@ -154,11 +154,11 @@ struct AddIntakeView: View {
                     HStack {
                         Text(String(format: "%.0f", amountRange.lowerBound))
                             .font(Theme.bodyFont(size: 11))
-                            .foregroundColor(.white.opacity(0.4))
+                            .foregroundColor(Theme.textTertiary)
                         Spacer()
                         Text(String(format: "%.0f", amountRange.upperBound))
                             .font(Theme.bodyFont(size: 11))
-                            .foregroundColor(.white.opacity(0.4))
+                            .foregroundColor(Theme.textTertiary)
                     }
                 }
             }
@@ -171,7 +171,7 @@ struct AddIntakeView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Quick Select")
                 .font(Theme.bodyFont(size: 13))
-                .foregroundColor(.white.opacity(0.6))
+                .foregroundColor(Theme.textSecondary)
                 .padding(.leading, 4)
 
             HStack(spacing: 10) {
@@ -198,20 +198,20 @@ struct AddIntakeView: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Add a note (optional)")
                     .font(Theme.bodyFont(size: 13))
-                    .foregroundColor(.white.opacity(0.6))
+                    .foregroundColor(Theme.textSecondary)
 
                 TextField("e.g., Morning coffee, Post-workout...", text: $note)
                     .font(Theme.bodyFont(size: 15))
-                    .foregroundColor(.white)
+                    .foregroundColor(Theme.textPrimary)
                     .tint(Theme.lagoon)
                     .padding(12)
                     .background(
                         RoundedRectangle(cornerRadius: 12)
-                            .fill(Color.white.opacity(0.08))
+                            .fill(Theme.glassLight)
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: 12)
-                            .strokeBorder(Color.white.opacity(0.1), lineWidth: 1)
+                            .strokeBorder(Theme.glassBorder.opacity(0.4), lineWidth: 1)
                     )
             }
             .padding(18)
@@ -259,11 +259,11 @@ struct AddIntakeView: View {
 
                 Text("Logged!")
                     .font(Theme.titleFont(size: 24))
-                    .foregroundColor(.white)
+                    .foregroundColor(Theme.textPrimary)
 
                 Text("+\(String(format: "%.0f", amount)) \(store.profile.unitSystem.volumeUnit)")
                     .font(Theme.bodyFont(size: 16))
-                    .foregroundColor(.white.opacity(0.7))
+                    .foregroundColor(Theme.textSecondary)
             }
             .padding(40)
             .background(
@@ -300,12 +300,12 @@ struct AddIntakeView: View {
             showingSuccess = true
         }
 
-        withAnimation(.spring(response: 0.5, dampingFraction: 0.85)) {
+        let entry = withAnimation(.spring(response: 0.5, dampingFraction: 0.85)) {
             store.addIntake(amount: amount, source: .manual)
         }
 
         Task {
-            await healthKit.saveWaterIntake(ml: store.profile.unitSystem.ml(from: amount))
+            await healthKit.saveWaterIntake(ml: entry.volumeML, date: entry.date, entryID: entry.id)
         }
 
         // Reset after delay
@@ -345,11 +345,11 @@ private struct PresetAmountButton: View {
                 VStack(spacing: 4) {
                     Text("\(amount)")
                         .font(Theme.titleFont(size: 18))
-                        .foregroundColor(.white)
+                        .foregroundColor(Theme.textPrimary)
 
                     Text(unit)
                         .font(Theme.bodyFont(size: 11))
-                        .foregroundColor(.white.opacity(0.6))
+                        .foregroundColor(Theme.textSecondary)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)
@@ -363,7 +363,7 @@ private struct PresetAmountButton: View {
                         .overlay(
                             RoundedRectangle(cornerRadius: 16)
                                 .strokeBorder(
-                                    isSelected ? Theme.lagoon.opacity(0.6) : Color.white.opacity(0.15),
+                                    isSelected ? Theme.lagoon.opacity(0.6) : Theme.glassBorder,
                                     lineWidth: isSelected ? 2 : 1
                                 )
                         )

@@ -59,11 +59,11 @@ struct AchievementsView: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text("Quests & Badges")
                     .font(Theme.titleFont(size: 28))
-                    .foregroundColor(.white)
+                    .foregroundColor(Theme.textPrimary)
 
                 Text("Complete challenges, earn rewards")
                     .font(Theme.bodyFont(size: 14))
-                    .foregroundColor(.white.opacity(0.6))
+                    .foregroundColor(Theme.textSecondary)
             }
 
             Spacer()
@@ -118,18 +118,18 @@ struct AchievementsView: View {
 
                 Text("Today's Quests")
                     .font(Theme.titleFont(size: 18))
-                    .foregroundColor(.white)
+                    .foregroundColor(Theme.textPrimary)
 
                 Spacer()
 
                 Text("\(completedQuests)/\(store.gameState.quests.count)")
                     .font(Theme.bodyFont(size: 13))
-                    .foregroundColor(.white.opacity(0.6))
+                    .foregroundColor(Theme.textSecondary)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 4)
                     .background(
                         Capsule()
-                            .fill(Color.white.opacity(0.1))
+                            .fill(Theme.glassLight)
                     )
             }
 
@@ -159,13 +159,13 @@ struct AchievementsView: View {
 
                 Text("Achievements")
                     .font(Theme.titleFont(size: 18))
-                    .foregroundColor(.white)
+                    .foregroundColor(Theme.textPrimary)
 
                 Spacer()
 
                 Text("\(completedAchievements) unlocked")
                     .font(Theme.bodyFont(size: 13))
-                    .foregroundColor(.white.opacity(0.6))
+                    .foregroundColor(Theme.textSecondary)
             }
 
             LazyVGrid(columns: columns, spacing: 14) {
@@ -202,12 +202,12 @@ private struct RefreshButton: View {
                     )
                     .overlay(
                         Circle()
-                            .strokeBorder(Color.white.opacity(0.2), lineWidth: 1)
+                            .strokeBorder(Theme.glassBorder, lineWidth: 1)
                     )
 
                 Image(systemName: "arrow.clockwise")
                     .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(.white)
+                    .foregroundColor(Theme.textPrimary)
                     .rotationEffect(.degrees(rotation))
             }
             .frame(width: 44, height: 44)
@@ -251,12 +251,12 @@ private struct MiniStatCard: View {
 
                 Text(value)
                     .font(Theme.titleFont(size: 20))
-                    .foregroundColor(.white)
+                    .foregroundColor(Theme.textPrimary)
                     .contentTransition(.numericText())
 
                 Text(label)
                     .font(Theme.bodyFont(size: 11))
-                    .foregroundColor(.white.opacity(0.6))
+                    .foregroundColor(Theme.textSecondary)
                     .lineLimit(1)
             }
             .padding(.vertical, 14)
@@ -320,7 +320,7 @@ private struct EnhancedAchievementBadge: View {
                 Text(achievement.title)
                     .font(Theme.bodyFont(size: 13))
                     .fontWeight(.medium)
-                    .foregroundColor(.white)
+                    .foregroundColor(Theme.textPrimary)
                     .lineLimit(2)
                     .multilineTextAlignment(.center)
 
@@ -336,7 +336,7 @@ private struct EnhancedAchievementBadge: View {
                 } else {
                     Text(achievement.detail)
                         .font(Theme.bodyFont(size: 10))
-                        .foregroundColor(.white.opacity(0.5))
+                        .foregroundColor(Theme.textTertiary)
                         .lineLimit(1)
                 }
             }

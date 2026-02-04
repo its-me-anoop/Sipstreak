@@ -58,11 +58,11 @@ struct InsightsView: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text("Insights")
                     .font(Theme.titleFont(size: 28))
-                    .foregroundColor(.white)
+                    .foregroundColor(Theme.textPrimary)
 
                 Text("Track your hydration journey")
                     .font(Theme.bodyFont(size: 14))
-                    .foregroundColor(.white.opacity(0.6))
+                    .foregroundColor(Theme.textSecondary)
             }
 
             Spacer()
@@ -77,7 +77,7 @@ struct InsightsView: View {
                     )
                     .overlay(
                         Circle()
-                            .strokeBorder(Color.white.opacity(0.2), lineWidth: 1)
+                            .strokeBorder(Theme.glassBorder, lineWidth: 1)
                     )
 
                 Image(systemName: "chart.bar.fill")
@@ -100,7 +100,7 @@ struct InsightsView: View {
 
                     Text("Last 7 Days")
                         .font(Theme.titleFont(size: 18))
-                        .foregroundColor(.white)
+                        .foregroundColor(Theme.textPrimary)
 
                     Spacer()
 
@@ -108,7 +108,7 @@ struct InsightsView: View {
                     let avgML = lastSevenDays.map { $0.totalML }.reduce(0, +) / 7
                     Text("Avg: \(Formatters.shortVolume(ml: avgML, unit: store.profile.unitSystem)) \(store.profile.unitSystem.volumeUnit)")
                         .font(Theme.bodyFont(size: 12))
-                        .foregroundColor(.white.opacity(0.6))
+                        .foregroundColor(Theme.textSecondary)
                 }
 
                 // Bar chart
@@ -142,16 +142,16 @@ struct InsightsView: View {
                             .foregroundColor(Theme.lagoon)
                         Text(fullDateFormatter.string(from: day.date))
                             .font(Theme.bodyFont(size: 13))
-                            .foregroundColor(.white.opacity(0.7))
+                            .foregroundColor(Theme.textSecondary)
                         Spacer()
                         Text(Formatters.volumeString(ml: day.totalML, unit: store.profile.unitSystem))
                             .font(Theme.titleFont(size: 16))
-                            .foregroundColor(.white)
+                            .foregroundColor(Theme.textPrimary)
                     }
                     .padding(12)
                     .background(
                         RoundedRectangle(cornerRadius: 12)
-                            .fill(Color.white.opacity(0.08))
+                            .fill(Theme.glassLight)
                     )
                     .transition(.asymmetric(
                         insertion: .opacity.combined(with: .scale(scale: 0.95)),
@@ -174,7 +174,7 @@ struct InsightsView: View {
 
                     Text("Goal Breakdown")
                         .font(Theme.titleFont(size: 18))
-                        .foregroundColor(.white)
+                        .foregroundColor(Theme.textPrimary)
 
                     Spacer()
                 }
@@ -220,7 +220,7 @@ struct InsightsView: View {
                         Text("Daily Target")
                             .font(Theme.bodyFont(size: 15))
                             .fontWeight(.medium)
-                            .foregroundColor(.white)
+                            .foregroundColor(Theme.textPrimary)
 
                         Spacer()
 
@@ -254,13 +254,13 @@ struct InsightsView: View {
 
                     Text("Recent Logs")
                         .font(Theme.titleFont(size: 18))
-                        .foregroundColor(.white)
+                        .foregroundColor(Theme.textPrimary)
 
                     Spacer()
 
                     Text("\(recentEntries.count) entries")
                         .font(Theme.bodyFont(size: 12))
-                        .foregroundColor(.white.opacity(0.5))
+                        .foregroundColor(Theme.textTertiary)
                 }
 
                 if recentEntries.isEmpty {
@@ -268,15 +268,15 @@ struct InsightsView: View {
                     VStack(spacing: 12) {
                         Image(systemName: "drop.triangle")
                             .font(.system(size: 32))
-                            .foregroundColor(.white.opacity(0.3))
+                            .foregroundColor(Theme.textTertiary)
 
                         Text("No entries yet")
                             .font(Theme.bodyFont(size: 14))
-                            .foregroundColor(.white.opacity(0.5))
+                            .foregroundColor(Theme.textTertiary)
 
                         Text("Log your first drink to see it here")
                             .font(Theme.bodyFont(size: 12))
-                            .foregroundColor(.white.opacity(0.4))
+                            .foregroundColor(Theme.textTertiary)
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 20)
@@ -290,7 +290,7 @@ struct InsightsView: View {
 
                         if index < recentEntries.count - 1 {
                             Rectangle()
-                                .fill(Color.white.opacity(0.06))
+                                .fill(Theme.glassBorder.opacity(0.4))
                                 .frame(height: 1)
                         }
                     }
@@ -354,7 +354,7 @@ private struct DayBarView: View {
                 ZStack(alignment: .bottom) {
                     // Background bar
                     RoundedRectangle(cornerRadius: 8)
-                        .fill(Color.white.opacity(0.1))
+                        .fill(Theme.glassLight)
                         .frame(height: 100)
 
                     // Progress bar
@@ -382,7 +382,7 @@ private struct DayBarView: View {
 
                 Text(day.label)
                     .font(Theme.bodyFont(size: 11))
-                    .foregroundColor(isSelected ? .white : .white.opacity(0.6))
+                    .foregroundColor(isSelected ? Theme.textPrimary : Theme.textSecondary)
             }
             .scaleEffect(isPressed ? 0.95 : 1)
         }
@@ -421,7 +421,7 @@ private struct GoalBreakdownRow: View {
 
             Text(label)
                 .font(Theme.bodyFont(size: 14))
-                .foregroundColor(.white.opacity(0.7))
+                .foregroundColor(Theme.textSecondary)
 
             Spacer()
 
@@ -433,7 +433,7 @@ private struct GoalBreakdownRow: View {
                 .foregroundColor(value >= 0 ? Theme.mint : Theme.coral) +
             Text(" \(unitSystem.volumeUnit)")
                 .font(Theme.bodyFont(size: 12))
-                .foregroundColor(.white.opacity(0.5))
+                .foregroundColor(Theme.textTertiary)
         }
     }
 }
@@ -477,11 +477,11 @@ private struct RecentLogRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(timeFormatter.string(from: entry.date))
                     .font(Theme.bodyFont(size: 13))
-                    .foregroundColor(.white)
+                    .foregroundColor(Theme.textPrimary)
 
                 Text(entry.source.rawValue.capitalized)
                     .font(Theme.bodyFont(size: 11))
-                    .foregroundColor(.white.opacity(0.5))
+                    .foregroundColor(Theme.textTertiary)
             }
 
             Spacer()

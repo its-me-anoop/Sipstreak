@@ -10,20 +10,20 @@ struct AchievementBadgeView: View {
         VStack(spacing: 8) {
             ZStack {
                 Circle()
-                    .fill(achievement.isUnlocked ? Theme.sun : Color.white.opacity(0.12))
+                    .fill(achievement.isUnlocked ? Theme.sun : Theme.glassLight)
                     .frame(width: 56, height: 56)
                 Image(systemName: achievement.isUnlocked ? "sparkles" : "lock.fill")
-                    .foregroundColor(achievement.isUnlocked ? .black : .white.opacity(0.7))
+                    .foregroundColor(achievement.isUnlocked ? .black : Theme.textSecondary)
                     .rotationEffect(.degrees(twinkle && achievement.isUnlocked ? 12 : 0))
                     .scaleEffect(twinkle && achievement.isUnlocked ? 1.06 : 1.0)
                     .animation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true), value: twinkle)
             }
             Text(achievement.title)
                 .font(Theme.bodyFont(size: 12))
-                .foregroundColor(.white)
+                .foregroundColor(Theme.textPrimary)
             Text(achievement.detail)
                 .font(Theme.bodyFont(size: 10))
-                .foregroundColor(.white.opacity(0.6))
+                .foregroundColor(Theme.textSecondary)
                 .multilineTextAlignment(.center)
         }
         .padding(10)

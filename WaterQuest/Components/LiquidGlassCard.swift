@@ -77,8 +77,8 @@ struct LiquidGlassButton: View {
 
         var textColor: Color {
             switch self {
-            case .primary, .accent: return .white
-            case .secondary: return .white.opacity(0.9)
+            case .primary, .accent: return Theme.textPrimary
+            case .secondary: return Theme.textSecondary
             }
         }
     }
@@ -142,17 +142,7 @@ struct LiquidGlassButton: View {
                     )
                     .overlay(
                         Capsule()
-                            .strokeBorder(
-                                LinearGradient(
-                                    colors: [
-                                        Color.white.opacity(0.3),
-                                        Color.white.opacity(0.1)
-                                    ],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                ),
-                                lineWidth: 1
-                            )
+                            .strokeBorder(Theme.glassBorder, lineWidth: 1)
                     )
             )
             .shadow(color: style.tintColor.opacity(0.3), radius: 8, x: 0, y: 4)
@@ -201,11 +191,11 @@ struct FluidStatCard: View {
 
                 Text(label)
                     .font(Theme.bodyFont(size: 12))
-                    .foregroundColor(.white.opacity(0.6))
+                    .foregroundColor(Theme.textSecondary)
 
                 Text(animatedValue)
                     .font(Theme.titleFont(size: 20))
-                    .foregroundColor(.white)
+                    .foregroundColor(Theme.textPrimary)
                     .contentTransition(.numericText())
             }
             .padding(16)
@@ -254,7 +244,7 @@ struct QuickAddPill: View {
                 Text("+\(amount) \(unit)")
                     .font(Theme.bodyFont(size: 14))
                     .fontWeight(.medium)
-                    .foregroundColor(.white)
+                    .foregroundColor(Theme.textPrimary)
                     .padding(.vertical, 12)
                     .padding(.horizontal, 16)
                     .background(
@@ -266,10 +256,7 @@ struct QuickAddPill: View {
                             )
                             .overlay(
                                 Capsule()
-                                    .strokeBorder(
-                                        Color.white.opacity(0.2),
-                                        lineWidth: 1
-                                    )
+                                    .strokeBorder(Theme.glassBorder, lineWidth: 1)
                             )
                     )
                     .shadow(color: Theme.lagoon.opacity(0.2), radius: 6, x: 0, y: 3)
@@ -328,10 +315,10 @@ struct WaveDivider: View {
                     VStack(spacing: 12) {
                         Text("Liquid Glass Card")
                             .font(Theme.titleFont(size: 20))
-                            .foregroundColor(.white)
+                            .foregroundColor(Theme.textPrimary)
                         Text("Beautiful fluid effects")
                             .font(Theme.bodyFont(size: 14))
-                            .foregroundColor(.white.opacity(0.7))
+                            .foregroundColor(Theme.textSecondary)
                     }
                     .padding(24)
                 }

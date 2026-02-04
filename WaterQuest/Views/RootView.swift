@@ -184,7 +184,9 @@ private extension View {
 struct RootView: View {
     @AppStorage("hasOnboarded") private var hasOnboarded: Bool = false
     @EnvironmentObject private var store: HydrationStore
+    @EnvironmentObject private var subscriptionManager: SubscriptionManager
     @State private var showSplash = true
+    @State private var showTrialExpiredPaywall = false
 
     var body: some View {
         content
@@ -193,6 +195,16 @@ struct RootView: View {
                 try? await Task.sleep(for: .seconds(1.4))
                 withAnimation(.easeOut(duration: 0.35)) {
                     showSplash = false
+                }
+                // After splash: if onboarded and trial expired, show paywall
+                if hasOnboarded && !subscriptionManager.isPro {
+                    showTrialExpiredPaywall = true
+                }
+            }
+            // Re-check whenever subscription status changes (e.g. restore on re-launch)
+            .onChange(of: subscriptionManager.isPro) { _, isPro in
+                if isPro {
+                    showTrialExpiredPaywall = false
                 }
             }
     }
@@ -224,5 +236,8 @@ struct RootView: View {
             }
         }
         .animation(.spring(response: 0.45, dampingFraction: 0.82), value: store.activeAchievement)
+        .sheet(isPresented: $showTrialExpiredPaywall) {
+            PaywallView(isDismissible: true)
+        }
     }
 }

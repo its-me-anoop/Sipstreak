@@ -44,7 +44,8 @@ final class HydrationStore: ObservableObject {
         todayEntries.reduce(0) { $0 + $1.volumeML }
     }
 
-    func addIntake(amount: Double, unitSystem: UnitSystem? = nil, source: HydrationSource = .manual) {
+    @discardableResult
+    func addIntake(amount: Double, unitSystem: UnitSystem? = nil, source: HydrationSource = .manual) -> HydrationEntry {
         let previouslyUnlocked = Set(gameState.achievements.filter { $0.isUnlocked }.map { $0.id })
         let units = unitSystem ?? profile.unitSystem
         let ml = units.ml(from: amount)
@@ -56,10 +57,20 @@ final class HydrationStore: ObservableObject {
         persist()
         let newlyUnlocked = gameState.achievements.filter { $0.isUnlocked && !previouslyUnlocked.contains($0.id) }
         enqueueAchievements(newlyUnlocked)
+        return entry
     }
 
     func deleteEntry(_ entry: HydrationEntry) {
         entries.removeAll { $0.id == entry.id }
+        GamificationEngine.refreshDailyQuests(state: &gameState, goalML: dailyGoal.totalML)
+        persist()
+    }
+
+    func updateEntry(id: UUID, volumeML: Double, note: String?) {
+        guard let index = entries.firstIndex(where: { $0.id == id }) else { return }
+        entries[index].volumeML = volumeML
+        entries[index].note = note
+        GamificationEngine.refreshDailyQuests(state: &gameState, goalML: dailyGoal.totalML)
         persist()
     }
 
@@ -78,6 +89,14 @@ final class HydrationStore: ObservableObject {
 
     func updateWorkout(_ summary: WorkoutSummary) {
         lastWorkout = summary
+        persist()
+    }
+
+    func syncHealthKitEntries(_ healthKitEntries: [HydrationEntry], for date: Date = Date()) {
+        entries.removeAll { $0.source == .healthKit && $0.date.isSameDay(as: date) }
+        entries.append(contentsOf: healthKitEntries)
+        entries.sort { $0.date < $1.date }
+        GamificationEngine.refreshDailyQuests(state: &gameState, goalML: dailyGoal.totalML)
         persist()
     }
 

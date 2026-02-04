@@ -22,11 +22,7 @@ struct ProgressRing: View {
             // Background ring with subtle gradient
             Circle()
                 .stroke(
-                    LinearGradient(
-                        colors: [Color.white.opacity(0.12), Color.white.opacity(0.06)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
+                    Theme.glassBorder.opacity(0.5),
                     lineWidth: lineWidth
                 )
 

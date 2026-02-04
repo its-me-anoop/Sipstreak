@@ -30,6 +30,10 @@ struct SettingsView: View {
                         .offset(y: appearAnimation ? 0 : 20)
                         .opacity(appearAnimation ? 1 : 0)
 
+                    appearanceSection
+                        .offset(y: appearAnimation ? 0 : 22)
+                        .opacity(appearAnimation ? 1 : 0)
+
                     goalSection
                         .offset(y: appearAnimation ? 0 : 25)
                         .opacity(appearAnimation ? 1 : 0)
@@ -74,10 +78,10 @@ struct SettingsView: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text("Settings")
                     .font(Theme.titleFont(size: 28))
-                    .foregroundColor(.white)
+                    .foregroundColor(Theme.textPrimary)
                 Text("Fine-tune your daily hydration flow")
                     .font(Theme.bodyFont(size: 14))
-                    .foregroundColor(.white.opacity(0.65))
+                    .foregroundColor(Theme.textSecondary)
             }
             Spacer()
             ZStack {
@@ -89,7 +93,7 @@ struct SettingsView: View {
                     )
                     .overlay(
                         Circle()
-                            .strokeBorder(Color.white.opacity(0.2), lineWidth: 1)
+                            .strokeBorder(Theme.glassBorder, lineWidth: 1)
                     )
                 Image(systemName: "slider.horizontal.3")
                     .font(.system(size: 18, weight: .semibold))
@@ -124,7 +128,7 @@ struct SettingsView: View {
             HStack {
                 Text("Weight")
                     .font(Theme.bodyFont(size: 14))
-                    .foregroundColor(.white)
+                    .foregroundColor(Theme.textPrimary)
                 Spacer()
                 valuePill("\(weightValue) \(unit.bodyWeightUnit)", color: Theme.mint)
             }
@@ -147,7 +151,7 @@ struct SettingsView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Units")
                 .font(Theme.bodyFont(size: 13))
-                .foregroundColor(.white.opacity(0.6))
+                .foregroundColor(Theme.textSecondary)
 
             Picker("Units", selection: binding(get: { store.profile.unitSystem }, set: { value in
                 store.updateProfile { $0.unitSystem = value }
@@ -159,6 +163,16 @@ struct SettingsView: View {
             .tint(Theme.lagoon)
             .onChange(of: store.profile.unitSystem) {
                 Haptics.selection()
+            }
+        }
+    }
+
+    private var appearanceSection: some View {
+        glassSection(title: "Appearance", subtitle: "Light, dark, or follow your system", systemImage: "circle.half.fill", iconTint: Theme.lagoon) {
+            HStack(spacing: 10) {
+                ForEach(AppTheme.allCases) { theme in
+                    AppearanceOptionButton(theme: theme)
+                }
             }
         }
     }
@@ -186,7 +200,7 @@ struct SettingsView: View {
                     HStack {
                         Text("Daily goal")
                             .font(Theme.bodyFont(size: 14))
-                            .foregroundColor(.white)
+                            .foregroundColor(Theme.textPrimary)
                         Spacer()
                         valuePill("\(String(format: "%.0f", customGoalValue)) \(store.profile.unitSystem.volumeUnit)", color: Theme.sun)
                     }
@@ -198,7 +212,7 @@ struct SettingsView: View {
                         .tint(Theme.sun)
                     Text("Updates immediately and feeds quests")
                         .font(Theme.bodyFont(size: 12))
-                        .foregroundColor(.white.opacity(0.55))
+                        .foregroundColor(Theme.textTertiary)
                         .onChange(of: customGoalValue) { _, value in
                             store.updateProfile { profile in
                                 profile.customGoalML = profile.unitSystem.ml(from: value)
@@ -259,7 +273,7 @@ struct SettingsView: View {
                 HStack {
                     Text("Reminders per day")
                         .font(Theme.bodyFont(size: 14))
-                        .foregroundColor(.white)
+                        .foregroundColor(Theme.textPrimary)
                     Spacer()
                     valuePill("\(store.profile.dailyReminderCount)", color: Theme.lagoon)
                 }
@@ -302,10 +316,10 @@ struct SettingsView: View {
                     VStack(alignment: .leading, spacing: 3) {
                         Text(title)
                             .font(Theme.titleFont(size: 16))
-                            .foregroundColor(.white)
+                            .foregroundColor(Theme.textPrimary)
                         Text(subtitle)
                             .font(Theme.bodyFont(size: 12))
-                            .foregroundColor(.white.opacity(0.6))
+                            .foregroundColor(Theme.textSecondary)
                     }
                     Spacer()
                 }
@@ -320,20 +334,20 @@ struct SettingsView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .font(Theme.bodyFont(size: 13))
-                .foregroundColor(.white.opacity(0.6))
+                .foregroundColor(Theme.textSecondary)
             TextField(placeholder, text: text)
                 .font(Theme.bodyFont(size: 15))
-                .foregroundColor(.white)
+                .foregroundColor(Theme.textPrimary)
                 .textInputAutocapitalization(.words)
                 .disableAutocorrection(true)
                 .padding(12)
                 .background(
                     RoundedRectangle(cornerRadius: 14)
-                        .fill(Color.white.opacity(0.08))
+                        .fill(Theme.glassLight)
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: 14)
-                        .strokeBorder(Color.white.opacity(0.1), lineWidth: 1)
+                        .strokeBorder(Theme.glassBorder.opacity(0.4), lineWidth: 1)
                 )
                 .tint(Theme.mint)
         }
@@ -344,10 +358,10 @@ struct SettingsView: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text(title)
                     .font(Theme.bodyFont(size: 14))
-                    .foregroundColor(.white)
+                    .foregroundColor(Theme.textPrimary)
                 Text(subtitle)
                     .font(Theme.bodyFont(size: 12))
-                    .foregroundColor(.white.opacity(0.6))
+                    .foregroundColor(Theme.textSecondary)
             }
         }
         .toggleStyle(SwitchToggleStyle(tint: tint))
@@ -363,25 +377,25 @@ struct SettingsView: View {
                 VStack(alignment: .leading, spacing: 3) {
                     Text(title)
                         .font(Theme.bodyFont(size: 14))
-                        .foregroundColor(.white)
+                        .foregroundColor(Theme.textPrimary)
                     Text(subtitle)
                         .font(Theme.bodyFont(size: 12))
-                        .foregroundColor(.white.opacity(0.6))
+                        .foregroundColor(Theme.textSecondary)
                 }
                 Spacer()
                 statusBadge(status.text, color: status.color)
                 Image(systemName: "chevron.right")
                     .font(.system(size: 12, weight: .semibold))
-                    .foregroundColor(.white.opacity(0.3))
+                    .foregroundColor(Theme.textTertiary)
             }
             .padding(12)
             .background(
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(Color.white.opacity(0.05))
+                    .fill(Theme.glassLight)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
-                    .strokeBorder(Color.white.opacity(0.06), lineWidth: 1)
+                    .strokeBorder(Theme.glassBorder.opacity(0.25), lineWidth: 1)
             )
         }
         .buttonStyle(.plain)
@@ -429,7 +443,7 @@ struct SettingsView: View {
                 iconBubble(systemImage: systemImage, tint: tint)
                 Text(title)
                     .font(Theme.bodyFont(size: 13))
-                    .foregroundColor(.white.opacity(0.7))
+                    .foregroundColor(Theme.textSecondary)
             }
             DatePicker("", selection: date, displayedComponents: .hourAndMinute)
                 .datePickerStyle(.compact)
@@ -443,17 +457,17 @@ struct SettingsView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 18)
-                .fill(Color.white.opacity(0.06))
+                .fill(Theme.glassLight)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 18)
-                .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
+                .strokeBorder(Theme.glassBorder.opacity(0.3), lineWidth: 1)
         )
     }
 
     private var rowDivider: some View {
         Rectangle()
-            .fill(Color.white.opacity(0.08))
+            .fill(Theme.glassBorder.opacity(0.4))
             .frame(height: 1)
     }
 
@@ -467,35 +481,35 @@ struct SettingsView: View {
             return StatusIndicator(text: "Unavailable", color: Theme.coral)
         }
         return healthKit.isAuthorized
-            ? StatusIndicator(text: "Connected", color: Theme.mint)
-            : StatusIndicator(text: "Not Connected", color: Theme.sun)
+            ? StatusIndicator(text: "Connected", color: Theme.mintText)
+            : StatusIndicator(text: "Not Connected", color: Theme.sunText)
     }
 
     private var locationStatus: StatusIndicator {
         switch locationManager.authorizationStatus {
         case .authorizedAlways, .authorizedWhenInUse:
-            return StatusIndicator(text: "Enabled", color: Theme.mint)
+            return StatusIndicator(text: "Enabled", color: Theme.mintText)
         case .denied:
             return StatusIndicator(text: "Denied", color: Theme.coral)
         case .restricted:
             return StatusIndicator(text: "Restricted", color: Theme.coral)
         case .notDetermined:
-            return StatusIndicator(text: "Not Set", color: Theme.sun)
+            return StatusIndicator(text: "Not Set", color: Theme.sunText)
         @unknown default:
-            return StatusIndicator(text: "Unknown", color: .white.opacity(0.7))
+            return StatusIndicator(text: "Unknown", color: Theme.textTertiary)
         }
     }
 
     private var notificationStatus: StatusIndicator {
         switch notifier.authorizationStatus {
         case .authorized, .provisional, .ephemeral:
-            return StatusIndicator(text: "Enabled", color: Theme.mint)
+            return StatusIndicator(text: "Enabled", color: Theme.mintText)
         case .denied:
             return StatusIndicator(text: "Denied", color: Theme.coral)
         case .notDetermined:
-            return StatusIndicator(text: "Not Set", color: Theme.sun)
+            return StatusIndicator(text: "Not Set", color: Theme.sunText)
         @unknown default:
-            return StatusIndicator(text: "Unknown", color: .white.opacity(0.7))
+            return StatusIndicator(text: "Unknown", color: Theme.textTertiary)
         }
     }
 
@@ -522,6 +536,44 @@ struct SettingsView: View {
         let hour = minutes / 60
         let minute = minutes % 60
         return Calendar.current.date(bySettingHour: hour, minute: minute, second: 0, of: Date()) ?? Date()
+    }
+}
+
+// MARK: - Appearance Option Button
+private struct AppearanceOptionButton: View {
+    let theme: AppTheme
+    @AppStorage("appTheme") private var appTheme: AppTheme = .system
+
+    private var isSelected: Bool { appTheme == theme }
+
+    var body: some View {
+        Button {
+            appTheme = theme
+            Haptics.selection()
+        } label: {
+            VStack(spacing: 6) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(isSelected ? Theme.lagoon.opacity(0.18) : Theme.glassLight)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .strokeBorder(
+                                    isSelected ? Theme.lagoon : Theme.glassBorder,
+                                    lineWidth: isSelected ? 2 : 1
+                                )
+                        )
+                    Image(systemName: theme.icon)
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundColor(isSelected ? Theme.lagoon : Theme.textSecondary)
+                }
+                .frame(width: 52, height: 52)
+
+                Text(theme.label)
+                    .font(Theme.bodyFont(size: 12))
+                    .foregroundColor(isSelected ? Theme.lagoon : Theme.textSecondary)
+            }
+        }
+        .buttonStyle(.plain)
     }
 }
 

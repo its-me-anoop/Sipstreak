@@ -19,11 +19,11 @@ struct StatPill: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text(label)
                     .font(Theme.bodyFont(size: 11))
-                    .foregroundColor(.white.opacity(0.5))
+                    .foregroundColor(Theme.textTertiary)
 
                 Text(animatedValue)
                     .font(Theme.titleFont(size: 16))
-                    .foregroundColor(.white)
+                    .foregroundColor(Theme.textPrimary)
                     .contentTransition(.numericText())
             }
         }
