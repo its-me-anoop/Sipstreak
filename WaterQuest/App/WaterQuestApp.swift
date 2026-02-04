@@ -28,8 +28,10 @@ struct WaterQuestApp: App {
             .environmentObject(weatherClient)
             .preferredColorScheme(.dark)
             .task {
+                store.notificationScheduler = notifier
                 await notifier.refreshAuthorizationStatus()
                 locationManager.requestLocation()
+                notifier.scheduleReminders(profile: store.profile, entries: store.entries, goalML: store.dailyGoal.totalML)
             }
         }
     }

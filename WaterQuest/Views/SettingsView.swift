@@ -14,24 +14,39 @@ struct SettingsView: View {
     @State private var customGoalValue: Double = 2200
     @State private var wakeTime: Date = Date()
     @State private var sleepTime: Date = Date()
+    @State private var appearAnimation = false
 
     var body: some View {
         ZStack(alignment: .top) {
-            Theme.background.ignoresSafeArea()
+            // Animated background
+            SettingsBackground()
+                .ignoresSafeArea()
 
-            ScrollView {
+            ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 18) {
                     header
+                        .offset(y: appearAnimation ? 0 : -20)
+                        .opacity(appearAnimation ? 1 : 0)
 
                     profileSection
+                        .offset(y: appearAnimation ? 0 : 20)
+                        .opacity(appearAnimation ? 1 : 0)
 
                     goalSection
+                        .offset(y: appearAnimation ? 0 : 25)
+                        .opacity(appearAnimation ? 1 : 0)
 
                     scheduleSection
+                        .offset(y: appearAnimation ? 0 : 30)
+                        .opacity(appearAnimation ? 1 : 0)
 
                     remindersSection
+                        .offset(y: appearAnimation ? 0 : 35)
+                        .opacity(appearAnimation ? 1 : 0)
 
                     permissionsSection
+                        .offset(y: appearAnimation ? 0 : 40)
+                        .opacity(appearAnimation ? 1 : 0)
                 }
                 .padding(.horizontal, 20)
                 .padding(.bottom, 40)
@@ -51,6 +66,10 @@ struct SettingsView: View {
             wakeTime = dateFromMinutes(store.profile.wakeMinutes)
             sleepTime = dateFromMinutes(store.profile.sleepMinutes)
             Task { await notifier.refreshAuthorizationStatus() }
+
+            withAnimation(Theme.fluidSpring.delay(0.1)) {
+                appearAnimation = true
+            }
         }
     }
 
@@ -67,17 +86,26 @@ struct SettingsView: View {
             Spacer()
             ZStack {
                 Circle()
-                    .fill(Theme.lagoon.opacity(0.2))
+                    .fill(.ultraThinMaterial)
+                    .overlay(
+                        Circle()
+                            .fill(Theme.lagoon.opacity(0.2))
+                    )
+                    .overlay(
+                        Circle()
+                            .strokeBorder(Color.white.opacity(0.2), lineWidth: 1)
+                    )
                 Image(systemName: "slider.horizontal.3")
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundColor(Theme.lagoon)
             }
             .frame(width: 44, height: 44)
+            .shadow(color: Theme.lagoon.opacity(0.3), radius: 8, x: 0, y: 4)
         }
     }
 
     private var profileSection: some View {
-        section(title: "Profile", subtitle: "Personal details and unit preferences", systemImage: "person.fill", iconTint: Theme.mint) {
+        glassSection(title: "Profile", subtitle: "Personal details and unit preferences", systemImage: "person.fill", iconTint: Theme.mint) {
             labeledTextField(title: "Name", placeholder: "Your name", text: binding(get: { store.profile.name }, set: { newValue in
                 store.updateProfile { $0.name = newValue }
             }))
@@ -140,7 +168,7 @@ struct SettingsView: View {
     }
 
     private var goalSection: some View {
-        section(title: "Goal", subtitle: "Daily target and adjustments", systemImage: "target", iconTint: Theme.sun) {
+        glassSection(title: "Goal", subtitle: "Daily target and adjustments", systemImage: "target", iconTint: Theme.sun) {
             toggleRow(title: "Use custom goal", subtitle: "Set a personalized daily target", isOn: Binding(
                 get: { customGoalEnabled },
                 set: { enabled in
@@ -206,7 +234,7 @@ struct SettingsView: View {
                     .font(Theme.bodyFont(size: 14))
                     .foregroundColor(.white)
                 Spacer()
-                valuePill("\(Int(manualTemp))°C · \(Int(manualHumidity))%", color: Theme.lagoon)
+                valuePill("\(Int(manualTemp))\u{00B0}C \u{00B7} \(Int(manualHumidity))%", color: Theme.lagoon)
             }
 
             VStack(alignment: .leading, spacing: 8) {
@@ -233,25 +261,27 @@ struct SettingsView: View {
 
             HStack {
                 Spacer()
-                Button("Apply") {
+                LiquidGlassButton("Apply", icon: "checkmark", style: .primary, size: .small) {
                     let snapshot = WeatherSnapshot(temperatureC: manualTemp, humidityPercent: manualHumidity, condition: "Manual")
                     withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
                         store.updateManualWeather(snapshot)
                     }
                 }
-                .font(Theme.bodyFont(size: 13))
-                .buttonStyle(.bordered)
-                .tint(Theme.lagoon)
-                .hapticTap()
             }
         }
-        .padding(12)
-        .background(RoundedRectangle(cornerRadius: 16).fill(Color.white.opacity(0.08)))
-        .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.white.opacity(0.06)))
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color.white.opacity(0.06))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
+        )
     }
 
     private var scheduleSection: some View {
-        section(title: "Schedule", subtitle: "Set your daily window", systemImage: "clock.fill", iconTint: Theme.lagoon) {
+        glassSection(title: "Schedule", subtitle: "Set your daily window", systemImage: "clock.fill", iconTint: Theme.lagoon) {
             HStack(spacing: 12) {
                 timePicker(title: "Wake", systemImage: "sunrise.fill", tint: Theme.sun, date: $wakeTime)
                 timePicker(title: "Sleep", systemImage: "moon.stars.fill", tint: Theme.mint, date: $sleepTime)
@@ -262,17 +292,24 @@ struct SettingsView: View {
     }
 
     private var remindersSection: some View {
-        section(title: "Reminders", subtitle: "Gentle nudges throughout the day", systemImage: "bell.fill", iconTint: Theme.lagoon) {
+        glassSection(title: "Reminders", subtitle: "Gentle nudges throughout the day", systemImage: "bell.fill", iconTint: Theme.lagoon) {
             toggleRow(title: "Enable reminders", subtitle: "Stay on track with timed alerts", isOn: binding(get: { store.profile.remindersEnabled }, set: { value in
                 store.updateProfile { $0.remindersEnabled = value }
-                notifier.scheduleReminders(profile: store.profile)
+                notifier.scheduleReminders(profile: store.profile, entries: store.entries, goalML: store.dailyGoal.totalML)
+            }), tint: Theme.lagoon)
+
+            rowDivider
+
+            toggleRow(title: "Smart reminders", subtitle: "Skip when active, nudge when quiet", isOn: binding(get: { store.profile.smartRemindersEnabled }, set: { value in
+                store.updateProfile { $0.smartRemindersEnabled = value }
+                notifier.scheduleReminders(profile: store.profile, entries: store.entries, goalML: store.dailyGoal.totalML)
             }), tint: Theme.lagoon)
 
             rowDivider
 
             Stepper(value: binding(get: { store.profile.dailyReminderCount }, set: { value in
                 store.updateProfile { $0.dailyReminderCount = value }
-                notifier.scheduleReminders(profile: store.profile)
+                notifier.scheduleReminders(profile: store.profile, entries: store.entries, goalML: store.dailyGoal.totalML)
             }), in: 3...12) {
                 HStack {
                     Text("Reminders per day")
@@ -290,7 +327,7 @@ struct SettingsView: View {
     }
 
     private var permissionsSection: some View {
-        section(title: "Permissions", subtitle: "Connect health, weather, and alerts", systemImage: "lock.shield.fill", iconTint: Theme.coral) {
+        glassSection(title: "Permissions", subtitle: "Connect health, weather, and alerts", systemImage: "lock.shield.fill", iconTint: Theme.coral) {
             permissionRow(title: "HealthKit", subtitle: "Sync workouts and water logs", systemImage: "heart.fill", status: healthStatus) {
                 Task { await healthKit.requestAuthorization() }
             }
@@ -305,32 +342,33 @@ struct SettingsView: View {
         }
     }
 
-    private func section<Content: View>(
+    // MARK: - Section Builder with Liquid Glass
+    private func glassSection<Content: View>(
         title: String,
         subtitle: String,
         systemImage: String,
         iconTint: Color = Theme.lagoon,
         @ViewBuilder content: () -> Content
     ) -> some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack(spacing: 12) {
-                iconBubble(systemImage: systemImage, tint: iconTint)
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(title)
-                        .font(Theme.titleFont(size: 16))
-                        .foregroundColor(.white)
-                    Text(subtitle)
-                        .font(Theme.bodyFont(size: 12))
-                        .foregroundColor(.white.opacity(0.6))
+        LiquidGlassCard(cornerRadius: 22, tintColor: iconTint.opacity(0.3), isInteractive: false) {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack(spacing: 12) {
+                    iconBubble(systemImage: systemImage, tint: iconTint)
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(title)
+                            .font(Theme.titleFont(size: 16))
+                            .foregroundColor(.white)
+                        Text(subtitle)
+                            .font(Theme.bodyFont(size: 12))
+                            .foregroundColor(.white.opacity(0.6))
+                    }
+                    Spacer()
                 }
-                Spacer()
-            }
 
-            content()
+                content()
+            }
+            .padding(16)
         }
-        .padding(16)
-        .background(RoundedRectangle(cornerRadius: 22).fill(Theme.card))
-        .overlay(RoundedRectangle(cornerRadius: 22).stroke(Color.white.opacity(0.08)))
     }
 
     private func labeledTextField(title: String, placeholder: String, text: Binding<String>) -> some View {
@@ -344,8 +382,14 @@ struct SettingsView: View {
                 .textInputAutocapitalization(.words)
                 .disableAutocorrection(true)
                 .padding(12)
-                .background(RoundedRectangle(cornerRadius: 14).fill(Color.white.opacity(0.1)))
-                .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.white.opacity(0.08)))
+                .background(
+                    RoundedRectangle(cornerRadius: 14)
+                        .fill(Color.white.opacity(0.08))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14)
+                        .strokeBorder(Color.white.opacity(0.1), lineWidth: 1)
+                )
                 .tint(Theme.mint)
         }
     }
@@ -386,8 +430,14 @@ struct SettingsView: View {
                     .foregroundColor(.white.opacity(0.3))
             }
             .padding(12)
-            .background(RoundedRectangle(cornerRadius: 16).fill(Color.white.opacity(0.06)))
-            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.white.opacity(0.08)))
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color.white.opacity(0.05))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .strokeBorder(Color.white.opacity(0.06), lineWidth: 1)
+            )
         }
         .buttonStyle(.plain)
         .hapticTap()
@@ -409,7 +459,10 @@ struct SettingsView: View {
             .font(Theme.bodyFont(size: 12))
             .padding(.vertical, 4)
             .padding(.horizontal, 10)
-            .background(Capsule().fill(color.opacity(0.2)))
+            .background(
+                Capsule()
+                    .fill(color.opacity(0.2))
+            )
             .foregroundColor(color)
     }
 
@@ -418,7 +471,10 @@ struct SettingsView: View {
             .font(Theme.bodyFont(size: 11))
             .padding(.vertical, 4)
             .padding(.horizontal, 8)
-            .background(Capsule().fill(color.opacity(0.18)))
+            .background(
+                Capsule()
+                    .fill(color.opacity(0.18))
+            )
             .foregroundColor(color)
     }
 
@@ -440,8 +496,14 @@ struct SettingsView: View {
         }
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(RoundedRectangle(cornerRadius: 18).fill(Color.white.opacity(0.08)))
-        .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color.white.opacity(0.08)))
+        .background(
+            RoundedRectangle(cornerRadius: 18)
+                .fill(Color.white.opacity(0.06))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 18)
+                .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
+        )
     }
 
     private var rowDivider: some View {
@@ -503,7 +565,7 @@ struct SettingsView: View {
             profile.wakeMinutes = wakeMinutes
             profile.sleepMinutes = sleepMinutes
         }
-        notifier.scheduleReminders(profile: store.profile)
+        notifier.scheduleReminders(profile: store.profile, entries: store.entries, goalML: store.dailyGoal.totalML)
     }
 
     private func minutes(from date: Date) -> Int {
@@ -515,5 +577,58 @@ struct SettingsView: View {
         let hour = minutes / 60
         let minute = minutes % 60
         return Calendar.current.date(bySettingHour: hour, minute: minute, second: 0, of: Date()) ?? Date()
+    }
+}
+
+// MARK: - Settings Background
+private struct SettingsBackground: View {
+    @State private var gradientRotation: Double = 0
+
+    var body: some View {
+        ZStack {
+            Theme.background
+
+            // Rotating gradient orbs
+            GeometryReader { geometry in
+                ZStack {
+                    Circle()
+                        .fill(
+                            RadialGradient(
+                                colors: [Theme.lagoon.opacity(0.15), Color.clear],
+                                center: .center,
+                                startRadius: 0,
+                                endRadius: 200
+                            )
+                        )
+                        .frame(width: 400, height: 400)
+                        .offset(x: -100, y: -50)
+                        .rotationEffect(.degrees(gradientRotation))
+
+                    Circle()
+                        .fill(
+                            RadialGradient(
+                                colors: [Theme.mint.opacity(0.1), Color.clear],
+                                center: .center,
+                                startRadius: 0,
+                                endRadius: 150
+                            )
+                        )
+                        .frame(width: 300, height: 300)
+                        .offset(x: geometry.size.width - 100, y: geometry.size.height - 200)
+                        .rotationEffect(.degrees(-gradientRotation * 0.5))
+                }
+            }
+        }
+        .onAppear {
+            withAnimation(.linear(duration: 30).repeatForever(autoreverses: false)) {
+                gradientRotation = 360
+            }
+        }
+    }
+}
+
+#Preview("Settings") {
+    PreviewEnvironment {
+        SettingsView()
     }
 }

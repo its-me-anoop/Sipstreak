@@ -30,7 +30,8 @@ final class WeatherClient: ObservableObject {
             let weather = try await weatherService.weather(for: location)
             let tempC = weather.currentWeather.temperature.converted(to: .celsius).value
             let humidity = weather.currentWeather.humidity * 100
-            let snapshot = WeatherSnapshot(temperatureC: tempC, humidityPercent: humidity, condition: weather.currentWeather.condition.description)
+            let condition = weather.currentWeather.condition
+            let snapshot = WeatherSnapshot(temperatureC: tempC, humidityPercent: humidity, condition: condition.description, conditionKey: String(describing: condition))
             currentWeather = snapshot
             status = .idle
         } catch {

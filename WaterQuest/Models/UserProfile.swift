@@ -34,6 +34,7 @@ struct UserProfile: Codable {
     var dailyReminderCount: Int
     var prefersWeatherGoal: Bool
     var prefersHealthKit: Bool
+    var smartRemindersEnabled: Bool
 
     static let `default` = UserProfile(
         name: "",
@@ -46,6 +47,7 @@ struct UserProfile: Codable {
         sleepMinutes: 22 * 60,
         dailyReminderCount: 7,
         prefersWeatherGoal: true,
-        prefersHealthKit: true
+        prefersHealthKit: true,
+        smartRemindersEnabled: true
     )
 }

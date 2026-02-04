@@ -1,5 +1,6 @@
 import Foundation
 
+@MainActor
 final class HydrationStore: ObservableObject {
     @Published var entries: [HydrationEntry]
     @Published var profile: UserProfile
@@ -11,6 +12,10 @@ final class HydrationStore: ObservableObject {
 
     private let persistence = PersistenceService.shared
     private var pendingAchievements: [Achievement] = []
+
+    /// Set by the app after both objects are created so the store can notify
+    /// the scheduler when new intake is logged.
+    weak var notificationScheduler: NotificationScheduler?
 
     init() {
         let state = persistence.load(PersistedState.self, fallback: .default)
@@ -49,6 +54,7 @@ final class HydrationStore: ObservableObject {
         entries.append(entry)
         GamificationEngine.refreshDailyQuests(state: &gameState, goalML: dailyGoal.totalML)
         GamificationEngine.applyIntake(state: &gameState, entry: entry, todayTotalML: todayTotalML, goalML: dailyGoal.totalML, allEntries: entries)
+        notificationScheduler?.onIntakeLogged(entry: entry)
         persist()
         let newlyUnlocked = gameState.achievements.filter { $0.isUnlocked && !previouslyUnlocked.contains($0.id) }
         enqueueAchievements(newlyUnlocked)

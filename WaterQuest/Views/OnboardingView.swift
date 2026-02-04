@@ -416,7 +416,7 @@ struct OnboardingView: View {
         }
 
         if remindersEnabled {
-            notifier.scheduleReminders(profile: store.profile)
+            notifier.scheduleReminders(profile: store.profile, entries: store.entries, goalML: store.dailyGoal.totalML)
         }
         
         withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
@@ -608,19 +608,17 @@ struct FeaturePill: View {
 // MARK: - Enhanced Mascot View
 struct EnhancedMascotView: View {
     @State private var bounce = false
-    @State private var shimmer = false
     
     var body: some View {
         ZStack {
-            // Shimmer effect
             Image(systemName: "drop.fill")
                 .resizable()
                 .scaledToFit()
                 .foregroundStyle(
                     LinearGradient(
                         colors: [Theme.lagoon, Theme.mint, Theme.lagoon],
-                        startPoint: shimmer ? .topLeading : .bottomTrailing,
-                        endPoint: shimmer ? .bottomTrailing : .topLeading
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
                     )
                 )
                 .shadow(color: Theme.lagoon.opacity(0.5), radius: 16, x: 0, y: 8)
@@ -646,9 +644,6 @@ struct EnhancedMascotView: View {
         .animation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true), value: bounce)
         .onAppear {
             bounce = true
-            withAnimation(.linear(duration: 3).repeatForever(autoreverses: true)) {
-                shimmer = true
-            }
         }
     }
 }
