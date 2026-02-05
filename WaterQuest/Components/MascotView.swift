@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct MascotView: View {
+    @State private var bounce = false
+
     var body: some View {
         ZStack {
             Image(systemName: "drop.fill")
@@ -25,5 +27,11 @@ struct MascotView: View {
             .offset(y: 8)
         }
         .frame(width: 80, height: 100)
+        .scaleEffect(bounce ? 1.04 : 1.0)
+        .offset(y: bounce ? -3 : 0)
+        .animation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true), value: bounce)
+        .onAppear {
+            bounce = true
+        }
     }
 }

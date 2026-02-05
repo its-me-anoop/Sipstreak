@@ -2,11 +2,14 @@ import SwiftUI
 
 @main
 struct WaterQuestApp: App {
+    @AppStorage("appTheme") private var appTheme: AppTheme = .system
+    @Environment(\.scenePhase) private var scenePhase
     @StateObject private var store = HydrationStore()
     @StateObject private var healthKit = HealthKitManager()
     @StateObject private var notifier = NotificationScheduler()
     @StateObject private var locationManager: LocationManager
     @StateObject private var weatherClient: WeatherClient
+    @StateObject private var subscriptionManager = SubscriptionManager()
 
     init() {
         let location = LocationManager()
@@ -26,10 +29,21 @@ struct WaterQuestApp: App {
             .environmentObject(notifier)
             .environmentObject(locationManager)
             .environmentObject(weatherClient)
-            .preferredColorScheme(.dark)
+            .environmentObject(subscriptionManager)
+            .preferredColorScheme(appTheme.colorScheme)
             .task {
+                store.notificationScheduler = notifier
                 await notifier.refreshAuthorizationStatus()
-                locationManager.requestLocation()
+                await healthKit.refreshAuthorizationStatus()
+                notifier.scheduleReminders(profile: store.profile, entries: store.entries, goalML: store.dailyGoal.totalML)
+                await subscriptionManager.initialise()
+                let _ = subscriptionManager.startTransactionListener()
+            }
+            .onChange(of: scenePhase) { _, phase in
+                guard phase == .active else { return }
+                Task {
+                    await subscriptionManager.refreshStatus()
+                }
             }
         }
     }
