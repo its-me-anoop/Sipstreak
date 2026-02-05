@@ -101,7 +101,7 @@ struct DashboardView: View {
             EditLogEntryView(entry: entry, unitSystem: store.profile.unitSystem) { updated in
                 store.updateEntry(id: updated.id, volumeML: updated.volumeML, note: updated.note)
             } onDelete: {
-                store.deleteEntry(entry)
+                deleteEntry(entry)
             }
         }
     }
@@ -278,7 +278,7 @@ struct DashboardView: View {
                 ForEach(buttons, id: \.self) { amount in
                     QuickAddPill(amount: amount, unit: unit.volumeUnit) {
                         let entry = withAnimation(Theme.fluidSpring) {
-                            let entry = store.addIntake(amount: Double(amount), source: .manual)
+                            let entry = store.addIntake(amount: Double(amount), source: .manual, note: nil)
                             rippleTrigger.toggle()
                             return entry
                         }
@@ -510,14 +510,17 @@ struct DashboardView: View {
                                 Haptics.selection()
                                 entryToEdit = entry
                             }
-                        }
-                        .onDelete(perform: { offsets in
-                            let toDelete = offsets.map { sorted[$0] }
-                            withAnimation(Theme.fluidSpring) {
-                                toDelete.forEach { store.deleteEntry($0) }
+                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                Button(role: .destructive) {
+                                    Haptics.impact(.medium)
+                                    withAnimation(Theme.fluidSpring) {
+                                        deleteEntry(entry)
+                                    }
+                                } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
                             }
-                            Haptics.impact(.medium)
-                        })
+                        }
                     }
                 }
             }
@@ -525,6 +528,15 @@ struct DashboardView: View {
     }
 
     // MARK: - Actions
+    private func deleteEntry(_ entry: HydrationEntry) {
+        if entry.source == .manual {
+            Task {
+                await healthKit.deleteWaterIntake(entryID: entry.id)
+            }
+        }
+        store.deleteEntry(entry)
+    }
+
     private func startMotionUpdates() {
         guard motionManager.isDeviceMotionAvailable else { return }
         motionManager.deviceMotionUpdateInterval = 1.0 / 30.0
@@ -567,9 +579,9 @@ struct DashboardView: View {
             await MainActor.run {
                 store.updateWorkout(summary)
             }
-            if let healthKitEntries = await healthKit.fetchTodayWaterEntries() {
+            if let healthKitEntries = await healthKit.fetchRecentWaterEntries(days: 7) {
                 await MainActor.run {
-                    store.syncHealthKitEntries(healthKitEntries)
+                    store.syncHealthKitEntriesRange(healthKitEntries, days: 7)
                 }
             }
         }

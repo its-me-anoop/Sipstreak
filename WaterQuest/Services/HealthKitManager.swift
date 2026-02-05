@@ -64,10 +64,16 @@ final class HealthKitManager: ObservableObject {
 
     func fetchTodayWaterEntries() async -> [HydrationEntry]? {
         guard isAvailable else { return nil }
-        let status = await authorizationRequestStatus()
-        guard status != .shouldRequest else { return nil }
 
         let start = Calendar.current.startOfDay(for: Date())
+        let predicate = HKQuery.predicateForSamples(withStart: start, end: Date())
+        return await fetchWaterEntries(predicate: predicate)
+    }
+
+    func fetchRecentWaterEntries(days: Int) async -> [HydrationEntry]? {
+        guard isAvailable else { return nil }
+        let cappedDays = max(1, min(30, days))
+        let start = Calendar.current.date(byAdding: .day, value: -cappedDays + 1, to: Calendar.current.startOfDay(for: Date())) ?? Calendar.current.startOfDay(for: Date())
         let predicate = HKQuery.predicateForSamples(withStart: start, end: Date())
         return await fetchWaterEntries(predicate: predicate)
     }
@@ -94,6 +100,27 @@ final class HealthKitManager: ObservableObject {
             try await healthStore.save(sample)
         } catch {
             print("Failed to save water sample: \(error)")
+        }
+    }
+
+    func deleteWaterIntake(entryID: UUID) async {
+        guard isAvailable else { return }
+        let status = await authorizationRequestStatus()
+        guard status != .shouldRequest else { return }
+        guard let waterType = HKQuantityType.quantityType(forIdentifier: .dietaryWater) else { return }
+
+        let predicate = HKQuery.predicateForObjects(withMetadataKey: waterEntryMetadataKey, allowedValues: [entryID.uuidString])
+        await withCheckedContinuation { continuation in
+            let query = HKSampleQuery(sampleType: waterType, predicate: predicate, limit: HKObjectQueryNoLimit, sortDescriptors: nil) { [weak self] _, samples, _ in
+                guard let self, let samples = samples as? [HKSample], !samples.isEmpty else {
+                    continuation.resume(returning: ())
+                    return
+                }
+                self.healthStore.delete(samples) { _, _ in
+                    continuation.resume(returning: ())
+                }
+            }
+            healthStore.execute(query)
         }
     }
 

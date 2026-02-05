@@ -21,10 +21,14 @@ struct OnboardingView: View {
     @State private var reminderCount = 7
     @State private var prefersWeather = true
     @State private var prefersHealthKit = true
+
+    private let remindersNotificationsIndex = 4
+    private let weatherLocationIndex = 5
+    private let healthActivityIndex = 6
+    private let lastPageIndex = 7
     
     // Animation states
     @State private var appeared = false
-    @State private var contentOffset: CGFloat = 50
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -33,26 +37,22 @@ struct OnboardingView: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // Page indicator
-                pageIndicator
-                    .padding(.top, 16)
-                    .opacity(appeared ? 1 : 0)
-                    .offset(y: appeared ? 0 : -20)
-                
                 // Content
                 TabView(selection: $pageIndex) {
                     introPage.tag(0)
                     profilePage.tag(1)
                     schedulePage.tag(2)
-                    permissionsPage.tag(3)
+                    customGoalPage.tag(3)
+                    remindersNotificationsPage.tag(4)
+                    weatherLocationPage.tag(5)
+                    healthActivityPage.tag(6)
+                    trialPage.tag(7)
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .onChange(of: pageIndex) { _, newValue in
+                .onChange(of: pageIndex) { oldValue, newValue in
                     Haptics.impact(.light)
-                    withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-                        contentOffset = 0
-                    }
+                    Task { await requestPermissionsIfNeeded(for: oldValue, movingTo: newValue) }
                 }
 
                 // Navigation buttons
@@ -68,25 +68,8 @@ struct OnboardingView: View {
         .onAppear {
             withAnimation(.spring(response: 0.8, dampingFraction: 0.75).delay(0.2)) {
                 appeared = true
-                contentOffset = 0
             }
         }
-    }
-    
-    // MARK: - Page Indicator
-    @ViewBuilder
-    private var pageIndicator: some View {
-        HStack(spacing: 8) {
-            ForEach(0..<4, id: \.self) { index in
-                Capsule()
-                    .fill(index == pageIndex ? Color.white : Color.white.opacity(0.3))
-                    .frame(width: index == pageIndex ? 24 : 8, height: 8)
-                    .animation(.spring(response: 0.4, dampingFraction: 0.75), value: pageIndex)
-            }
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 10)
-        .modifier(GlassBackgroundModifier(cornerRadius: 20))
     }
     
     // MARK: - Navigation Buttons
@@ -118,7 +101,7 @@ struct OnboardingView: View {
             }
 
             Button {
-                if pageIndex == 3 {
+                if pageIndex == lastPageIndex {
                     Haptics.success()
                     finishOnboarding()
                 } else {
@@ -129,9 +112,9 @@ struct OnboardingView: View {
                 }
             } label: {
                 HStack(spacing: 6) {
-                    Text(pageIndex == 3 ? "Start Quest" : "Next")
+                    Text(pageIndex == lastPageIndex ? "Start Quest" : "Next")
                         .font(Theme.titleFont(size: 16))
-                    if pageIndex < 3 {
+                    if pageIndex < lastPageIndex {
                         Image(systemName: "chevron.right")
                             .font(.system(size: 14, weight: .semibold))
                     } else {
@@ -189,7 +172,7 @@ struct OnboardingView: View {
                     )
                     .shadow(color: Theme.lagoon.opacity(0.5), radius: 10, x: 0, y: 4)
                 
-                Text("A playful hydration adventure with quests, streaks, and smart goals that adapt to your day.")
+                Text("A gentle hydration companion that builds steady energy, focus, and recovery through small daily wins.")
                     .font(Theme.bodyFont(size: 17))
                     .foregroundColor(Theme.textSecondary)
                     .multilineTextAlignment(.center)
@@ -201,9 +184,9 @@ struct OnboardingView: View {
             
             // Feature pills
             HStack(spacing: 12) {
-                FeaturePill(icon: "flame.fill", text: "Streaks", color: Theme.coral)
-                FeaturePill(icon: "target", text: "Quests", color: Theme.lagoon)
-                FeaturePill(icon: "chart.line.uptrend.xyaxis", text: "Insights", color: Theme.mint)
+                FeaturePill(icon: "calendar.badge.checkmark", text: "Consistency", color: Theme.coral)
+                FeaturePill(icon: "drop.circle", text: "Daily Flow", color: Theme.lagoon)
+                FeaturePill(icon: "sunrise.fill", text: "Steady Energy", color: Theme.mint)
             }
             .padding(.top, 8)
             .offset(y: appeared ? 0 : 40)
@@ -213,6 +196,31 @@ struct OnboardingView: View {
             Spacer()
         }
         .padding(.top, 20)
+        .modifier(OnboardingPageTransition())
+    }
+
+    // MARK: - Trial Page
+    private var trialPage: some View {
+        ScrollView {
+            VStack(spacing: 24) {
+                PageHeader(
+                    icon: "gift.fill",
+                    title: "Your Free Trial",
+                    subtitle: "Experience calm, guided hydration from day one"
+                )
+
+                DropletChatStack(messages: [
+                    "Welcome to your calm start. We will guide hydration gently, not aggressively.",
+                    "During your trial, you get premium quests, deeper insights, and quiet automation.",
+                    "Over time, this becomes a steady rhythm that supports energy, focus, and recovery."
+                ])
+            }
+            .padding(.horizontal, 24)
+            .padding(.top, 10)
+            .padding(.bottom, 100)
+        }
+        .scrollIndicators(.hidden)
+        .modifier(OnboardingPageTransition())
     }
 
     // MARK: - Profile Page
@@ -222,10 +230,15 @@ struct OnboardingView: View {
                 PageHeader(
                     icon: "person.crop.circle.fill",
                     title: "Build Your Profile",
-                    subtitle: "Let's personalize your hydration journey"
+                    subtitle: "Personalize goals so hydration feels natural and sustainable"
                 )
 
                 VStack(spacing: 16) {
+                    DropletChatStack(messages: [
+                        "Tell me a little about you so your plan feels personal and sustainable.",
+                        "Your units, weight, and activity level help me shape a calm, realistic goal."
+                    ])
+
                     GlassTextField(
                         title: "What should we call you?",
                         placeholder: "Your name",
@@ -262,6 +275,7 @@ struct OnboardingView: View {
             .padding(.bottom, 100)
         }
         .scrollIndicators(.hidden)
+        .modifier(OnboardingPageTransition())
     }
 
     // MARK: - Schedule Page
@@ -271,13 +285,48 @@ struct OnboardingView: View {
                 PageHeader(
                     icon: "clock.fill",
                     title: "Daily Rhythm",
-                    subtitle: "Set up your hydration schedule"
+                    subtitle: "Shape a rhythm that feels effortless"
                 )
 
                 VStack(spacing: 16) {
+                    DropletChatStack(messages: [
+                        "When do your days begin and end?",
+                        "I will pace goals and reminders so hydration feels calm and unhurried."
+                    ])
+
+                    HStack(spacing: 12) {
+                        GlassTimePicker(title: "Wake Up", icon: "sunrise.fill", date: $wakeTime, tint: Theme.sun)
+                        GlassTimePicker(title: "Sleep", icon: "moon.stars.fill", date: $sleepTime, tint: Theme.lagoon)
+                    }
+                }
+            }
+            .padding(.horizontal, 24)
+            .padding(.top, 10)
+            .padding(.bottom, 100)
+        }
+        .scrollIndicators(.hidden)
+        .modifier(OnboardingPageTransition())
+    }
+
+    // MARK: - Custom Goal Page
+    private var customGoalPage: some View {
+        ScrollView {
+            VStack(spacing: 24) {
+                PageHeader(
+                    icon: "target",
+                    title: "Custom Daily Goal",
+                    subtitle: "Honor the target that feels right for you"
+                )
+
+                VStack(spacing: 16) {
+                    DropletChatStack(messages: [
+                        "If you already have a target from a clinician or coach, we can honor it.",
+                        "That keeps your quests and progress aligned with what matters most to you."
+                    ])
+
                     GlassToggle(
                         title: "Custom Daily Goal",
-                        subtitle: "Set your own target instead of calculated",
+                        subtitle: "Use a personal target",
                         isOn: $customGoalEnabled,
                         tint: Theme.mint
                     )
@@ -295,15 +344,37 @@ struct OnboardingView: View {
                             removal: .scale(scale: 0.9, anchor: .top).combined(with: .opacity)
                         ))
                     }
+                }
+                .animation(.spring(response: 0.5, dampingFraction: 0.8), value: customGoalEnabled)
+            }
+            .padding(.horizontal, 24)
+            .padding(.top, 10)
+            .padding(.bottom, 100)
+        }
+        .scrollIndicators(.hidden)
+        .modifier(OnboardingPageTransition())
+    }
 
-                    HStack(spacing: 12) {
-                        GlassTimePicker(title: "Wake Up", icon: "sunrise.fill", date: $wakeTime, tint: Theme.sun)
-                        GlassTimePicker(title: "Sleep", icon: "moon.stars.fill", date: $sleepTime, tint: Theme.lagoon)
-                    }
+    // MARK: - Reminders + Notifications
+    private var remindersNotificationsPage: some View {
+        ScrollView {
+            VStack(spacing: 24) {
+                PageHeader(
+                    icon: "bell.badge.fill",
+                    title: "Reminders & Notifications",
+                    subtitle: "Supportive nudges that feel easy"
+                )
+
+                VStack(spacing: 16) {
+                    DropletChatStack(messages: [
+                        "I can offer gentle reminders so hydration feels automatic.",
+                        "We will space them across your day, keeping your rhythm steady.",
+                        "If you allow notifications, I can support you even on busy days."
+                    ])
 
                     GlassToggle(
                         title: "Smart Reminders",
-                        subtitle: "Get notified throughout the day",
+                        subtitle: "Receive gentle reminders",
                         isOn: $remindersEnabled,
                         tint: Theme.lagoon
                     )
@@ -319,8 +390,16 @@ struct OnboardingView: View {
                             removal: .scale(scale: 0.9, anchor: .top).combined(with: .opacity)
                         ))
                     }
+
+                    PermissionButton(
+                        title: "Notifications",
+                        icon: "bell.fill",
+                        color: Theme.coral
+                    ) {
+                        Haptics.impact(.medium)
+                        Task { await notifier.requestAuthorization() }
+                    }
                 }
-                .animation(.spring(response: 0.5, dampingFraction: 0.8), value: customGoalEnabled)
                 .animation(.spring(response: 0.5, dampingFraction: 0.8), value: remindersEnabled)
             }
             .padding(.horizontal, 24)
@@ -328,62 +407,41 @@ struct OnboardingView: View {
             .padding(.bottom, 100)
         }
         .scrollIndicators(.hidden)
+        .modifier(OnboardingPageTransition())
     }
 
-    // MARK: - Permissions Page
-    private var permissionsPage: some View {
+    // MARK: - Weather + Location
+    private var weatherLocationPage: some View {
         ScrollView {
             VStack(spacing: 24) {
                 PageHeader(
-                    icon: "bolt.fill",
-                    title: "Power-Ups",
-                    subtitle: "Enable features to enhance your experience"
+                    icon: "cloud.sun.fill",
+                    title: "Weather & Location",
+                    subtitle: "Match hydration to your day"
                 )
 
                 VStack(spacing: 16) {
+                    DropletChatStack(messages: [
+                        "Weather changes your needs more than you think.",
+                        "If you enable weather, I can keep goals calm and balanced.",
+                        "Location gives me accurate local conditions, no guesswork."
+                    ])
+
                     GlassToggle(
                         title: "Weather Integration",
-                        subtitle: "Adjust goals based on temperature",
+                        subtitle: "Adjust goals with weather",
                         isOn: $prefersWeather,
                         tint: Theme.sun
                     )
 
-                    GlassToggle(
-                        title: "Health Sync",
-                        subtitle: "Connect workouts and water intake",
-                        isOn: $prefersHealthKit,
-                        tint: Theme.mint
-                    )
-
-                    VStack(spacing: 12) {
-                        PermissionButton(
-                            title: "Health & Activity",
-                            icon: "heart.fill",
-                            color: .pink
-                        ) {
-                            Haptics.impact(.medium)
-                            Task { await healthKit.requestAuthorization() }
-                        }
-
-                        PermissionButton(
-                            title: "Location",
-                            icon: "location.fill",
-                            color: Theme.lagoon
-                        ) {
-                            Haptics.impact(.medium)
-                            locationManager.requestPermission()
-                        }
-
-                        PermissionButton(
-                            title: "Notifications",
-                            icon: "bell.fill",
-                            color: Theme.coral
-                        ) {
-                            Haptics.impact(.medium)
-                            Task { await notifier.requestAuthorization() }
-                        }
+                    PermissionButton(
+                        title: "Location",
+                        icon: "location.fill",
+                        color: Theme.lagoon
+                    ) {
+                        Haptics.impact(.medium)
+                        locationManager.requestPermission()
                     }
-                    .padding(.top, 8)
                 }
             }
             .padding(.horizontal, 24)
@@ -391,9 +449,78 @@ struct OnboardingView: View {
             .padding(.bottom, 100)
         }
         .scrollIndicators(.hidden)
+        .modifier(OnboardingPageTransition())
+    }
+
+    // MARK: - Health + Activity
+    private var healthActivityPage: some View {
+        ScrollView {
+            VStack(spacing: 24) {
+                PageHeader(
+                    icon: "heart.fill",
+                    title: "Health & Activity",
+                    subtitle: "Align hydration with movement"
+                )
+
+                VStack(spacing: 16) {
+                    DropletChatStack(messages: [
+                        "Movement changes what your body needs, even on ordinary days.",
+                        "If you enable Health, I can lift goals gently to support recovery.",
+                        "Workout and energy data help me estimate your extra hydration."
+                    ])
+
+                    GlassToggle(
+                        title: "Health Sync",
+                        subtitle: "Connect activity and water intake",
+                        isOn: $prefersHealthKit,
+                        tint: Theme.mint
+                    )
+
+                    PermissionButton(
+                        title: "Health & Activity",
+                        icon: "heart.fill",
+                        color: .pink
+                    ) {
+                        Haptics.impact(.medium)
+                        Task { await healthKit.requestAuthorization() }
+                    }
+                }
+            }
+            .padding(.horizontal, 24)
+            .padding(.top, 10)
+            .padding(.bottom, 100)
+        }
+        .scrollIndicators(.hidden)
+        .modifier(OnboardingPageTransition())
     }
 
     // MARK: - Helpers
+    private func requestPermissionsIfNeeded(for previousIndex: Int, movingTo newIndex: Int) async {
+        guard newIndex > previousIndex else { return }
+
+        switch previousIndex {
+        case remindersNotificationsIndex:
+            guard remindersEnabled else { return }
+            await notifier.refreshAuthorizationStatus()
+            if notifier.authorizationStatus != .authorized {
+                await notifier.requestAuthorization()
+            }
+        case weatherLocationIndex:
+            guard prefersWeather else { return }
+            if locationManager.authorizationStatus == .notDetermined {
+                locationManager.requestPermission()
+            }
+        case healthActivityIndex:
+            guard prefersHealthKit else { return }
+            await healthKit.refreshAuthorizationStatus()
+            if healthKit.isAvailable && !healthKit.isAuthorized {
+                await healthKit.requestAuthorization()
+            }
+        default:
+            break
+        }
+    }
+
     private func finishOnboarding() {
         let finalName = name.trimmingCharacters(in: .whitespacesAndNewlines)
         let weightKg = unitSystem.kg(from: weight)
@@ -602,6 +729,94 @@ struct FeaturePill: View {
         .padding(.horizontal, 14)
         .padding(.vertical, 8)
         .modifier(GlassButtonModifier(tint: color))
+    }
+}
+
+// MARK: - Droplet Chat Stack
+struct DropletChatStack: View {
+    let messages: [String]
+
+    @State private var revealedIndex: Int = -1
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            ForEach(messages.indices, id: \.self) { index in
+                ChatBubble(text: messages[index])
+                    .opacity(revealedIndex >= index ? 1 : 0)
+                    .offset(y: revealedIndex >= index ? 0 : 16)
+            }
+        }
+        .onAppear {
+            revealedIndex = -1
+            for index in messages.indices {
+                withAnimation(.spring(response: 0.55, dampingFraction: 0.85).delay(Double(index) * 0.12)) {
+                    revealedIndex = index
+                }
+            }
+        }
+    }
+}
+
+struct ChatBubble: View {
+    let text: String
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(Theme.lagoon.opacity(0.2))
+                    .frame(width: 34, height: 34)
+                    .overlay(
+                        Circle()
+                            .stroke(Theme.glassBorder.opacity(0.5), lineWidth: 1)
+                    )
+                Image(systemName: "drop.fill")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [Theme.lagoon, Theme.mint],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+            }
+
+            Text(text)
+                .font(Theme.bodyFont(size: 15))
+                .foregroundColor(Theme.textPrimary)
+                .lineSpacing(4)
+                .padding(14)
+                .background(
+                    RoundedRectangle(cornerRadius: 18)
+                        .fill(.ultraThinMaterial)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 18)
+                                .stroke(Theme.glassBorder.opacity(0.4), lineWidth: 1)
+                        )
+                )
+
+            Spacer(minLength: 0)
+        }
+    }
+}
+
+// MARK: - Onboarding Page Transition
+struct OnboardingPageTransition: ViewModifier {
+    @State private var isVisible = false
+
+    func body(content: Content) -> some View {
+        content
+            .opacity(isVisible ? 1 : 0)
+            .offset(y: isVisible ? 0 : 24)
+            .scaleEffect(isVisible ? 1 : 0.98)
+            .onAppear {
+                withAnimation(.spring(response: 0.55, dampingFraction: 0.85)) {
+                    isVisible = true
+                }
+            }
+            .onDisappear {
+                isVisible = false
+            }
     }
 }
 

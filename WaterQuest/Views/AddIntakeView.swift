@@ -300,8 +300,9 @@ struct AddIntakeView: View {
             showingSuccess = true
         }
 
+        let trimmedNote = note.trimmingCharacters(in: .whitespacesAndNewlines)
         let entry = withAnimation(.spring(response: 0.5, dampingFraction: 0.85)) {
-            store.addIntake(amount: amount, source: .manual)
+            store.addIntake(amount: amount, source: .manual, note: trimmedNote.isEmpty ? nil : trimmedNote)
         }
 
         Task {

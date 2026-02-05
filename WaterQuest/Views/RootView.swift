@@ -187,6 +187,7 @@ struct RootView: View {
     @EnvironmentObject private var subscriptionManager: SubscriptionManager
     @State private var showSplash = true
     @State private var showTrialExpiredPaywall = false
+    @State private var pendingPaywallCheck = false
 
     var body: some View {
         content
@@ -197,14 +198,27 @@ struct RootView: View {
                     showSplash = false
                 }
                 // After splash: if onboarded and trial expired, show paywall
-                if hasOnboarded && !subscriptionManager.isPro {
-                    showTrialExpiredPaywall = true
+                if hasOnboarded {
+                    if subscriptionManager.isInitialized {
+                        if !subscriptionManager.isPro {
+                            showTrialExpiredPaywall = true
+                        }
+                    } else {
+                        pendingPaywallCheck = true
+                    }
                 }
             }
             // Re-check whenever subscription status changes (e.g. restore on re-launch)
             .onChange(of: subscriptionManager.isPro) { _, isPro in
                 if isPro {
                     showTrialExpiredPaywall = false
+                }
+            }
+            .onChange(of: subscriptionManager.isInitialized) { _, initialized in
+                guard initialized, pendingPaywallCheck, hasOnboarded else { return }
+                pendingPaywallCheck = false
+                if !subscriptionManager.isPro {
+                    showTrialExpiredPaywall = true
                 }
             }
     }

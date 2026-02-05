@@ -291,6 +291,37 @@ struct SettingsView: View {
                 Task { await healthKit.requestAuthorization() }
             }
 
+            Button {
+                Haptics.selection()
+                Task {
+                    guard let healthKitEntries = await healthKit.fetchRecentWaterEntries(days: 7) else { return }
+                    await MainActor.run {
+                        store.syncHealthKitEntriesRange(healthKitEntries, days: 7)
+                    }
+                }
+            } label: {
+                HStack {
+                    Text("Sync HealthKit Now")
+                        .font(Theme.bodyFont(size: 13))
+                        .foregroundColor(Theme.textPrimary)
+                    Spacer()
+                    Image(systemName: "arrow.clockwise")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(Theme.textTertiary)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Theme.glassLight)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .strokeBorder(Theme.glassBorder.opacity(0.25), lineWidth: 1)
+                )
+            }
+            .buttonStyle(.plain)
+
             permissionRow(title: "Location", subtitle: "Local weather for goal tuning", systemImage: "location.fill", status: locationStatus) {
                 locationManager.requestPermission()
             }

@@ -45,11 +45,11 @@ final class HydrationStore: ObservableObject {
     }
 
     @discardableResult
-    func addIntake(amount: Double, unitSystem: UnitSystem? = nil, source: HydrationSource = .manual) -> HydrationEntry {
+    func addIntake(amount: Double, unitSystem: UnitSystem? = nil, source: HydrationSource = .manual, note: String? = nil) -> HydrationEntry {
         let previouslyUnlocked = Set(gameState.achievements.filter { $0.isUnlocked }.map { $0.id })
         let units = unitSystem ?? profile.unitSystem
         let ml = units.ml(from: amount)
-        let entry = HydrationEntry(date: Date(), volumeML: ml, source: source)
+        let entry = HydrationEntry(date: Date(), volumeML: ml, source: source, note: note)
         entries.append(entry)
         GamificationEngine.refreshDailyQuests(state: &gameState, goalML: dailyGoal.totalML)
         GamificationEngine.applyIntake(state: &gameState, entry: entry, todayTotalML: todayTotalML, goalML: dailyGoal.totalML, allEntries: entries)
@@ -94,6 +94,16 @@ final class HydrationStore: ObservableObject {
 
     func syncHealthKitEntries(_ healthKitEntries: [HydrationEntry], for date: Date = Date()) {
         entries.removeAll { $0.source == .healthKit && $0.date.isSameDay(as: date) }
+        entries.append(contentsOf: healthKitEntries)
+        entries.sort { $0.date < $1.date }
+        GamificationEngine.refreshDailyQuests(state: &gameState, goalML: dailyGoal.totalML)
+        persist()
+    }
+
+    func syncHealthKitEntriesRange(_ healthKitEntries: [HydrationEntry], days: Int) {
+        let cappedDays = max(1, min(30, days))
+        guard let start = Calendar.current.date(byAdding: .day, value: -cappedDays + 1, to: Calendar.current.startOfDay(for: Date())) else { return }
+        entries.removeAll { $0.source == .healthKit && $0.date >= start }
         entries.append(contentsOf: healthKitEntries)
         entries.sort { $0.date < $1.date }
         GamificationEngine.refreshDailyQuests(state: &gameState, goalML: dailyGoal.totalML)

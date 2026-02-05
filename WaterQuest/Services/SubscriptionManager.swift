@@ -15,6 +15,8 @@ enum ProductID: String, CaseIterable {
 final class SubscriptionManager: ObservableObject {
     /// `true` while the user is within the 7-day trial window OR has an active subscription.
     @Published private(set) var isPro: Bool = false
+    /// `true` once initial products and status have been loaded.
+    @Published private(set) var isInitialized: Bool = false
 
     /// The fetched StoreKit products (monthly & annual).
     @Published private(set) var products: [Product] = []
@@ -59,6 +61,7 @@ final class SubscriptionManager: ObservableObject {
     func initialise() async {
         await fetchProducts()
         await refreshSubscriptionStatus()
+        isInitialized = true
     }
 
     // MARK: - Products
@@ -134,6 +137,11 @@ final class SubscriptionManager: ObservableObject {
             }
         }
         isPro = hasActive || isTrialActive
+    }
+
+    /// Public wrapper to re-check the current entitlement state.
+    func refreshStatus() async {
+        await refreshSubscriptionStatus()
     }
 
     // MARK: - Transaction listener

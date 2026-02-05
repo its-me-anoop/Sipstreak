@@ -3,6 +3,7 @@ import StoreKit
 
 struct PaywallView: View {
     @EnvironmentObject private var subscriptionManager: SubscriptionManager
+    @Environment(\.dismiss) private var dismiss
 
     /// When `true` the sheet can be dismissed without purchasing (post-trial launch paywall).
     var isDismissible: Bool = true
@@ -12,6 +13,9 @@ struct PaywallView: View {
     @State private var restoreSuccess = false
     @State private var appearAnimation = false
     @State private var wavePhase: CGFloat = 0
+
+    private let privacyURL = URL(string: "https://example.com/privacy")!
+    private let termsURL = URL(string: "https://example.com/terms")!
 
     var body: some View {
         ZStack {
@@ -49,6 +53,8 @@ struct PaywallView: View {
                     }
 
                     restoreButton
+
+                    legalSection
 
                     Spacer(minLength: 32)
                 }
@@ -247,6 +253,23 @@ struct PaywallView: View {
         .buttonStyle(.plain)
     }
 
+    private var legalSection: some View {
+        VStack(spacing: 8) {
+            Text("Payment will be charged to your Apple ID at confirmation. Subscription automatically renews unless canceled at least 24 hours before the end of the current period. Manage or cancel in your App Store account settings.")
+                .font(Theme.bodyFont(size: 11))
+                .foregroundColor(Theme.textTertiary)
+                .multilineTextAlignment(.center)
+
+            HStack(spacing: 16) {
+                Link("Privacy Policy", destination: privacyURL)
+                Link("Terms of Use", destination: termsURL)
+            }
+            .font(Theme.bodyFont(size: 11))
+            .foregroundColor(Theme.mint)
+        }
+        .padding(.horizontal, 12)
+    }
+
     // MARK: - Actions
     private func doPurchase(_ product: Product) {
         isPurchasing = true
@@ -288,10 +311,8 @@ struct PaywallView: View {
     }
 
     private func dismissPaywall() {
-        // Uses the environment dismiss action; works both as a sheet and full-screen cover.
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-        // Programmatic dismiss via presentation callback set by the caller.
-        PaywallDismissAction.shared.dismiss?()
+        dismiss()
     }
 }
 
@@ -418,14 +439,6 @@ private struct PricingCard: View {
         .padding(.top, 10)
         .padding(.bottom, 4)
     }
-}
-
-// MARK: - PaywallDismissAction
-/// Simple singleton that lets PaywallView dismiss itself regardless of how it was presented.
-final class PaywallDismissAction {
-    static let shared = PaywallDismissAction()
-    var dismiss: (() -> Void)?
-    private init() {}
 }
 
 // MARK: - Paywall Background
