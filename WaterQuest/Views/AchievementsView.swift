@@ -3,422 +3,189 @@ import SwiftUI
 struct AchievementsView: View {
     @EnvironmentObject private var store: HydrationStore
 
-    @State private var appearAnimation = false
-    @State private var selectedQuest: Quest? = nil
-    @State private var showingQuestDetail = false
-
-    private let columns = [GridItem(.flexible()), GridItem(.flexible())]
-
-    var body: some View {
-        ZStack(alignment: .top) {
-            // Animated background
-            AchievementsBackground()
-                .ignoresSafeArea()
-
-            ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 20) {
-                    // Header section
-                    headerSection
-                        .offset(y: appearAnimation ? 0 : -20)
-                        .opacity(appearAnimation ? 1 : 0)
-
-                    // Stats overview
-                    statsOverview
-                        .offset(y: appearAnimation ? 0 : 20)
-                        .opacity(appearAnimation ? 1 : 0)
-
-                    // Today's Quests section
-                    questsSection
-                        .offset(y: appearAnimation ? 0 : 30)
-                        .opacity(appearAnimation ? 1 : 0)
-
-                    // Achievements section
-                    achievementsSection
-                        .offset(y: appearAnimation ? 0 : 40)
-                        .opacity(appearAnimation ? 1 : 0)
-
-                    Spacer(minLength: 40)
-                }
-                .padding(.horizontal, 20)
-                .padding(.bottom, 40)
-            }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .animation(.spring(response: 0.5, dampingFraction: 0.82), value: store.gameState.achievements)
-        .animation(.spring(response: 0.5, dampingFraction: 0.82), value: store.gameState.quests)
-        .onAppear {
-            withAnimation(Theme.fluidSpring.delay(0.1)) {
-                appearAnimation = true
-            }
-        }
-    }
-
-    // MARK: - Header Section
-    private var headerSection: some View {
-        HStack(alignment: .center, spacing: 16) {
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Quests & Badges")
-                    .font(Theme.titleFont(size: 28))
-                    .foregroundColor(Theme.textPrimary)
-
-                Text("Complete challenges, earn rewards")
-                    .font(Theme.bodyFont(size: 14))
-                    .foregroundColor(Theme.textSecondary)
-            }
-
-            Spacer()
-
-            // Refresh button with animation
-            RefreshButton {
-                Haptics.impact(.medium)
-                withAnimation(.spring(response: 0.45, dampingFraction: 0.85)) {
-                    store.refreshQuests()
-                }
-            }
-        }
-    }
-
-    // MARK: - Stats Overview
-    private var statsOverview: some View {
-        HStack(spacing: 12) {
-            MiniStatCard(
-                icon: "flame.fill",
-                value: "\(store.gameState.streakDays)",
-                label: "Day Streak",
-                color: Theme.coral
-            )
-
-            MiniStatCard(
-                icon: "star.fill",
-                value: "\(store.gameState.level)",
-                label: "Level",
-                color: Theme.sun
-            )
-
-            MiniStatCard(
-                icon: "trophy.fill",
-                value: "\(completedAchievements)",
-                label: "Badges",
-                color: Theme.mint
-            )
-        }
-    }
+    private let columns = [
+        GridItem(.flexible(), spacing: 12),
+        GridItem(.flexible(), spacing: 12)
+    ]
 
     private var completedAchievements: Int {
         store.gameState.achievements.filter { $0.unlockedAt != nil }.count
     }
 
-    // MARK: - Quests Section
-    private var questsSection: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack {
-                Image(systemName: "flag.fill")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(Theme.lagoon)
-
-                Text("Today's Quests")
-                    .font(Theme.titleFont(size: 18))
-                    .foregroundColor(Theme.textPrimary)
-
-                Spacer()
-
-                Text("\(completedQuests)/\(store.gameState.quests.count)")
-                    .font(Theme.bodyFont(size: 13))
-                    .foregroundColor(Theme.textSecondary)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
-                    .background(
-                        Capsule()
-                            .fill(Theme.glassLight)
-                    )
-            }
-
-            ForEach(Array(store.gameState.quests.enumerated()), id: \.element.id) { index, quest in
-                let progress = min(1, quest.progressML / max(1, quest.targetML))
-                QuestCard(quest: quest, progress: progress)
-                    .transition(.asymmetric(
-                        insertion: .scale.combined(with: .opacity),
-                        removal: .scale.combined(with: .opacity)
-                    ))
-                    .animation(Theme.fluidSpring.delay(Double(index) * 0.05), value: store.gameState.quests)
-            }
-        }
-    }
-
     private var completedQuests: Int {
-        store.gameState.quests.filter { $0.progressML >= $0.targetML }.count
+        store.gameState.quests.filter { $0.isCompleted }.count
     }
 
-    // MARK: - Achievements Section
-    private var achievementsSection: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack {
-                Image(systemName: "trophy.fill")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(Theme.sun)
-
-                Text("Achievements")
-                    .font(Theme.titleFont(size: 18))
-                    .foregroundColor(Theme.textPrimary)
-
-                Spacer()
-
-                Text("\(completedAchievements) unlocked")
-                    .font(Theme.bodyFont(size: 13))
-                    .foregroundColor(Theme.textSecondary)
+    var body: some View {
+        List {
+            Section {
+                summarySection
             }
 
-            LazyVGrid(columns: columns, spacing: 14) {
-                ForEach(Array(store.gameState.achievements.enumerated()), id: \.element.id) { index, achievement in
-                    EnhancedAchievementBadge(achievement: achievement)
-                        .transition(.scale.combined(with: .opacity))
-                        .animation(Theme.fluidSpring.delay(Double(index) * 0.03), value: store.gameState.achievements)
+            Section("Daily Missions") {
+                if store.gameState.quests.isEmpty {
+                    Text("No active quests right now.")
+                        .foregroundStyle(.secondary)
+                } else {
+                    ForEach(store.gameState.quests) { quest in
+                        QuestStatusRow(quest: quest)
+                    }
+                }
+            }
+
+            Section("Milestones") {
+                if store.gameState.achievements.isEmpty {
+                    Text("Milestones will appear as you keep logging hydration.")
+                        .foregroundStyle(.secondary)
+                } else {
+                    LazyVGrid(columns: columns, spacing: 12) {
+                        ForEach(store.gameState.achievements) { achievement in
+                            AchievementCell(achievement: achievement)
+                        }
+                    }
+                    .padding(.vertical, 4)
                 }
             }
         }
+        .listStyle(.insetGrouped)
+        .scrollContentBackground(.hidden)
+        .background(AppWaterBackground().ignoresSafeArea())
+        .navigationTitle("Goals")
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    Haptics.selection()
+                    store.refreshQuests()
+                } label: {
+                    Image(systemName: "arrow.clockwise")
+                }
+            }
+        }
+    }
+
+    private var summarySection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("Progress at a glance")
+                .font(.title3.weight(.semibold))
+
+            HStack(spacing: 12) {
+                SummaryTile(title: "Streak", value: "\(store.gameState.streakDays) days", icon: "flame.fill", color: Theme.coral)
+                SummaryTile(title: "Level", value: "\(store.gameState.level)", icon: "star.fill", color: Theme.sun)
+                SummaryTile(title: "Coins", value: "\(store.gameState.coins)", icon: "bitcoinsign.circle.fill", color: Theme.lagoon)
+            }
+
+            HStack {
+                Text("\(completedQuests)/\(max(1, store.gameState.quests.count)) quests complete")
+                Spacer()
+                Text("\(completedAchievements)/\(max(1, store.gameState.achievements.count)) milestones")
+            }
+            .font(.footnote)
+            .foregroundStyle(.secondary)
+        }
+        .padding(.vertical, 8)
     }
 }
 
-// MARK: - Refresh Button
-private struct RefreshButton: View {
-    let action: () -> Void
-
-    @State private var isPressed = false
-    @State private var rotation: Double = 0
+private struct SummaryTile: View {
+    let title: String
+    let value: String
+    let icon: String
+    let color: Color
 
     var body: some View {
-        Button(action: {
-            withAnimation(.spring(response: 0.5, dampingFraction: 0.6)) {
-                rotation += 360
-            }
-            action()
-        }) {
-            ZStack {
-                Circle()
-                    .fill(.ultraThinMaterial)
-                    .overlay(
-                        Circle()
-                            .fill(Theme.lagoon.opacity(0.2))
-                    )
-                    .overlay(
-                        Circle()
-                            .strokeBorder(Theme.glassBorder, lineWidth: 1)
-                    )
-
-                Image(systemName: "arrow.clockwise")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(Theme.textPrimary)
-                    .rotationEffect(.degrees(rotation))
-            }
-            .frame(width: 44, height: 44)
-            .shadow(color: Theme.lagoon.opacity(0.3), radius: 8, x: 0, y: 4)
-            .scaleEffect(isPressed ? 0.9 : 1)
+        VStack(alignment: .leading, spacing: 6) {
+            Image(systemName: icon)
+                .foregroundStyle(color)
+            Text(value)
+                .font(.headline)
+            Text(title)
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
-        .buttonStyle(PlainButtonStyle())
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { _ in
-                    withAnimation(Theme.quickSpring) { isPressed = true }
-                }
-                .onEnded { _ in
-                    withAnimation(Theme.quickSpring) { isPressed = false }
-                }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(10)
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(Theme.cardSurface)
         )
     }
 }
 
-// MARK: - Mini Stat Card
-private struct MiniStatCard: View {
-    let icon: String
-    let value: String
-    let label: String
-    let color: Color
+private struct QuestStatusRow: View {
+    let quest: Quest
 
-    @State private var glowPulse: CGFloat = 0
+    private var progress: Double {
+        min(1, quest.progressML / max(1, quest.targetML))
+    }
 
     var body: some View {
-        LiquidGlassCard(cornerRadius: 18, tintColor: color.opacity(0.5), isInteractive: false) {
-            VStack(spacing: 8) {
-                ZStack {
-                    Circle()
-                        .fill(color.opacity(0.15 + glowPulse * 0.1))
-                        .frame(width: 36, height: 36)
-
-                    Image(systemName: icon)
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(color)
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(quest.title)
+                        .font(.subheadline.weight(.semibold))
+                        .strikethrough(quest.isCompleted)
+                    Text(quest.detail)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
-
-                Text(value)
-                    .font(Theme.titleFont(size: 20))
-                    .foregroundColor(Theme.textPrimary)
-                    .contentTransition(.numericText())
-
-                Text(label)
-                    .font(Theme.bodyFont(size: 11))
-                    .foregroundColor(Theme.textSecondary)
-                    .lineLimit(1)
+                Spacer()
+                Label("+\(quest.rewardXP)", systemImage: "star.fill")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(Theme.sun)
             }
-            .padding(.vertical, 14)
-            .padding(.horizontal, 10)
-            .frame(maxWidth: .infinity)
+
+            ProgressView(value: progress)
+                .tint(quest.isCompleted ? Theme.mint : Theme.lagoon)
         }
-        .onAppear {
-            withAnimation(.easeInOut(duration: 2).repeatForever(autoreverses: true)) {
-                glowPulse = 1
-            }
-        }
+        .padding(.vertical, 2)
     }
 }
 
-// MARK: - Enhanced Achievement Badge
-private struct EnhancedAchievementBadge: View {
+private struct AchievementCell: View {
     let achievement: Achievement
-
-    @State private var isPressed = false
-    @State private var bounceScale: CGFloat = 1
 
     private var isUnlocked: Bool {
         achievement.unlockedAt != nil
     }
 
     var body: some View {
-        LiquidGlassCard(
-            cornerRadius: 20,
-            tintColor: isUnlocked ? Theme.sun.opacity(0.5) : Color.gray.opacity(0.3),
-            isInteractive: true
-        ) {
-            VStack(spacing: 12) {
-                // Icon with effects
-                ZStack {
-                    // Background circle
+        VStack(spacing: 8) {
+            Image(systemName: isUnlocked ? "trophy.fill" : "lock.fill")
+                .font(.title3)
+                .foregroundStyle(isUnlocked ? Theme.sun : .secondary)
+                .frame(width: 42, height: 42)
+                .background(
                     Circle()
-                        .fill(
-                            isUnlocked
-                                ? LinearGradient(
-                                    colors: [Theme.sun.opacity(0.3), Theme.coral.opacity(0.2)],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                                : LinearGradient(
-                                    colors: [Color.gray.opacity(0.2), Color.gray.opacity(0.1)],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                        )
-                        .frame(width: 52, height: 52)
+                        .fill(Theme.cardElevated)
+                )
 
-                    // Icon
-                    Image(systemName: isUnlocked ? "trophy.fill" : "trophy")
-                        .font(.system(size: 26))
-                        .foregroundColor(isUnlocked ? Theme.sun : .gray)
-                        .opacity(isUnlocked ? 1 : 0.5)
-                        .scaleEffect(bounceScale)
-                }
+            Text(achievement.title)
+                .font(.subheadline.weight(.medium))
+                .multilineTextAlignment(.center)
+                .lineLimit(2)
 
-                // Title
-                Text(achievement.title)
-                    .font(Theme.bodyFont(size: 13))
-                    .fontWeight(.medium)
-                    .foregroundColor(Theme.textPrimary)
-                    .lineLimit(2)
-                    .multilineTextAlignment(.center)
-
-                // Status
-                if isUnlocked {
-                    HStack(spacing: 4) {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 10))
-                        Text("Unlocked")
-                            .font(Theme.bodyFont(size: 10))
-                    }
-                    .foregroundColor(Theme.mint)
-                } else {
-                    Text(achievement.detail)
-                        .font(Theme.bodyFont(size: 10))
-                        .foregroundColor(Theme.textTertiary)
-                        .lineLimit(1)
-                }
-            }
-            .padding(.vertical, 16)
-            .padding(.horizontal, 12)
-            .frame(maxWidth: .infinity)
+            Text(isUnlocked ? "Unlocked" : achievement.detail)
+                .font(.caption)
+                .foregroundStyle(isUnlocked ? Theme.mint : .secondary)
+                .lineLimit(2)
+                .multilineTextAlignment(.center)
         }
-        .scaleEffect(isPressed ? 0.95 : 1)
-        .animation(Theme.quickSpring, value: isPressed)
-        .onChange(of: isUnlocked) { _, newValue in
-            if newValue {
-                // Bounce animation on unlock
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.5)) {
-                    bounceScale = 1.2
-                }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
-                        bounceScale = 1
-                    }
-                }
-                Haptics.achievement()
-            }
-        }
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { _ in isPressed = true }
-                .onEnded { _ in isPressed = false }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 12)
+        .padding(.horizontal, 10)
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(Theme.cardSurface)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(Theme.glassBorder, lineWidth: 1)
         )
     }
 }
 
-// MARK: - Achievements Background
-private struct AchievementsBackground: View {
-    @State private var starOpacities: [CGFloat] = Array(repeating: 0.3, count: 20)
-
-    var body: some View {
-        ZStack {
-            Theme.background
-
-            // Floating particles/stars effect
-            GeometryReader { geometry in
-                ForEach(0..<20, id: \.self) { index in
-                    Circle()
-                        .fill(Theme.sun.opacity(starOpacities[index]))
-                        .frame(width: CGFloat.random(in: 2...6), height: CGFloat.random(in: 2...6))
-                        .position(
-                            x: CGFloat.random(in: 0...geometry.size.width),
-                            y: CGFloat.random(in: 0...geometry.size.height)
-                        )
-                        .blur(radius: 1)
-                }
-            }
-
-            // Gradient overlay
-            LinearGradient(
-                colors: [
-                    Theme.sun.opacity(0.05),
-                    Color.clear,
-                    Theme.lagoon.opacity(0.05)
-                ],
-                startPoint: .topTrailing,
-                endPoint: .bottomLeading
-            )
-        }
-        .onAppear {
-            animateStars()
-        }
-    }
-
-    private func animateStars() {
-        for index in 0..<20 {
-            let delay = Double.random(in: 0...2)
-            let duration = Double.random(in: 2...4)
-
-            withAnimation(.easeInOut(duration: duration).repeatForever(autoreverses: true).delay(delay)) {
-                starOpacities[index] = CGFloat.random(in: 0.2...0.6)
-            }
-        }
-    }
-}
-
-#Preview("Quests") {
+#Preview("Achievements") {
     PreviewEnvironment {
         AchievementsView()
     }

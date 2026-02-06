@@ -4,6 +4,7 @@ import SwiftUI
 struct WaterQuestApp: App {
     @AppStorage("appTheme") private var appTheme: AppTheme = .system
     @Environment(\.scenePhase) private var scenePhase
+
     @StateObject private var store = HydrationStore()
     @StateObject private var healthKit = HealthKitManager()
     @StateObject private var notifier = NotificationScheduler()
@@ -20,10 +21,10 @@ struct WaterQuestApp: App {
     var body: some Scene {
         WindowGroup {
             ZStack {
-                Theme.background.ignoresSafeArea()
+                AppWaterBackground().ignoresSafeArea()
                 RootView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
+            .tint(Theme.lagoon)
             .environmentObject(store)
             .environmentObject(healthKit)
             .environmentObject(notifier)
@@ -37,14 +38,38 @@ struct WaterQuestApp: App {
                 await healthKit.refreshAuthorizationStatus()
                 notifier.scheduleReminders(profile: store.profile, entries: store.entries, goalML: store.dailyGoal.totalML)
                 await subscriptionManager.initialise()
-                let _ = subscriptionManager.startTransactionListener()
+                _ = subscriptionManager.startTransactionListener()
             }
-            .onChange(of: scenePhase) { _, phase in
-                guard phase == .active else { return }
-                Task {
-                    await subscriptionManager.refreshStatus()
+            .task(id: store.profile.prefersHealthKit) {
+                if store.profile.prefersHealthKit {
+                    await startHealthKitAutoSync()
+                } else {
+                    healthKit.stopWaterIntakeObserver()
                 }
             }
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .active {
+                    Task {
+                        await subscriptionManager.refreshStatus()
+                        await refreshHealthKitWaterEntries()
+                    }
+                }
+            }
+        }
+    }
+
+    @MainActor
+    private func startHealthKitAutoSync() async {
+        await healthKit.startWaterIntakeObserver(days: 7) { entries in
+            store.syncHealthKitEntriesRange(entries, days: 7)
+        }
+    }
+
+    @MainActor
+    private func refreshHealthKitWaterEntries() async {
+        guard store.profile.prefersHealthKit else { return }
+        if let entries = await healthKit.fetchRecentWaterEntries(days: 7) {
+            store.syncHealthKitEntriesRange(entries, days: 7)
         }
     }
 }

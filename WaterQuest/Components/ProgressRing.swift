@@ -2,7 +2,7 @@ import SwiftUI
 
 struct ProgressRing: View {
     var progress: Double
-    var lineWidth: CGFloat = 16
+    var lineWidth: CGFloat = 14
     var showRippleEffect: Bool = true
 
     @State private var animationTime: CGFloat = 0
@@ -13,16 +13,14 @@ struct ProgressRing: View {
 
     var body: some View {
         ZStack {
-            // Outer glow effect
             Circle()
                 .fill(Theme.progressGlow)
-                .scaleEffect(1.3)
-                .opacity(glowOpacity * progress)
+                .scaleEffect(1.2)
+                .opacity(glowOpacity * min(1, progress + 0.1))
 
-            // Background ring with subtle gradient
             Circle()
                 .stroke(
-                    Theme.glassBorder.opacity(0.5),
+                    Theme.glassBorder.opacity(0.45),
                     lineWidth: lineWidth
                 )
 
@@ -35,17 +33,14 @@ struct ProgressRing: View {
                     )
             }
 
-            // Progress ring with gradient
             Circle()
                 .trim(from: 0, to: max(0.02, progress))
                 .stroke(
                     AngularGradient(
                         gradient: Gradient(colors: [
+                            Theme.lagoon,
                             Theme.mint,
-                            Theme.lagoon,
-                            Theme.glassAccent,
-                            Theme.lagoon,
-                            Theme.mint
+                            Theme.lagoon
                         ]),
                         center: .center,
                         startAngle: .degrees(-90),
@@ -54,17 +49,16 @@ struct ProgressRing: View {
                     style: StrokeStyle(lineWidth: lineWidth, lineCap: .round)
                 )
                 .rotationEffect(.degrees(-90))
-                .shadow(color: Theme.lagoon.opacity(0.5), radius: 8, x: 0, y: 0)
+                .shadow(color: Theme.lagoon.opacity(0.32), radius: 6, x: 0, y: 0)
                 .animation(Theme.fluidSpring, value: progress)
 
-            // End cap glow
             if progress > 0.05 {
                 Circle()
                     .fill(Theme.glassHighlight)
                     .frame(width: lineWidth * 0.6, height: lineWidth * 0.6)
                     .offset(y: -((lineWidth > 16 ? 80 : 72)))
                     .rotationEffect(.degrees(-90 + 360 * progress))
-                    .blur(radius: 2)
+                    .blur(radius: 1.4)
                     .scaleEffect(pulseScale)
             }
         }
@@ -74,10 +68,10 @@ struct ProgressRing: View {
         }
         .onAppear {
             withAnimation(.easeInOut(duration: 0.8)) {
-                glowOpacity = 0.6
+                glowOpacity = 0.42
             }
             withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
-                pulseScale = 1.15
+                pulseScale = 1.1
             }
         }
     }
@@ -96,14 +90,14 @@ struct WaterFillCircle: View {
                 ForEach(0..<3, id: \.self) { index in
                     WaterWaveShape(
                         progress: progress,
-                        waveHeight: 4 + CGFloat(index) * 2,
+                        waveHeight: 3 + CGFloat(index) * 1.5,
                         phase: animationTime * (1.5 + CGFloat(index) * 0.3)
                     )
                     .fill(
                         LinearGradient(
                             colors: [
-                                Theme.lagoon.opacity(0.4 - Double(index) * 0.1),
-                                Theme.mint.opacity(0.3 - Double(index) * 0.08)
+                                Theme.lagoon.opacity(0.35 - Double(index) * 0.08),
+                                Theme.mint.opacity(0.26 - Double(index) * 0.07)
                             ],
                             startPoint: .top,
                             endPoint: .bottom

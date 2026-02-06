@@ -63,6 +63,12 @@ final class HydrationStore: ObservableObject {
     func deleteEntry(_ entry: HydrationEntry) {
         entries.removeAll { $0.id == entry.id }
         GamificationEngine.refreshDailyQuests(state: &gameState, goalML: dailyGoal.totalML)
+        GamificationEngine.refreshMilestones(
+            state: &gameState,
+            entries: entries,
+            goalML: dailyGoal.totalML,
+            todayTotalML: todayTotalML
+        )
         persist()
     }
 
@@ -71,6 +77,12 @@ final class HydrationStore: ObservableObject {
         entries[index].volumeML = volumeML
         entries[index].note = note
         GamificationEngine.refreshDailyQuests(state: &gameState, goalML: dailyGoal.totalML)
+        GamificationEngine.refreshMilestones(
+            state: &gameState,
+            entries: entries,
+            goalML: dailyGoal.totalML,
+            todayTotalML: todayTotalML
+        )
         persist()
     }
 
@@ -97,6 +109,12 @@ final class HydrationStore: ObservableObject {
         entries.append(contentsOf: healthKitEntries)
         entries.sort { $0.date < $1.date }
         GamificationEngine.refreshDailyQuests(state: &gameState, goalML: dailyGoal.totalML)
+        GamificationEngine.refreshMilestones(
+            state: &gameState,
+            entries: entries,
+            goalML: dailyGoal.totalML,
+            todayTotalML: todayTotalML
+        )
         persist()
     }
 
@@ -107,6 +125,12 @@ final class HydrationStore: ObservableObject {
         entries.append(contentsOf: healthKitEntries)
         entries.sort { $0.date < $1.date }
         GamificationEngine.refreshDailyQuests(state: &gameState, goalML: dailyGoal.totalML)
+        GamificationEngine.refreshMilestones(
+            state: &gameState,
+            entries: entries,
+            goalML: dailyGoal.totalML,
+            todayTotalML: todayTotalML
+        )
         persist()
     }
 

@@ -1,54 +1,86 @@
 import SwiftUI
 
 struct SplashScreenView: View {
-    @State private var isPulsing = false
+    @State private var pulse = false
+    @State private var shimmer = false
 
     var body: some View {
         ZStack {
-            Theme.background
-                .ignoresSafeArea()
+            AppWaterBackground().ignoresSafeArea()
 
-            VStack(spacing: 18) {
+            VStack(spacing: 0) {
+                Spacer(minLength: 120)
+
                 ZStack {
                     Circle()
-                        .fill(Theme.lagoon.opacity(0.2))
-                        .frame(width: 128, height: 128)
-                        .scaleEffect(isPulsing ? 1.05 : 0.95)
-                        .animation(.easeInOut(duration: 1.4).repeatForever(autoreverses: true), value: isPulsing)
+                        .stroke(Theme.lagoon.opacity(0.22), lineWidth: 1.4)
+                        .frame(width: 176, height: 176)
+                        .scaleEffect(pulse ? 1.04 : 0.9)
+                        .opacity(pulse ? 0.9 : 0.45)
 
-                    MascotView()
-                        .scaleEffect(0.9)
+                    Circle()
+                        .stroke(Theme.mint.opacity(0.18), lineWidth: 1)
+                        .frame(width: 132, height: 132)
+                        .scaleEffect(pulse ? 0.98 : 1.08)
+                        .opacity(0.9)
+
+                    Circle()
+                        .fill(Theme.lagoon.opacity(0.14))
+                        .frame(width: 112, height: 112)
+                        .blur(radius: 0.2)
+
+                    Image(systemName: "drop.fill")
+                        .font(.system(size: 46, weight: .semibold))
+                        .foregroundStyle(Theme.glowGradient)
+                        .shadow(color: Theme.lagoon.opacity(0.35), radius: 16, x: 0, y: 6)
+                        .overlay(
+                            LinearGradient(
+                                colors: [.white.opacity(0.95), .clear],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                            .blendMode(.screen)
+                            .opacity(shimmer ? 0.6 : 0.15)
+                            .mask(
+                                Image(systemName: "drop.fill")
+                                    .font(.system(size: 46, weight: .semibold))
+                            )
+                        )
                 }
+                .animation(.easeInOut(duration: 1.6).repeatForever(autoreverses: true), value: pulse)
 
-                Text("WaterQuest")
-                    .font(Theme.titleFont(size: 34))
-                    .foregroundColor(Theme.textPrimary)
+                VStack(spacing: 8) {
+                    Text("WaterQuest")
+                        .font(.system(size: 38, weight: .bold, design: .rounded))
+                        .kerning(0.3)
+                    Text("Hydration that fits your day")
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.top, 26)
 
-                Text("Hydrate. Level up.")
-                    .font(Theme.bodyFont(size: 14))
-                    .foregroundColor(Theme.textSecondary)
-
-                ProgressView()
-                    .tint(Theme.mint)
-                    .scaleEffect(1.1)
-            }
-            .padding(.bottom, 40)
-
-            VStack {
                 Spacer()
-                WaveView()
-                    .frame(height: 180)
-                    .opacity(0.7)
+
+                VStack(spacing: 10) {
+                    ProgressView()
+                        .tint(Theme.lagoon)
+                        .controlSize(.regular)
+                    Text("Getting things ready...")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.bottom, 56)
             }
-            .ignoresSafeArea(edges: .bottom)
+            .padding(.horizontal, 24)
         }
         .onAppear {
-            isPulsing = true
+            pulse = true
+            shimmer = true
         }
     }
 }
 
-#Preview("Splash Screen") {
+#Preview("Splash") {
     PreviewEnvironment {
         SplashScreenView()
     }

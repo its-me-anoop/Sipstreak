@@ -34,7 +34,7 @@ struct AchievementCelebrationView: View {
                     .animation(.easeInOut(duration: 2.2).repeatForever(autoreverses: true), value: floatBadge)
 
                     VStack(spacing: 6) {
-                        Text("Achievement Unlocked!")
+                        Text("Milestone Reached!")
                             .font(Theme.titleFont(size: 20))
                             .foregroundColor(.white)
                         Text(achievement.title)
@@ -49,7 +49,7 @@ struct AchievementCelebrationView: View {
                     }
                     .multilineTextAlignment(.center)
 
-                    Button("Keep the Flow Going") {
+                    Button("Keep the Momentum") {
                         dismiss()
                     }
                     .buttonStyle(PrimaryButtonStyle())
@@ -81,9 +81,9 @@ struct AchievementCelebrationView: View {
 
     private var encouragementLine: String {
         let lines = [
-            "You’re building a great habit. Keep it up!",
-            "That’s a hydration win. You’ve got this!",
-            "Every sip counts—your streak is glowing."
+            "That consistency is paying off. Keep going.",
+            "Big hydration win. Your future self will thank you.",
+            "You are building a strong routine, one sip at a time."
         ]
         let index = abs(achievement.id.hashValue) % lines.count
         return lines[index]

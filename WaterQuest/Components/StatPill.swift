@@ -31,24 +31,13 @@ struct StatPill: View {
         .padding(.vertical, 10)
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(.ultraThinMaterial)
+                .fill(Theme.glassLight)
                 .overlay(
                     RoundedRectangle(cornerRadius: 16)
-                        .fill(Theme.liquidGlassGradient)
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16)
-                        .strokeBorder(
-                            LinearGradient(
-                                colors: [Theme.glassBorder, Theme.glassBorder.opacity(0.2)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
-                            lineWidth: 1
-                        )
+                        .strokeBorder(Theme.glassBorder.opacity(0.75), lineWidth: 0.8)
                 )
         )
-        .shadow(color: Color.black.opacity(0.1), radius: 6, x: 0, y: 3)
+        .shadow(color: Theme.shadowColor.opacity(0.58), radius: 7, x: 0, y: 3)
         .onAppear {
             animatedValue = value
         }
