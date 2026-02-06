@@ -1,5 +1,14 @@
 import Foundation
 
+enum HydrationStorePersistSource: String {
+    case local
+    case remote
+}
+
+extension Notification.Name {
+    static let hydrationStoreDidPersist = Notification.Name("HydrationStoreDidPersist")
+}
+
 @MainActor
 final class HydrationStore: ObservableObject {
     @Published var entries: [HydrationEntry]
@@ -8,9 +17,11 @@ final class HydrationStore: ObservableObject {
     @Published var lastWeather: WeatherSnapshot?
     @Published var lastWorkout: WorkoutSummary
     @Published var activeAchievement: Achievement?
+    @Published private(set) var hasPremiumAccess: Bool = false
 
     private let persistence = PersistenceService.shared
     private var pendingAchievements: [Achievement] = []
+    private var stateUpdatedAt: Date
 
     /// Set by the app after both objects are created so the store can notify
     /// the scheduler when new intake is logged.
@@ -24,16 +35,29 @@ final class HydrationStore: ObservableObject {
         self.lastWeather = state.lastWeather
         self.lastWorkout = state.lastWorkout
         self.activeAchievement = nil
+        self.stateUpdatedAt = state.lastUpdatedAt
         GamificationEngine.ensureAchievements(state: &self.gameState)
         GamificationEngine.refreshDailyQuests(state: &self.gameState, goalML: dailyGoal.totalML)
     }
 
     var dailyGoal: GoalBreakdown {
-        GoalCalculator.dailyGoal(profile: profile, weather: activeWeather, workout: lastWorkout)
+        GoalCalculator.dailyGoal(
+            profile: profile,
+            weather: canUseWeatherAdjustment ? lastWeather : nil,
+            workout: canUseWorkoutAdjustment ? lastWorkout : nil
+        )
     }
 
     var activeWeather: WeatherSnapshot? {
-        profile.prefersWeatherGoal ? lastWeather : nil
+        canUseWeatherAdjustment ? lastWeather : nil
+    }
+
+    var canUseWeatherAdjustment: Bool {
+        hasPremiumAccess && profile.prefersWeatherGoal
+    }
+
+    var canUseWorkoutAdjustment: Bool {
+        hasPremiumAccess && profile.prefersHealthKit
     }
 
     var todayEntries: [HydrationEntry] {
@@ -42,6 +66,10 @@ final class HydrationStore: ObservableObject {
 
     var todayTotalML: Double {
         todayEntries.reduce(0) { $0 + $1.volumeML }
+    }
+
+    var persistedStateSnapshot: PersistedState {
+        makePersistedState(updatedAt: stateUpdatedAt)
     }
 
     @discardableResult
@@ -139,8 +167,19 @@ final class HydrationStore: ObservableObject {
         persist()
     }
 
+    func setPremiumAccess(_ hasAccess: Bool) {
+        guard hasPremiumAccess != hasAccess else { return }
+        hasPremiumAccess = hasAccess
+        GamificationEngine.refreshDailyQuests(state: &gameState, goalML: dailyGoal.totalML)
+        notificationScheduler?.scheduleReminders(profile: profile, entries: entries, goalML: dailyGoal.totalML)
+    }
+
     func resetToday() {
         entries.removeAll { $0.date.isSameDay(as: Date()) }
+        persist()
+    }
+
+    func touchForSync() {
         persist()
     }
 
@@ -152,15 +191,45 @@ final class HydrationStore: ObservableObject {
         }
     }
 
-    private func persist() {
-        let state = PersistedState(
+    func applySyncedState(_ state: PersistedState) {
+        entries = state.entries.sorted { $0.date < $1.date }
+        profile = state.profile
+        gameState = state.gameState
+        lastWeather = state.lastWeather
+        lastWorkout = state.lastWorkout
+        pendingAchievements.removeAll()
+        activeAchievement = nil
+        GamificationEngine.ensureAchievements(state: &gameState)
+        GamificationEngine.refreshDailyQuests(state: &gameState, goalML: dailyGoal.totalML)
+        persist(source: .remote, updatedAt: state.lastUpdatedAt)
+    }
+
+    private func makePersistedState(updatedAt: Date) -> PersistedState {
+        PersistedState(
             entries: entries,
             profile: profile,
             gameState: gameState,
             lastWeather: lastWeather,
-            lastWorkout: lastWorkout
+            lastWorkout: lastWorkout,
+            lastUpdatedAt: updatedAt
         )
+    }
+
+    private func persist(source: HydrationStorePersistSource = .local, updatedAt: Date? = nil) {
+        switch source {
+        case .local:
+            stateUpdatedAt = updatedAt ?? Date()
+        case .remote:
+            stateUpdatedAt = updatedAt ?? stateUpdatedAt
+        }
+
+        let state = makePersistedState(updatedAt: stateUpdatedAt)
         persistence.save(state)
+        NotificationCenter.default.post(
+            name: .hydrationStoreDidPersist,
+            object: state,
+            userInfo: ["source": source.rawValue]
+        )
     }
 
     private func enqueueAchievements(_ achievements: [Achievement]) {
@@ -178,18 +247,20 @@ struct PersistedState: Codable {
     var gameState: GameState
     var lastWeather: WeatherSnapshot?
     var lastWorkout: WorkoutSummary
+    var lastUpdatedAt: Date
 
     // manualWeather removed; kept as ignored key so old persisted JSON decodes without error
     private enum CodingKeys: String, CodingKey {
-        case entries, profile, gameState, lastWeather, lastWorkout, manualWeather
+        case entries, profile, gameState, lastWeather, lastWorkout, lastUpdatedAt, manualWeather
     }
 
-    init(entries: [HydrationEntry], profile: UserProfile, gameState: GameState, lastWeather: WeatherSnapshot?, lastWorkout: WorkoutSummary) {
+    init(entries: [HydrationEntry], profile: UserProfile, gameState: GameState, lastWeather: WeatherSnapshot?, lastWorkout: WorkoutSummary, lastUpdatedAt: Date) {
         self.entries = entries
         self.profile = profile
         self.gameState = gameState
         self.lastWeather = lastWeather
         self.lastWorkout = lastWorkout
+        self.lastUpdatedAt = lastUpdatedAt
     }
 
     init(from decoder: Decoder) throws {
@@ -199,6 +270,7 @@ struct PersistedState: Codable {
         gameState    = try c.decode(GameState.self,         forKey: .gameState)
         lastWeather  = try c.decodeIfPresent(WeatherSnapshot.self, forKey: .lastWeather)
         lastWorkout  = try c.decode(WorkoutSummary.self,    forKey: .lastWorkout)
+        lastUpdatedAt = try c.decodeIfPresent(Date.self, forKey: .lastUpdatedAt) ?? .distantPast
         // .manualWeather silently ignored if present in old JSON
     }
 
@@ -209,6 +281,7 @@ struct PersistedState: Codable {
         try c.encode(gameState,   forKey: .gameState)
         try c.encode(lastWeather, forKey: .lastWeather)
         try c.encode(lastWorkout, forKey: .lastWorkout)
+        try c.encode(lastUpdatedAt, forKey: .lastUpdatedAt)
     }
 
     static let `default` = PersistedState(
@@ -216,6 +289,7 @@ struct PersistedState: Codable {
         profile: .default,
         gameState: .default,
         lastWeather: nil,
-        lastWorkout: .empty
+        lastWorkout: .empty,
+        lastUpdatedAt: .distantPast
     )
 }

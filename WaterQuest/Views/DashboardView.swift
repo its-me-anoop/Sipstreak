@@ -5,11 +5,13 @@ struct DashboardView: View {
     @EnvironmentObject private var weather: WeatherClient
     @EnvironmentObject private var healthKit: HealthKitManager
     @EnvironmentObject private var locationManager: LocationManager
+    @EnvironmentObject private var subscriptionManager: SubscriptionManager
 
     @StateObject private var aiService = HydrationAIService()
 
     @State private var entryToEdit: HydrationEntry?
     @State private var isRefreshing = false
+    @State private var showPaywall = false
 
     private var goal: GoalBreakdown { store.dailyGoal }
     private var progress: Double { min(1, store.todayTotalML / max(1, goal.totalML)) }
@@ -24,13 +26,23 @@ struct DashboardView: View {
                 quickAddSection
             }
 
-            if let tip = aiService.currentTip {
-                Section("Hydration Coach") {
-                    tipSection(tip)
+            Section("Hydration Coach") {
+                if subscriptionManager.isPro {
+                    if let tip = aiService.currentTip {
+                        tipSection(tip)
+                    } else {
+                        HStack {
+                            ProgressView()
+                            Text("Generating your coach tip...")
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                } else {
+                    lockedCoachSection
                 }
             }
 
-            if store.profile.prefersWeatherGoal {
+            if store.canUseWeatherAdjustment {
                 Section("Weather") {
                     weatherSection
                 }
@@ -48,11 +60,11 @@ struct DashboardView: View {
             }
 
             Section("Today\'s Log") {
-                if todayEntries.isEmpty {
+                if visibleTodayEntries.isEmpty {
                     Text("No water logged yet.")
                         .foregroundStyle(.secondary)
                 } else {
-                    ForEach(todayEntries) { entry in
+                    ForEach(visibleTodayEntries) { entry in
                         Button {
                             Haptics.selection()
                             entryToEdit = entry
@@ -68,6 +80,28 @@ struct DashboardView: View {
                             }
                         }
                     }
+
+                    if !subscriptionManager.isPro && todayEntries.count > visibleTodayEntries.count {
+                        Button {
+                            Haptics.selection()
+                            showPaywall = true
+                        } label: {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 3) {
+                                    Text("View full history with Pro")
+                                        .font(.subheadline.weight(.semibold))
+                                    Text("Showing latest 5 entries")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(.tertiary)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                    }
                 }
             }
         }
@@ -80,11 +114,20 @@ struct DashboardView: View {
         }
         .task {
             await refreshSignals()
-            await generateAITip()
+            if subscriptionManager.isPro {
+                await generateAITip()
+            }
         }
         .task(id: locationManager.lastLocation?.timestamp) {
-            guard store.profile.prefersWeatherGoal else { return }
+            guard store.canUseWeatherAdjustment else { return }
             await refreshWeather()
+        }
+        .onChange(of: subscriptionManager.isPro) { _, isPro in
+            if isPro {
+                Task {
+                    await generateAITip()
+                }
+            }
         }
         .sheet(item: $entryToEdit) { entry in
             EntryEditorSheet(entry: entry, unitSystem: store.profile.unitSystem) { updatedAmount, updatedNote in
@@ -96,6 +139,9 @@ struct DashboardView: View {
             } onDelete: {
                 deleteEntry(entry)
             }
+        }
+        .sheet(isPresented: $showPaywall) {
+            PaywallView(isDismissible: true)
         }
     }
 
@@ -171,6 +217,33 @@ struct DashboardView: View {
                 if aiService.isGenerating {
                     ProgressView()
                 }
+            }
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var lockedCoachSection: some View {
+        Button {
+            Haptics.selection()
+            showPaywall = true
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "lock.fill")
+                    .foregroundStyle(Theme.sun)
+                    .frame(width: 28)
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("AI hydration coaching is Pro")
+                        .font(.subheadline.weight(.semibold))
+                    Text("Unlock personalized tips that adapt through the day.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.tertiary)
             }
         }
         .buttonStyle(.plain)
@@ -253,6 +326,13 @@ struct DashboardView: View {
         store.todayEntries.sorted { $0.date > $1.date }
     }
 
+    private var visibleTodayEntries: [HydrationEntry] {
+        if subscriptionManager.isPro {
+            return todayEntries
+        }
+        return Array(todayEntries.prefix(5))
+    }
+
     private func weatherIcon(_ snapshot: WeatherSnapshot) -> String {
         if snapshot.conditionKey.isEmpty {
             return "cloud.sun"
@@ -265,14 +345,18 @@ struct DashboardView: View {
         let entry = store.addIntake(amount: amount, source: .manual)
 
         Task {
-            await healthKit.saveWaterIntake(ml: entry.volumeML, date: entry.date, entryID: entry.id)
-            await generateAITip()
+            if subscriptionManager.hasActiveSubscription {
+                await healthKit.saveWaterIntake(ml: entry.volumeML, date: entry.date, entryID: entry.id)
+            }
+            if subscriptionManager.isPro {
+                await generateAITip()
+            }
         }
     }
 
     private func deleteEntry(_ entry: HydrationEntry) {
         Haptics.impact(.medium)
-        if entry.source == .manual {
+        if entry.source == .manual && subscriptionManager.hasActiveSubscription {
             Task {
                 await healthKit.deleteWaterIntake(entryID: entry.id)
             }
@@ -285,7 +369,7 @@ struct DashboardView: View {
         isRefreshing = true
         defer { isRefreshing = false }
 
-        if store.profile.prefersHealthKit {
+        if store.canUseWorkoutAdjustment {
             await healthKit.refreshAuthorizationStatus()
             let summary = await healthKit.fetchTodayWorkoutSummary()
             store.updateWorkout(summary)
@@ -294,7 +378,7 @@ struct DashboardView: View {
             }
         }
 
-        if store.profile.prefersWeatherGoal {
+        if store.canUseWeatherAdjustment {
             await refreshWeather()
         }
 

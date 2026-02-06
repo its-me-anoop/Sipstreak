@@ -8,6 +8,9 @@ A playful, gamified iOS hydration tracker with smart goals that adapt to weather
 - HealthKit integration (write water, read workouts).
 - Local notification reminders.
 - Onboarding flow and settings.
+- WaterQuest Pro premium features with a 7-day free trial.
+- Pro pricing: £2.99/month or £29.99/year.
+- Server sync via CloudKit (same Apple ID + iCloud account).
 
 ## Getting Started
 1. Open `WaterQuest.xcodeproj` in Xcode.

@@ -7,7 +7,7 @@ struct PaywallView: View {
 
     var isDismissible: Bool = true
 
-    @State private var selectedProduct: Product?
+    @State private var selectedPlan: ProductID = .annual
     @State private var isPurchasing = false
     @State private var purchaseError: String?
     @State private var restoreSuccess = false
@@ -37,26 +37,28 @@ struct PaywallView: View {
                         plansContent
                     }
 
-                    if let product = resolvedProduct {
-                        Section {
-                            Button {
-                                doPurchase(product)
-                            } label: {
-                                if isPurchasing {
-                                    HStack {
-                                        ProgressView()
-                                            .tint(.white)
-                                        Text("Processing…")
-                                    }
-                                    .frame(maxWidth: .infinity)
-                                } else {
-                                    Text("Start Pro - \(product.displayPrice)")
-                                        .frame(maxWidth: .infinity)
+                    Section {
+                        Button {
+                            doPurchase()
+                        } label: {
+                            if isPurchasing {
+                                HStack {
+                                    ProgressView()
+                                        .tint(.white)
+                                    Text("Processing…")
                                 }
+                                .frame(maxWidth: .infinity)
+                            } else {
+                                Text("Start \(SubscriptionManager.trialLengthLabel) free trial")
+                                    .frame(maxWidth: .infinity)
                             }
-                            .buttonStyle(.borderedProminent)
-                            .disabled(isPurchasing)
                         }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(isPurchasing || resolvedProduct == nil)
+
+                        Text("Then \(selectedPlanPrice)/\(selectedPlanUnit). Cancel anytime.")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
                     }
 
                     if let purchaseError {
@@ -75,7 +77,7 @@ struct PaywallView: View {
                     }
 
                     Section {
-                        Text("Payment is charged to your Apple ID at confirmation. Subscription renews automatically unless canceled at least 24 hours before renewal.")
+                        Text("Payment is charged to your Apple ID after the \(SubscriptionManager.trialLengthLabel) trial unless canceled. Subscription renews automatically unless canceled at least 24 hours before renewal.")
                             .font(.footnote)
                             .foregroundStyle(.secondary)
 
@@ -103,9 +105,7 @@ struct PaywallView: View {
                 }
             }
             .task {
-                if selectedProduct == nil {
-                    selectedProduct = subscriptionManager.annualProduct ?? subscriptionManager.monthlyProduct
-                }
+                selectedPlan = subscriptionManager.annualProduct != nil ? .annual : .monthly
             }
         }
     }
@@ -125,7 +125,7 @@ struct PaywallView: View {
                 .font(.title3.weight(.semibold))
                 .multilineTextAlignment(.center)
 
-            Text("Choose monthly or yearly access. Cancel anytime in App Store settings.")
+            Text("\(SubscriptionManager.trialLengthLabel) free trial, then \(SubscriptionManager.monthlyPriceText)/month or \(SubscriptionManager.annualPriceText)/year.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -136,41 +136,58 @@ struct PaywallView: View {
 
     @ViewBuilder
     private var plansContent: some View {
-        if subscriptionManager.products.isEmpty {
-            HStack {
-                Spacer()
-                ProgressView()
-                Spacer()
-            }
-        } else {
-            if let annual = subscriptionManager.annualProduct {
-                PlanRow(
-                    title: "Yearly",
-                    subtitle: perMonthText(for: annual).map { "\($0)/month" } ?? "Best value",
-                    price: annual.displayPrice,
-                    isSelected: selectedProduct?.id == annual.id,
-                    isBestValue: true
-                ) {
-                    selectedProduct = annual
-                }
-            }
+        PlanRow(
+            title: "Yearly",
+            subtitle: "\(annualPerMonthText)/month, billed yearly",
+            price: SubscriptionManager.annualPriceText,
+            isSelected: selectedPlan == .annual,
+            isBestValue: true
+        ) {
+            selectedPlan = .annual
+        }
 
-            if let monthly = subscriptionManager.monthlyProduct {
-                PlanRow(
-                    title: "Monthly",
-                    subtitle: "Flexible monthly billing",
-                    price: monthly.displayPrice,
-                    isSelected: selectedProduct?.id == monthly.id,
-                    isBestValue: false
-                ) {
-                    selectedProduct = monthly
-                }
-            }
+        PlanRow(
+            title: "Monthly",
+            subtitle: "Flexible monthly billing",
+            price: SubscriptionManager.monthlyPriceText,
+            isSelected: selectedPlan == .monthly,
+            isBestValue: false
+        ) {
+            selectedPlan = .monthly
+        }
+
+        if subscriptionManager.products.isEmpty {
+            Text("Loading App Store products...")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
         }
     }
 
     private var resolvedProduct: Product? {
-        selectedProduct ?? subscriptionManager.annualProduct ?? subscriptionManager.monthlyProduct
+        switch selectedPlan {
+        case .monthly:
+            return subscriptionManager.monthlyProduct
+        case .annual:
+            return subscriptionManager.annualProduct
+        }
+    }
+
+    private var selectedPlanPrice: String {
+        selectedPlan == .annual ? SubscriptionManager.annualPriceText : SubscriptionManager.monthlyPriceText
+    }
+
+    private var selectedPlanUnit: String {
+        selectedPlan == .annual ? "year" : "month"
+    }
+
+    private var annualPerMonthText: String {
+        let annual = Decimal(string: "29.99") ?? Decimal(29.99)
+        let monthly = annual / Decimal(12)
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencyCode = "GBP"
+        formatter.locale = Locale(identifier: "en_GB")
+        return formatter.string(from: NSDecimalNumber(decimal: monthly)) ?? "£2.50"
     }
 
     private func featureRow(icon: String, text: String) -> some View {
@@ -183,14 +200,12 @@ struct PaywallView: View {
         }
     }
 
-    private func perMonthText(for annual: Product) -> String? {
-        let monthly = annual.price / 12
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        return formatter.string(from: NSDecimalNumber(decimal: monthly))
-    }
+    private func doPurchase() {
+        guard let product = resolvedProduct else {
+            purchaseError = "Products are not available right now. Please try again."
+            return
+        }
 
-    private func doPurchase(_ product: Product) {
         isPurchasing = true
         purchaseError = nil
 

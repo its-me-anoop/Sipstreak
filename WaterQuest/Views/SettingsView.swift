@@ -7,6 +7,7 @@ struct SettingsView: View {
     @EnvironmentObject private var notifier: NotificationScheduler
     @EnvironmentObject private var healthKit: HealthKitManager
     @EnvironmentObject private var locationManager: LocationManager
+    @EnvironmentObject private var subscriptionManager: SubscriptionManager
 
     @AppStorage("appTheme") private var appTheme: AppTheme = .system
 
@@ -14,11 +15,13 @@ struct SettingsView: View {
     @State private var customGoalValue: Double = 2200
     @State private var wakeTime: Date = Date()
     @State private var sleepTime: Date = Date()
+    @State private var showPaywall = false
 
     var body: some View {
         Form {
             profileSection
             appearanceSection
+            premiumSection
             goalSection
             scheduleSection
             reminderSection
@@ -33,6 +36,9 @@ struct SettingsView: View {
         }
         .onAppear {
             hydrateLocalStateFromProfile()
+        }
+        .sheet(isPresented: $showPaywall) {
+            PaywallView(isDismissible: true)
         }
     }
 
@@ -98,6 +104,31 @@ struct SettingsView: View {
         }
     }
 
+    private var premiumSection: some View {
+        Section("WaterQuest Pro") {
+            HStack {
+                Text("Status")
+                Spacer()
+                Text(proStatusLabel)
+                    .foregroundStyle(subscriptionManager.isPro ? Theme.mint : .secondary)
+            }
+
+            if subscriptionManager.isTrialActive {
+                Text("Trial ends in \(trialDaysLeftLabel).")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            } else if !subscriptionManager.hasActiveSubscription {
+                Text("Start with a \(SubscriptionManager.trialLengthLabel) free trial, then \(SubscriptionManager.monthlyPriceText)/month or \(SubscriptionManager.annualPriceText)/year.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+
+            Button(subscriptionManager.isPro ? "Manage Pro" : "Start \(SubscriptionManager.trialLengthLabel) free trial") {
+                showPaywall = true
+            }
+        }
+    }
+
     private var goalSection: some View {
         Section("Daily Goal") {
             Toggle("Use custom goal", isOn: $customGoalEnabled)
@@ -130,22 +161,34 @@ struct SettingsView: View {
                 }
             }
 
-            Toggle("Weather adjustment", isOn: Binding(
-                get: { store.profile.prefersWeatherGoal },
-                set: { value in
-                    store.updateProfile { $0.prefersWeatherGoal = value }
-                    if value {
-                        locationManager.requestPermission()
+            if subscriptionManager.hasActiveSubscription {
+                Toggle("Weather adjustment", isOn: Binding(
+                    get: { store.profile.prefersWeatherGoal },
+                    set: { value in
+                        store.updateProfile { $0.prefersWeatherGoal = value }
+                        if value {
+                            locationManager.requestPermission()
+                        }
                     }
-                }
-            ))
+                ))
 
-            Toggle("Workout adjustment", isOn: Binding(
-                get: { store.profile.prefersHealthKit },
-                set: { value in
-                    store.updateProfile { $0.prefersHealthKit = value }
-                }
-            ))
+                Toggle("Workout adjustment", isOn: Binding(
+                    get: { store.profile.prefersHealthKit },
+                    set: { value in
+                        store.updateProfile { $0.prefersHealthKit = value }
+                    }
+                ))
+            } else {
+                proLockedSettingRow(
+                    title: "Weather adjustment",
+                    subtitle: "Use local weather for adaptive daily goals."
+                )
+
+                proLockedSettingRow(
+                    title: "Workout adjustment",
+                    subtitle: "Use HealthKit workouts for adaptive daily goals."
+                )
+            }
         }
     }
 
@@ -199,22 +242,30 @@ struct SettingsView: View {
 
     private var permissionsSection: some View {
         Section("Permissions") {
-            permissionRow(
-                title: "HealthKit",
-                subtitle: healthStatusText,
-                systemImage: "heart.fill",
-                tint: healthKit.isAuthorized ? Theme.mint : Theme.sun
-            ) {
-                Task { await healthKit.requestAuthorization() }
-            }
+            if subscriptionManager.hasActiveSubscription {
+                permissionRow(
+                    title: "HealthKit",
+                    subtitle: healthStatusText,
+                    systemImage: "heart.fill",
+                    tint: healthKit.isAuthorized ? Theme.mint : Theme.sun
+                ) {
+                    Task { await healthKit.requestAuthorization() }
+                }
 
-            Button("Sync HealthKit Now") {
-                Task {
-                    guard let entries = await healthKit.fetchRecentWaterEntries(days: 7) else { return }
-                    await MainActor.run {
-                        store.syncHealthKitEntriesRange(entries, days: 7)
+                Button("Sync HealthKit Now") {
+                    Task {
+                        guard let entries = await healthKit.fetchRecentWaterEntries(days: 7) else { return }
+                        await MainActor.run {
+                            store.syncHealthKitEntriesRange(entries, days: 7)
+                        }
                     }
                 }
+            } else {
+                lockedPermissionRow(
+                    title: "HealthKit",
+                    subtitle: "Premium feature. Start a trial or subscribe to connect.",
+                    systemImage: "heart.fill"
+                )
             }
 
             permissionRow(
@@ -252,6 +303,58 @@ struct SettingsView: View {
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
+                        .foregroundStyle(.primary)
+                    Text(subtitle)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.tertiary)
+            }
+        }
+    }
+
+    private func lockedPermissionRow(title: String, subtitle: String, systemImage: String) -> some View {
+        Button {
+            showPaywall = true
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: systemImage)
+                    .foregroundStyle(Theme.sun)
+                    .frame(width: 24)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("\(title) (Pro)")
+                        .foregroundStyle(.primary)
+                    Text(subtitle)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.tertiary)
+            }
+        }
+    }
+
+    private func proLockedSettingRow(title: String, subtitle: String) -> some View {
+        Button {
+            showPaywall = true
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: "lock.fill")
+                    .foregroundStyle(Theme.sun)
+                    .frame(width: 24)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("\(title) (Pro)")
                         .foregroundStyle(.primary)
                     Text(subtitle)
                         .font(.caption)
@@ -325,6 +428,21 @@ struct SettingsView: View {
 
         wakeTime = dateFromMinutes(store.profile.wakeMinutes)
         sleepTime = dateFromMinutes(store.profile.sleepMinutes)
+    }
+
+    private var proStatusLabel: String {
+        if subscriptionManager.hasActiveSubscription {
+            return "Active"
+        }
+        if subscriptionManager.isTrialActive {
+            return "Trial"
+        }
+        return "Free"
+    }
+
+    private var trialDaysLeftLabel: String {
+        let days = max(0, subscriptionManager.trialDaysRemaining)
+        return "\(days) \(days == 1 ? "day" : "days")"
     }
 
     private func updateSchedule() {

@@ -3,6 +3,7 @@ import SwiftUI
 struct AddIntakeView: View {
     @EnvironmentObject private var store: HydrationStore
     @EnvironmentObject private var healthKit: HealthKitManager
+    @EnvironmentObject private var subscriptionManager: SubscriptionManager
 
     @State private var amount: Double = 250
     @State private var note = ""
@@ -115,7 +116,9 @@ struct AddIntakeView: View {
         let entry = store.addIntake(amount: amount, source: .manual, note: trimmed.isEmpty ? nil : trimmed)
 
         Task {
-            await healthKit.saveWaterIntake(ml: entry.volumeML, date: entry.date, entryID: entry.id)
+            if subscriptionManager.hasActiveSubscription {
+                await healthKit.saveWaterIntake(ml: entry.volumeML, date: entry.date, entryID: entry.id)
+            }
         }
 
         withAnimation {

@@ -226,18 +226,7 @@ struct FloatingBubble: View {
 
 struct AnimatedMeshBackground: View {
     var body: some View {
-        ZStack {
-            AppWaterBackground().ignoresSafeArea()
-
-            FloatingBubble(size: 220, color: Theme.lagoon, delay: 0.0)
-                .position(x: 80, y: 160)
-
-            FloatingBubble(size: 180, color: Theme.mint, delay: 0.5)
-                .position(x: 310, y: 370)
-
-            FloatingBubble(size: 150, color: Theme.lavender, delay: 0.8)
-                .position(x: 220, y: 600)
-        }
+        AppWaterBackground().ignoresSafeArea()
     }
 }
 
@@ -245,103 +234,21 @@ struct AppWaterBackground: View {
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
-        TimelineView(.animation) { timeline in
-            GeometryReader { geo in
-                shaderBackground(
-                    size: geo.size,
-                    time: timeline.date.timeIntervalSinceReferenceDate
-                )
-            }
-        }
+        LinearGradient(
+            colors: colorScheme == .dark
+                ? [
+                    Color(uiColor: .systemBackground),
+                    Color(uiColor: .secondarySystemBackground)
+                ]
+                : [
+                    Color(uiColor: .systemGroupedBackground),
+                    Color(uiColor: .secondarySystemGroupedBackground)
+                ],
+            startPoint: .top,
+            endPoint: .bottom
+        )
         .allowsHitTesting(false)
         .ignoresSafeArea()
-    }
-
-    private func shaderBackground(size: CGSize, time: TimeInterval) -> some View {
-        let palette = WaterPalette(isLight: colorScheme == .light)
-
-        return Rectangle()
-            .fill(
-                LinearGradient(
-                    colors: [palette.topColor, palette.bottomColor],
-                    startPoint: UnitPoint(
-                        x: 0.18 + 0.12 * sin(time * 0.14),
-                        y: 0.02 + 0.06 * cos(time * 0.12)
-                    ),
-                    endPoint: UnitPoint(
-                        x: 0.82 + 0.1 * cos(time * 0.1),
-                        y: 0.98 + 0.04 * sin(time * 0.16)
-                    )
-                )
-            )
-            .overlay(
-                Circle()
-                    .fill(palette.blobA)
-                    .frame(width: max(320, size.width * 0.72), height: max(280, size.width * 0.62))
-                    .blur(radius: 70)
-                    .offset(
-                        x: -120 + cos(time * 0.22) * 48,
-                        y: -140 + sin(time * 0.18) * 38
-                    )
-            )
-            .overlay(
-                Circle()
-                    .fill(palette.blobB)
-                    .frame(width: max(300, size.width * 0.68), height: max(240, size.width * 0.58))
-                    .blur(radius: 64)
-                    .offset(
-                        x: 120 + sin(time * 0.2) * 56,
-                        y: 42 + cos(time * 0.16) * 36
-                    )
-            )
-            .overlay(
-                Circle()
-                    .fill(palette.blobC)
-                    .frame(width: max(360, size.width * 0.82), height: max(250, size.width * 0.62))
-                    .blur(radius: 72)
-                    .offset(
-                        x: 0 + sin(time * 0.15) * 44,
-                        y: 340 + cos(time * 0.14) * 30
-                    )
-            )
-            .overlay(
-                LinearGradient(
-                    colors: [palette.sheenTop, .clear, palette.sheenBottom],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-            )
-            .ignoresSafeArea()
-    }
-
-    private struct WaterPalette {
-        let topColor: Color
-        let bottomColor: Color
-        let blobA: Color
-        let blobB: Color
-        let blobC: Color
-        let sheenTop: Color
-        let sheenBottom: Color
-
-        init(isLight: Bool) {
-            if isLight {
-                topColor = Color(red: 0.83, green: 0.90, blue: 0.98)
-                bottomColor = Color(red: 0.47, green: 0.66, blue: 0.88)
-                blobA = Theme.lagoon.opacity(0.20)
-                blobB = Theme.mint.opacity(0.15)
-                blobC = Theme.lavender.opacity(0.12)
-                sheenTop = Color.white.opacity(0.12)
-                sheenBottom = Theme.lagoon.opacity(0.05)
-            } else {
-                topColor = Color(red: 0.05, green: 0.14, blue: 0.24)
-                bottomColor = Color(red: 0.01, green: 0.06, blue: 0.13)
-                blobA = Theme.lagoon.opacity(0.34)
-                blobB = Theme.mint.opacity(0.24)
-                blobC = Theme.lavender.opacity(0.18)
-                sheenTop = Color.white.opacity(0.06)
-                sheenBottom = Theme.lagoon.opacity(0.12)
-            }
-        }
     }
 }
 

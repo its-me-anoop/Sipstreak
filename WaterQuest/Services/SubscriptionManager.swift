@@ -13,8 +13,18 @@ enum ProductID: String, CaseIterable {
 /// Trial start date is persisted in UserDefaults so it survives app re-launches.
 @MainActor
 final class SubscriptionManager: ObservableObject {
+    static let trialLengthDays = 7
+
+    private enum Pricing {
+        static let currencyCode = "GBP"
+        static let monthly = Decimal(string: "2.99") ?? Decimal(2.99)
+        static let annual = Decimal(string: "29.99") ?? Decimal(29.99)
+    }
+
     /// `true` while the user is within the 7-day trial window OR has an active subscription.
     @Published private(set) var isPro: Bool = false
+    /// `true` when an active paid entitlement is found in StoreKit.
+    @Published private(set) var hasActiveSubscription: Bool = false
     /// `true` once initial products and status have been loaded.
     @Published private(set) var isInitialized: Bool = false
 
@@ -33,9 +43,29 @@ final class SubscriptionManager: ObservableObject {
         return start.addingTimeInterval(trialDuration)
     }
 
+    /// Number of whole/partial days remaining in trial (rounded up), 0 if expired.
+    var trialDaysRemaining: Int {
+        guard let expiration = trialExpirationDate else { return 0 }
+        let remaining = expiration.timeIntervalSinceNow
+        guard remaining > 0 else { return 0 }
+        return Int(ceil(remaining / (24 * 60 * 60)))
+    }
+
+    static var monthlyPriceText: String {
+        formatPrice(Pricing.monthly)
+    }
+
+    static var annualPriceText: String {
+        formatPrice(Pricing.annual)
+    }
+
+    static var trialLengthLabel: String {
+        "\(trialLengthDays)-day"
+    }
+
     // MARK: - Private
     private static let trialStartKey = "WaterQuest.trialStartDate"
-    private let trialDuration: TimeInterval = 7 * 24 * 60 * 60  // 7 days
+    private let trialDuration: TimeInterval = TimeInterval(SubscriptionManager.trialLengthDays * 24 * 60 * 60)
 
     private var trialStartDate: Date? {
         get {
@@ -53,6 +83,7 @@ final class SubscriptionManager: ObservableObject {
         if trialStartDate == nil {
             trialStartDate = Date()
         }
+        isPro = isTrialActive
     }
 
     // MARK: - Lifecycle
@@ -136,6 +167,7 @@ final class SubscriptionManager: ObservableObject {
                 }
             }
         }
+        hasActiveSubscription = hasActive
         isPro = hasActive || isTrialActive
     }
 
@@ -157,5 +189,13 @@ final class SubscriptionManager: ObservableObject {
                 }
             }
         }
+    }
+
+    private static func formatPrice(_ amount: Decimal) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencyCode = Pricing.currencyCode
+        formatter.locale = Locale(identifier: "en_GB")
+        return formatter.string(from: NSDecimalNumber(decimal: amount)) ?? "£0.00"
     }
 }
