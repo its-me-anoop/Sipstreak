@@ -13,64 +13,90 @@ struct MainTabView: View {
     @State private var selectedTab: Tab = .dashboard
     @State private var showPaywall = false
 
+    init() {
+        let tabAppearance = UITabBarAppearance()
+        tabAppearance.configureWithTransparentBackground()
+        tabAppearance.backgroundColor = .clear
+        tabAppearance.backgroundEffect = UIBlurEffect(style: .systemUltraThinMaterial)
+        UITabBar.appearance().standardAppearance = tabAppearance
+        UITabBar.appearance().scrollEdgeAppearance = tabAppearance
+
+        let navAppearance = UINavigationBarAppearance()
+        navAppearance.configureWithTransparentBackground()
+        navAppearance.backgroundColor = .clear
+        UINavigationBar.appearance().standardAppearance = navAppearance
+        UINavigationBar.appearance().scrollEdgeAppearance = navAppearance
+        UINavigationBar.appearance().compactAppearance = navAppearance
+    }
+
     var body: some View {
-        TabView(selection: $selectedTab) {
-            DashboardView()
+        ZStack {
+            AppWaterBackground().ignoresSafeArea()
+
+            TabView(selection: $selectedTab) {
+                NavigationStack {
+                    DashboardView()
+                }
+                .background(Color.clear)
+                .toolbarBackground(.hidden, for: .navigationBar)
                 .tabItem {
-                    Image(systemName: "drop.fill")
-                    Text("Today")
+                    Label("Home", systemImage: "house")
                 }
                 .tag(Tab.dashboard)
 
-            AddIntakeView()
+                NavigationStack {
+                    AddIntakeView()
+                }
+                .background(Color.clear)
+                .toolbarBackground(.hidden, for: .navigationBar)
                 .tabItem {
-                    Image(systemName: "plus.circle.fill")
-                    Text("Add")
+                    Label("Log", systemImage: "plus.circle")
                 }
                 .tag(Tab.add)
 
-            // Insights – gated
-            ZStack {
-                InsightsView()
-                if !subscriptionManager.isPro {
-                    LockedTabOverlay(
-                        icon: "chart.line.uptrend.xyaxis",
+                NavigationStack {
+                    gatedContainer(
                         title: "Insights",
-                        onUnlock: { showPaywall = true }
+                        systemImage: "chart.line.uptrend.xyaxis",
+                        description: "Unlock weekly trends and richer hydration analysis.",
+                        content: { InsightsView() }
                     )
                 }
-            }
-            .tabItem {
-                Image(systemName: "chart.line.uptrend.xyaxis")
-                Text("Insights")
-            }
-            .tag(Tab.insights)
-
-            // Quests – gated
-            ZStack {
-                AchievementsView()
-                if !subscriptionManager.isPro {
-                    LockedTabOverlay(
-                        icon: "trophy.fill",
-                        title: "Quests",
-                        onUnlock: { showPaywall = true }
-                    )
-                }
-            }
-            .tabItem {
-                Image(systemName: "trophy.fill")
-                Text("Quests")
-            }
-            .tag(Tab.achievements)
-
-            SettingsView()
+                .background(Color.clear)
+                .toolbarBackground(.hidden, for: .navigationBar)
                 .tabItem {
-                    Image(systemName: "gearshape.fill")
-                    Text("Settings")
+                    Label("Insights", systemImage: "chart.line.uptrend.xyaxis")
+                }
+                .tag(Tab.insights)
+
+                NavigationStack {
+                    gatedContainer(
+                        title: "Goals",
+                        systemImage: "trophy",
+                        description: "Unlock full quests, rewards, and milestone tracking.",
+                        content: { AchievementsView() }
+                    )
+                }
+                .background(Color.clear)
+                .toolbarBackground(.hidden, for: .navigationBar)
+                .tabItem {
+                    Label("Goals", systemImage: "trophy")
+                }
+                .tag(Tab.achievements)
+
+                NavigationStack {
+                    SettingsView()
+                }
+                .background(Color.clear)
+                .toolbarBackground(.hidden, for: .navigationBar)
+                .tabItem {
+                    Label("Settings", systemImage: "gearshape")
                 }
                 .tag(Tab.settings)
+            }
+            .background(Color.clear)
         }
-        .tint(Theme.mint)
+        .tint(Theme.lagoon)
         .onChange(of: selectedTab) {
             Haptics.selection()
         }
@@ -78,86 +104,70 @@ struct MainTabView: View {
             PaywallView(isDismissible: true)
         }
     }
+
+    @ViewBuilder
+    private func gatedContainer<Content: View>(
+        title: String,
+        systemImage: String,
+        description: String,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        if subscriptionManager.isPro {
+            content()
+        } else {
+            LockedFeatureView(
+                title: title,
+                systemImage: systemImage,
+                description: description,
+                onUnlock: { showPaywall = true }
+            )
+        }
+    }
 }
 
-// MARK: - Locked Tab Overlay
-/// Full-screen overlay rendered on top of a gated tab. Tapping "Unlock" opens the paywall.
-private struct LockedTabOverlay: View {
-    let icon: String
+private struct LockedFeatureView: View {
     let title: String
+    let systemImage: String
+    let description: String
     let onUnlock: () -> Void
 
-    @State private var glowPulse: CGFloat = 0
-
     var body: some View {
-        ZStack {
-            // Blurred backdrop so underlying content is hinted at but unreadable
-            Color.black.opacity(0.55)
-                .ignoresSafeArea()
+        VStack(spacing: 20) {
+            Spacer()
 
-            VStack(spacing: 24) {
-                // Lock icon with glow
-                ZStack {
+            Image(systemName: systemImage)
+                .font(.system(size: 42, weight: .semibold))
+                .foregroundStyle(Theme.lagoon)
+                .frame(width: 88, height: 88)
+                .background(
                     Circle()
-                        .fill(Theme.lagoon.opacity(0.15 + glowPulse * 0.1))
-                        .frame(width: 88, height: 88)
-                        .blur(radius: glowPulse * 6)
+                        .fill(.ultraThinMaterial)
+                )
 
-                    Circle()
-                        .fill(Theme.lagoon.opacity(0.22))
-                        .frame(width: 72, height: 72)
+            VStack(spacing: 8) {
+                Text("\(title) is part of Pro")
+                    .font(.title2.weight(.semibold))
 
-                    Image(systemName: "lock.fill")
-                        .font(.system(size: 32, weight: .semibold))
-                        .foregroundColor(.white)
-                }
-
-                VStack(spacing: 6) {
-                    Text("\(title) is a Pro feature")
-                        .font(Theme.titleFont(size: 20))
-                        .foregroundColor(Theme.textPrimary)
-
-                    Text("Subscribe to unlock insights, quests, and more")
-                        .font(Theme.bodyFont(size: 14))
-                        .foregroundColor(Theme.textSecondary)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 40)
-                }
-
-                // Unlock button
-                Button(action: {
-                    Haptics.impact(.medium)
-                    onUnlock()
-                }) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "sparkles")
-                            .font(.system(size: 15, weight: .semibold))
-                        Text("Unlock Pro")
-                            .font(Theme.titleFont(size: 16))
-                    }
-                    .foregroundColor(.white)
-                    .padding(.vertical, 14)
-                    .padding(.horizontal, 36)
-                    .background(
-                        Capsule()
-                            .fill(
-                                LinearGradient(
-                                    colors: [Theme.lagoon, Theme.mint],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
-                    )
-                    .shadow(color: Theme.lagoon.opacity(0.45), radius: 14, x: 0, y: 6)
-                }
-                .buttonStyle(.plain)
+                Text(description)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 20)
             }
-        }
-        .onAppear {
-            withAnimation(.easeInOut(duration: 2).repeatForever(autoreverses: true)) {
-                glowPulse = 1
+
+            Button("Unlock Pro") {
+                Haptics.impact(.medium)
+                onUnlock()
             }
+            .buttonStyle(.borderedProminent)
+
+            Spacer()
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(.horizontal, 24)
+        .background(AppWaterBackground().ignoresSafeArea())
+        .navigationTitle(title)
+        .navigationBarTitleDisplayMode(.large)
     }
 }
 

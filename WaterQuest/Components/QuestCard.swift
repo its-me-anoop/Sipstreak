@@ -6,25 +6,27 @@ struct QuestCard: View {
 
     @State private var isPressed = false
     @State private var showCheckmark = false
-    @State private var glowIntensity: CGFloat = 0
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .top, spacing: 12) {
-                // Quest icon
                 ZStack {
                     Circle()
-                        .fill(quest.isCompleted ? Theme.sun.opacity(0.3) : Theme.lagoon.opacity(0.2))
-                        .frame(width: 40, height: 40)
+                        .fill(quest.isCompleted ? Theme.sun.opacity(0.24) : Theme.lagoon.opacity(0.20))
+                        .frame(width: 38, height: 38)
+                        .overlay(
+                            Circle()
+                                .strokeBorder((quest.isCompleted ? Theme.sun : Theme.lagoon).opacity(0.28), lineWidth: 0.8)
+                        )
 
                     if quest.isCompleted {
                         Image(systemName: "checkmark")
-                            .font(.system(size: 16, weight: .bold))
+                            .font(.system(size: 15, weight: .bold))
                             .foregroundColor(Theme.sunText)
                             .scaleEffect(showCheckmark ? 1 : 0)
                     } else {
                         Image(systemName: questIcon)
-                            .font(.system(size: 16))
+                            .font(.system(size: 15, weight: .semibold))
                             .foregroundColor(Theme.lagoon)
                     }
                 }
@@ -43,7 +45,6 @@ struct QuestCard: View {
 
                 Spacer()
 
-                // Reward badge
                 HStack(spacing: 4) {
                     Image(systemName: "star.fill")
                         .font(.system(size: 10))
@@ -56,22 +57,19 @@ struct QuestCard: View {
                 .padding(.vertical, 6)
                 .background(
                     Capsule()
-                        .fill(Theme.sun.opacity(0.15))
+                        .fill(Theme.sun.opacity(0.18))
                         .overlay(
                             Capsule()
-                                .strokeBorder(Theme.sun.opacity(0.3), lineWidth: 1)
+                                .strokeBorder(Theme.sun.opacity(0.35), lineWidth: 0.8)
                         )
                 )
             }
 
-            // Progress bar
             GeometryReader { geometry in
                 ZStack(alignment: .leading) {
-                    // Background track
                     RoundedRectangle(cornerRadius: 4)
-                        .fill(Theme.glassLight)
+                        .fill(Theme.glassBorder.opacity(0.35))
 
-                    // Progress fill with gradient
                     RoundedRectangle(cornerRadius: 4)
                         .fill(
                             LinearGradient(
@@ -86,15 +84,14 @@ struct QuestCard: View {
 
                 }
             }
-            .frame(height: 6)
+            .frame(height: 7)
             .animation(Theme.fluidSpring, value: progress)
 
-            // Completion message
             if quest.isCompleted {
                 HStack(spacing: 6) {
                     Image(systemName: "party.popper.fill")
                         .font(.system(size: 12))
-                    Text("Quest complete!")
+                    Text("Mission complete - great work!")
                         .font(Theme.bodyFont(size: 12))
                         .fontWeight(.medium)
                 }
@@ -107,29 +104,25 @@ struct QuestCard: View {
         }
         .padding(16)
         .background(
-            RoundedRectangle(cornerRadius: 20)
-                .fill(.ultraThinMaterial)
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(Theme.glassLight)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 20)
-                        .fill(Theme.liquidGlassGradient)
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 20)
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
                         .strokeBorder(
                             LinearGradient(
                                 colors: quest.isCompleted
                                     ? [Theme.sun.opacity(0.4), Theme.sun.opacity(0.1)]
-                                    : [Theme.glassBorder, Theme.glassBorder.opacity(0.2)],
+                                    : [Theme.glassBorder.opacity(0.9), Theme.glassBorder.opacity(0.25)],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             ),
-                            lineWidth: 1
+                            lineWidth: 0.9
                         )
                 )
         )
         .shadow(
-            color: quest.isCompleted ? Theme.sun.opacity(0.2) : Color.black.opacity(0.15),
-            radius: quest.isCompleted ? 12 : 8,
+            color: quest.isCompleted ? Theme.sun.opacity(0.18) : Theme.shadowColor.opacity(0.72),
+            radius: quest.isCompleted ? 10 : 7,
             x: 0,
             y: 4
         )

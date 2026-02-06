@@ -115,37 +115,61 @@ struct HeroMascotView: View {
     @State private var appear = false
     @State private var ripple1: CGFloat = 0.6
     @State private var ripple2: CGFloat = 0.4
+    @State private var ripple3: CGFloat = 0.5
     @State private var ripple1Opacity: Double = 0.3
     @State private var ripple2Opacity: Double = 0.25
+    @State private var ripple3Opacity: Double = 0.2
+    @State private var sparkleRotation: Double = 0
 
     var body: some View {
         ZStack {
-            // Water ripples
+            // Three layered water ripples
             Circle()
                 .stroke(Theme.lagoon.opacity(ripple1Opacity), lineWidth: 2)
-                .frame(width: 200, height: 200)
+                .frame(width: 220, height: 220)
                 .scaleEffect(ripple1)
 
             Circle()
                 .stroke(Theme.mint.opacity(ripple2Opacity), lineWidth: 1.5)
-                .frame(width: 200, height: 200)
+                .frame(width: 220, height: 220)
                 .scaleEffect(ripple2)
 
+            Circle()
+                .stroke(Theme.lavender.opacity(ripple3Opacity), lineWidth: 1)
+                .frame(width: 220, height: 220)
+                .scaleEffect(ripple3)
+
+            // Orbiting sparkle particles
+            ForEach(0..<6, id: \.self) { i in
+                Circle()
+                    .fill(Color.white.opacity(0.5))
+                    .frame(width: 3, height: 3)
+                    .offset(y: -100)
+                    .rotationEffect(.degrees(Double(i) * 60 + sparkleRotation))
+            }
+
             MascotView(size: 120, animated: true)
-                .scaleEffect(appear ? 1 : 0.5)
+                .scaleEffect(appear ? 1 : 0.3)
                 .opacity(appear ? 1 : 0)
         }
         .onAppear {
-            withAnimation(.spring(response: 0.8, dampingFraction: 0.6)) {
+            withAnimation(.spring(response: 0.8, dampingFraction: 0.5)) {
                 appear = true
             }
             withAnimation(.easeOut(duration: 2.5).repeatForever(autoreverses: false)) {
-                ripple1 = 1.4
+                ripple1 = 1.5
                 ripple1Opacity = 0
             }
-            withAnimation(.easeOut(duration: 2.5).repeatForever(autoreverses: false).delay(1.2)) {
-                ripple2 = 1.3
+            withAnimation(.easeOut(duration: 2.5).repeatForever(autoreverses: false).delay(0.8)) {
+                ripple2 = 1.4
                 ripple2Opacity = 0
+            }
+            withAnimation(.easeOut(duration: 2.5).repeatForever(autoreverses: false).delay(1.6)) {
+                ripple3 = 1.3
+                ripple3Opacity = 0
+            }
+            withAnimation(.linear(duration: 20).repeatForever(autoreverses: false)) {
+                sparkleRotation = 360
             }
         }
     }

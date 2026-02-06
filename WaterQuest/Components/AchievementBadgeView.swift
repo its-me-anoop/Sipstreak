@@ -10,10 +10,14 @@ struct AchievementBadgeView: View {
         VStack(spacing: 8) {
             ZStack {
                 Circle()
-                    .fill(achievement.isUnlocked ? Theme.sun : Theme.glassLight)
+                    .fill(achievement.isUnlocked ? Theme.sun.opacity(0.9) : Theme.glassLight)
                     .frame(width: 56, height: 56)
+                    .overlay(
+                        Circle()
+                            .strokeBorder(achievement.isUnlocked ? Theme.sun.opacity(0.35) : Theme.glassBorder.opacity(0.6), lineWidth: 0.8)
+                    )
                 Image(systemName: achievement.isUnlocked ? "sparkles" : "lock.fill")
-                    .foregroundColor(achievement.isUnlocked ? .black : Theme.textSecondary)
+                    .foregroundColor(achievement.isUnlocked ? Theme.night : Theme.textSecondary)
                     .rotationEffect(.degrees(twinkle && achievement.isUnlocked ? 12 : 0))
                     .scaleEffect(twinkle && achievement.isUnlocked ? 1.06 : 1.0)
                     .animation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true), value: twinkle)
@@ -30,10 +34,14 @@ struct AchievementBadgeView: View {
         .frame(maxWidth: 140)
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(Theme.card)
+                .fill(Theme.glassLight)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .strokeBorder(Theme.glassBorder.opacity(0.65), lineWidth: 0.8)
+                )
         )
         .scaleEffect(pulse ? 1.04 : 1.0)
-        .shadow(color: achievement.isUnlocked ? Theme.sun.opacity(pulse ? 0.5 : 0.2) : .clear, radius: pulse ? 12 : 6)
+        .shadow(color: achievement.isUnlocked ? Theme.sun.opacity(pulse ? 0.36 : 0.16) : Theme.shadowColor.opacity(0.55), radius: pulse ? 10 : 6)
         .animation(.spring(response: 0.35, dampingFraction: 0.7), value: pulse)
         .onAppear {
             if achievement.isUnlocked {

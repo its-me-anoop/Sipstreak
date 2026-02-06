@@ -21,35 +21,21 @@ struct LiquidGlassCard<Content: View>: View {
     }
 
     var body: some View {
-        Group {
-            if #available(iOS 19.0, *) {
-                content
-                    .glassEffect(
-                        liquidGlass,
-                        in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    )
-            } else {
-                content
-                    .background(
-                        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                            .fill(.ultraThinMaterial)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                                    .strokeBorder(Theme.glassBorder.opacity(0.35), lineWidth: 0.5)
-                            )
-                    )
-            }
-        }
-        .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
-    }
+        let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
 
-    @available(iOS 19.0, *)
-    private var liquidGlass: Glass {
-        var glass = Glass.regular
-        if let tintColor {
-            glass = glass.tint(tintColor.opacity(0.45))
-        }
-        return glass.interactive(isInteractive)
+        content
+            .background(
+                shape
+                    .fill(Theme.glassLight)
+                    .overlay(shape.fill((tintColor ?? Theme.glassAccent).opacity(0.10)))
+                    .overlay(
+                        shape
+                            .strokeBorder(Theme.glassBorder.opacity(0.92), lineWidth: 0.8)
+                    )
+            )
+            .opacity(isInteractive ? 1 : 0.98)
+        .clipShape(shape)
+        .shadow(color: Theme.shadowColor.opacity(0.65), radius: 10, x: 0, y: 5)
     }
 }
 
@@ -70,15 +56,31 @@ struct LiquidGlassButton: View {
         var tintColor: Color {
             switch self {
             case .primary: return Theme.lagoon
-            case .secondary: return .clear
+            case .secondary: return Theme.glassLight
             case .accent: return Theme.mint
             }
         }
 
         var textColor: Color {
             switch self {
-            case .primary, .accent: return Theme.textPrimary
-            case .secondary: return Theme.textSecondary
+            case .primary, .accent: return Color.white.opacity(0.95)
+            case .secondary: return Theme.textPrimary
+            }
+        }
+
+        var borderColor: Color {
+            switch self {
+            case .primary: return Theme.lagoon.opacity(0.45)
+            case .secondary: return Theme.glassBorder.opacity(0.75)
+            case .accent: return Theme.mint.opacity(0.45)
+            }
+        }
+
+        var shadowColor: Color {
+            switch self {
+            case .primary: return Theme.lagoon.opacity(0.30)
+            case .secondary: return Theme.shadowColor.opacity(0.65)
+            case .accent: return Theme.mint.opacity(0.26)
             }
         }
     }
@@ -135,20 +137,16 @@ struct LiquidGlassButton: View {
             .padding(size.padding)
             .background(
                 Capsule()
-                    .fill(.ultraThinMaterial)
+                    .fill(style.tintColor)
                     .overlay(
                         Capsule()
-                            .fill(style.tintColor.opacity(0.3))
-                    )
-                    .overlay(
-                        Capsule()
-                            .strokeBorder(Theme.glassBorder, lineWidth: 1)
+                            .strokeBorder(style.borderColor, lineWidth: 1)
                     )
             )
-            .shadow(color: style.tintColor.opacity(0.3), radius: 8, x: 0, y: 4)
-            .scaleEffect(isPressed ? 0.95 : 1.0)
+            .shadow(color: style.shadowColor, radius: 10, x: 0, y: 5)
+            .scaleEffect(isPressed ? 0.96 : 1.0)
         }
-        .buttonStyle(PlainButtonStyle())
+        .buttonStyle(.plain)
         .simultaneousGesture(
             DragGesture(minimumDistance: 0)
                 .onChanged { _ in
@@ -177,21 +175,27 @@ struct FluidStatCard: View {
         LiquidGlassCard(cornerRadius: 20, tintColor: accentColor.opacity(0.5), isInteractive: false) {
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
-                    Image(systemName: icon)
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(accentColor)
-                        .rotationEffect(.degrees(iconRotation))
+                    HStack(spacing: 8) {
+                        Image(systemName: icon)
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(accentColor)
+                            .rotationEffect(.degrees(iconRotation))
+
+                        Text(label)
+                            .font(Theme.bodyFont(size: 12))
+                            .foregroundColor(Theme.textSecondary)
+                    }
 
                     Spacer()
 
                     Circle()
-                        .fill(accentColor.opacity(0.3 + glowPulse * 0.2))
-                        .frame(width: 8, height: 8)
+                        .fill(accentColor.opacity(0.28 + glowPulse * 0.15))
+                        .frame(width: 9, height: 9)
+                        .overlay(
+                            Circle()
+                                .strokeBorder(accentColor.opacity(0.45), lineWidth: 0.6)
+                        )
                 }
-
-                Text(label)
-                    .font(Theme.bodyFont(size: 12))
-                    .foregroundColor(Theme.textSecondary)
 
                 Text(animatedValue)
                     .font(Theme.titleFont(size: 20))
@@ -202,7 +206,7 @@ struct FluidStatCard: View {
         }
         .onAppear {
             animatedValue = value
-            withAnimation(.easeInOut(duration: 2).repeatForever(autoreverses: true)) {
+            withAnimation(.easeInOut(duration: 2.3).repeatForever(autoreverses: true)) {
                 glowPulse = 1
             }
         }
@@ -249,21 +253,21 @@ struct QuickAddPill: View {
                     .padding(.horizontal, 16)
                     .background(
                         Capsule()
-                            .fill(.ultraThinMaterial)
+                            .fill(Theme.glassLight)
                             .overlay(
                                 Capsule()
-                                    .fill(Theme.lagoon.opacity(0.25))
+                                    .fill(Theme.lagoon.opacity(0.26))
                             )
                             .overlay(
                                 Capsule()
                                     .strokeBorder(Theme.glassBorder, lineWidth: 1)
                             )
                     )
-                    .shadow(color: Theme.lagoon.opacity(0.2), radius: 6, x: 0, y: 3)
+                    .shadow(color: Theme.shadowColor.opacity(0.60), radius: 8, x: 0, y: 4)
             }
         }
-        .buttonStyle(PlainButtonStyle())
-        .scaleEffect(isPressed ? 0.92 : 1.0)
+        .buttonStyle(.plain)
+        .scaleEffect(isPressed ? 0.95 : 1.0)
         .animation(Theme.quickSpring, value: isPressed)
         .simultaneousGesture(
             DragGesture(minimumDistance: 0)

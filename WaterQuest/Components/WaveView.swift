@@ -35,9 +35,15 @@ struct WaveView: View {
 
     var body: some View {
         WaveShape(phase: phase, strength: 12)
-            .fill(LinearGradient(colors: [Theme.lagoon.opacity(0.7), Theme.mint.opacity(0.6)], startPoint: .top, endPoint: .bottom))
+            .fill(
+                LinearGradient(
+                    colors: [Theme.lagoon.opacity(0.52), Theme.mint.opacity(0.42)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
             .onAppear {
-                withAnimation(.linear(duration: 2.8).repeatForever(autoreverses: false)) {
+                withAnimation(.linear(duration: 3.6).repeatForever(autoreverses: false)) {
                     phase = .pi * 2
                 }
             }

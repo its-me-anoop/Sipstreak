@@ -5,6 +5,7 @@ import HealthKit
 final class HealthKitManager: ObservableObject {
     private let healthStore = HKHealthStore()
     private let waterEntryMetadataKey = "WaterQuestEntryID"
+    private var waterObserverQuery: HKObserverQuery?
 
     @Published var isAvailable: Bool = HKHealthStore.isHealthDataAvailable()
     @Published var isAuthorized: Bool = false
@@ -78,6 +79,81 @@ final class HealthKitManager: ObservableObject {
         return await fetchWaterEntries(predicate: predicate)
     }
 
+    func startWaterIntakeObserver(
+        days: Int = 7,
+        onEntriesUpdated: @escaping @MainActor ([HydrationEntry]) -> Void
+    ) async {
+        guard isAvailable else { return }
+        guard let waterType = HKQuantityType.quantityType(forIdentifier: .dietaryWater) else { return }
+
+        let status = await authorizationRequestStatus()
+        if status == .shouldRequest {
+            await requestAuthorization()
+        } else {
+            await refreshAuthorizationStatus()
+        }
+
+        guard isAuthorized else { return }
+
+        if let existingQuery = waterObserverQuery {
+            healthStore.stop(existingQuery)
+            waterObserverQuery = nil
+        }
+
+        let query = HKObserverQuery(sampleType: waterType, predicate: nil) { [weak self] _, completionHandler, error in
+            guard let self else {
+                completionHandler()
+                return
+            }
+
+            if let error {
+                print("HealthKit water observer error: \(error)")
+                completionHandler()
+                return
+            }
+
+            Task { @MainActor in
+                if let entries = await self.fetchRecentWaterEntries(days: days) {
+                    onEntriesUpdated(entries)
+                }
+                completionHandler()
+            }
+        }
+
+        waterObserverQuery = query
+        healthStore.execute(query)
+        healthStore.enableBackgroundDelivery(for: waterType, frequency: .immediate) { success, error in
+            if let error {
+                print("HealthKit background delivery error: \(error)")
+            } else if !success {
+                print("HealthKit background delivery was not enabled for water samples.")
+            }
+        }
+
+        if let entries = await fetchRecentWaterEntries(days: days) {
+            onEntriesUpdated(entries)
+        }
+    }
+
+    func stopWaterIntakeObserver() {
+        if let query = waterObserverQuery {
+            healthStore.stop(query)
+            waterObserverQuery = nil
+        }
+
+        guard let waterType = HKQuantityType.quantityType(forIdentifier: .dietaryWater) else {
+            return
+        }
+
+        healthStore.disableBackgroundDelivery(for: waterType) { success, error in
+            if let error {
+                print("HealthKit disable background delivery error: \(error)")
+            } else if !success {
+                print("HealthKit background delivery remained enabled for water samples.")
+            }
+        }
+    }
+
     func saveWaterIntake(ml: Double, date: Date = Date(), entryID: UUID? = nil) async {
         guard isAvailable else { return }
         let status = await authorizationRequestStatus()
@@ -112,7 +188,7 @@ final class HealthKitManager: ObservableObject {
         let predicate = HKQuery.predicateForObjects(withMetadataKey: waterEntryMetadataKey, allowedValues: [entryID.uuidString])
         await withCheckedContinuation { continuation in
             let query = HKSampleQuery(sampleType: waterType, predicate: predicate, limit: HKObjectQueryNoLimit, sortDescriptors: nil) { [weak self] _, samples, _ in
-                guard let self, let samples = samples as? [HKSample], !samples.isEmpty else {
+                guard let self, let samples, !samples.isEmpty else {
                     continuation.resume(returning: ())
                     return
                 }
