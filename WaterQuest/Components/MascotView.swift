@@ -1,15 +1,102 @@
 import SwiftUI
 
+enum MascotStyle: String, CaseIterable, Identifiable {
+    case ripple
+    case blaze
+    case leafy
+    case bolt
+    case frost
+
+    var id: String { rawValue }
+
+    var name: String {
+        switch self {
+        case .ripple: return "Ripple"
+        case .blaze: return "Blaze"
+        case .leafy: return "Leafy"
+        case .bolt: return "Bolt"
+        case .frost: return "Frost"
+        }
+    }
+
+    var tagline: String {
+        switch self {
+        case .ripple: return "Classic aqua companion"
+        case .blaze: return "Fiery streak booster"
+        case .leafy: return "Fresh and balanced"
+        case .bolt: return "Lightning quick energy"
+        case .frost: return "Cool and collected"
+        }
+    }
+
+    var colors: [Color] {
+        switch self {
+        case .ripple: return [Theme.lagoon, Theme.mint]
+        case .blaze: return [Theme.coral, Theme.sun]
+        case .leafy: return [Theme.mint, Theme.lagoon]
+        case .bolt: return [Theme.lavender, Theme.lagoon]
+        case .frost: return [Theme.lagoon.opacity(0.7), Theme.lavender]
+        }
+    }
+
+    var hueRotation: Double {
+        switch self {
+        case .ripple: return 0
+        case .blaze: return 28
+        case .leafy: return -20
+        case .bolt: return 45
+        case .frost: return -45
+        }
+    }
+
+    static func from(id: String) -> MascotStyle {
+        MascotStyle(rawValue: id) ?? .ripple
+    }
+}
+
+struct MascotMask: View {
+    let style: MascotStyle
+
+    var body: some View {
+        switch style {
+        case .ripple:
+            Image(systemName: "drop.fill")
+                .resizable()
+                .scaledToFit()
+        case .blaze:
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .rotation(.degrees(8))
+        case .leafy:
+            Capsule(style: .continuous)
+                .rotation(.degrees(-18))
+        case .bolt:
+            DiamondShape()
+        case .frost:
+            HexagonShape()
+        }
+    }
+}
+
 struct MascotView: View {
     var size: CGFloat = 80
     var animated: Bool = true
+    var style: MascotStyle? = nil
+
+    @AppStorage("WaterQuest.selectedMascot") private var selectedMascotID: String = MascotStyle.ripple.rawValue
 
     @State private var bounceOffset: CGFloat = 0
     @State private var glowScale: CGFloat = 1.0
     @State private var eyeBlink: Bool = false
     @State private var mouthWidth: CGFloat = 18
 
+    private var resolvedStyle: MascotStyle {
+        style ?? MascotStyle.from(id: selectedMascotID)
+    }
+
     var body: some View {
+        let mascotWidth = size
+        let mascotHeight = size * 1.25
+
         ZStack {
             // Glow ring
             if animated {
@@ -20,19 +107,14 @@ struct MascotView: View {
                     .blur(radius: 12)
             }
 
-            // Drop body
-            Image(systemName: "drop.fill")
-                .resizable()
-                .scaledToFit()
-                .foregroundStyle(
-                    LinearGradient(
-                        colors: [Theme.lagoon, Theme.mint.opacity(0.8)],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
+            // Body
+            mascotGradient
+                .frame(width: mascotWidth, height: mascotHeight)
+                .mask(
+                    MascotMask(style: resolvedStyle)
+                        .frame(width: mascotWidth, height: mascotHeight)
                 )
                 .shadow(color: Theme.lagoon.opacity(0.5), radius: 16, x: 0, y: 8)
-                .frame(width: size, height: size * 1.25)
 
             // Face
             VStack(spacing: size * 0.06) {
@@ -82,6 +164,15 @@ struct MascotView: View {
         }
     }
 
+    private var mascotGradient: some View {
+        LinearGradient(
+            colors: resolvedStyle.colors,
+            startPoint: .top,
+            endPoint: .bottom
+        )
+        .hueRotation(.degrees(resolvedStyle.hueRotation))
+    }
+
     private var eye: some View {
         ZStack {
             // Eye white
@@ -106,6 +197,149 @@ struct MascotView: View {
                 eyeBlink = false
             }
         }
+    }
+}
+
+struct MascotProgressView: View {
+    let progress: Double
+    var size: CGFloat = 110
+    var style: MascotStyle? = nil
+
+    @AppStorage("WaterQuest.selectedMascot") private var selectedMascotID: String = MascotStyle.ripple.rawValue
+
+    @State private var bobOffset: CGFloat = 0
+    @State private var glowScale: CGFloat = 1
+    @State private var blink: Bool = false
+
+    private var clampedProgress: CGFloat {
+        min(1, max(0, progress))
+    }
+
+    private var happiness: CGFloat {
+        0.2 + (0.8 * clampedProgress)
+    }
+
+    private var resolvedStyle: MascotStyle {
+        style ?? MascotStyle.from(id: selectedMascotID)
+    }
+
+    var body: some View {
+        let dropWidth = size
+        let dropHeight = size * 1.25
+        let mask = MascotMask(style: resolvedStyle)
+            .frame(width: dropWidth, height: dropHeight)
+
+        ZStack {
+            Circle()
+                .fill(Theme.lagoon.opacity(0.12))
+                .frame(width: size * 1.4, height: size * 1.4)
+                .scaleEffect(glowScale)
+                .blur(radius: 14)
+
+            Rectangle()
+                .fill(backgroundTint)
+                .frame(width: dropWidth, height: dropHeight)
+                .mask(mask)
+
+            mascotGradient
+                .frame(width: dropWidth, height: dropHeight * clampedProgress, alignment: .bottom)
+                .frame(width: dropWidth, height: dropHeight, alignment: .bottom)
+                .clipped()
+                .mask(mask)
+
+            MascotFaceView(size: size * 0.55, happiness: happiness, blink: blink)
+                .offset(y: size * 0.18)
+        }
+        .offset(y: bobOffset)
+        .onAppear {
+            withAnimation(.easeInOut(duration: 2.2).repeatForever(autoreverses: true)) {
+                bobOffset = -6
+            }
+            withAnimation(.easeInOut(duration: 2.8).repeatForever(autoreverses: true)) {
+                glowScale = 1.1
+            }
+            startBlinking()
+        }
+        .animation(.easeInOut(duration: 0.5), value: clampedProgress)
+    }
+
+    private var mascotGradient: some View {
+        LinearGradient(
+            colors: resolvedStyle.colors,
+            startPoint: .top,
+            endPoint: .bottom
+        )
+        .hueRotation(.degrees(resolvedStyle.hueRotation))
+    }
+
+    private var backgroundTint: Color {
+        (resolvedStyle.colors.first ?? Theme.lagoon).opacity(0.18)
+    }
+
+    private func startBlinking() {
+        Timer.scheduledTimer(withTimeInterval: 3.8, repeats: true) { _ in
+            blink = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.16) {
+                blink = false
+            }
+        }
+    }
+}
+
+private struct MascotFaceView: View {
+    let size: CGFloat
+    let happiness: CGFloat
+    var blink: Bool = false
+
+    private var eyeScaleY: CGFloat {
+        blink ? 0.2 : 0.75 + (0.35 * happiness)
+    }
+
+    private var mouthCurvature: CGFloat {
+        -0.35 + (0.85 * happiness)
+    }
+
+    var body: some View {
+        VStack(spacing: size * 0.16) {
+            HStack(spacing: size * 0.28) {
+                eye
+                eye
+            }
+
+            MascotMouthShape(curvature: mouthCurvature)
+                .stroke(Color.white.opacity(0.9), style: StrokeStyle(lineWidth: size * 0.12, lineCap: .round))
+                .frame(width: size * 0.55, height: size * 0.28)
+                .shadow(color: Color.white.opacity(0.4), radius: 2, x: 0, y: 1)
+        }
+        .animation(.easeInOut(duration: 0.12), value: blink)
+    }
+
+    private var eye: some View {
+        Capsule(style: .continuous)
+            .fill(Color.white.opacity(0.9))
+            .frame(width: size * 0.18, height: size * 0.18)
+            .scaleEffect(x: 1, y: eyeScaleY)
+            .overlay(
+                Circle()
+                    .fill(Color.black.opacity(0.85))
+                    .frame(width: size * 0.09, height: size * 0.09)
+                    .opacity(blink ? 0 : 1)
+                    .offset(y: size * 0.02)
+            )
+    }
+}
+
+private struct MascotMouthShape: Shape {
+    var curvature: CGFloat
+
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        let start = CGPoint(x: rect.minX, y: rect.midY)
+        let end = CGPoint(x: rect.maxX, y: rect.midY)
+        let control = CGPoint(x: rect.midX, y: rect.midY + curvature * rect.height)
+        path.move(to: start)
+        path.addQuadCurve(to: end, control: control)
+        return path
     }
 }
 
@@ -172,5 +406,37 @@ struct HeroMascotView: View {
                 sparkleRotation = 360
             }
         }
+    }
+}
+
+struct DiamondShape: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        let top = CGPoint(x: rect.midX, y: rect.minY)
+        let right = CGPoint(x: rect.maxX, y: rect.midY)
+        let bottom = CGPoint(x: rect.midX, y: rect.maxY)
+        let left = CGPoint(x: rect.minX, y: rect.midY)
+        path.move(to: top)
+        path.addLines([right, bottom, left, top])
+        return path
+    }
+}
+
+struct HexagonShape: Shape {
+    func path(in rect: CGRect) -> Path {
+        let width = rect.width
+        let height = rect.height
+        let xOffset = width * 0.1
+        let yOffset = height * 0.2
+
+        var path = Path()
+        path.move(to: CGPoint(x: rect.minX + xOffset, y: rect.minY))
+        path.addLine(to: CGPoint(x: rect.maxX - xOffset, y: rect.minY))
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.midY))
+        path.addLine(to: CGPoint(x: rect.maxX - xOffset, y: rect.maxY))
+        path.addLine(to: CGPoint(x: rect.minX + xOffset, y: rect.maxY))
+        path.addLine(to: CGPoint(x: rect.minX, y: rect.midY))
+        path.closeSubpath()
+        return path
     }
 }

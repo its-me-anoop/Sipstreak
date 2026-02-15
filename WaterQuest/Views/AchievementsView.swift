@@ -2,11 +2,24 @@ import SwiftUI
 
 struct AchievementsView: View {
     @EnvironmentObject private var store: HydrationStore
+    @EnvironmentObject private var subscriptionManager: SubscriptionManager
 
     private let columns = [
         GridItem(.flexible(), spacing: 12),
         GridItem(.flexible(), spacing: 12)
     ]
+
+    private static let defaultMascotID = "ripple"
+    private let mascotOptions: [MascotOption] = [
+        MascotOption(id: "ripple", name: "Ripple", tagline: "Classic aqua companion", systemImage: "drop.fill", colors: [Theme.lagoon, Theme.mint]),
+        MascotOption(id: "blaze", name: "Blaze", tagline: "Fiery streak booster", systemImage: "flame.fill", colors: [Theme.coral, Theme.sun]),
+        MascotOption(id: "leafy", name: "Leafy", tagline: "Fresh and balanced", systemImage: "leaf.fill", colors: [Theme.mint, Theme.lagoon]),
+        MascotOption(id: "bolt", name: "Bolt", tagline: "Lightning quick energy", systemImage: "bolt.fill", colors: [Theme.lavender, Theme.lagoon]),
+        MascotOption(id: "frost", name: "Frost", tagline: "Cool and collected", systemImage: "snowflake", colors: [Theme.lagoon.opacity(0.7), Theme.lavender])
+    ]
+
+    @AppStorage("WaterQuest.selectedMascot") private var selectedMascotID: String = AchievementsView.defaultMascotID
+    @State private var showPaywall = false
 
     private var completedAchievements: Int {
         store.gameState.achievements.filter { $0.unlockedAt != nil }.count
@@ -31,6 +44,28 @@ struct AchievementsView: View {
                         QuestStatusRow(quest: quest)
                     }
                 }
+            }
+
+            Section {
+                mascotSection
+            } header: {
+                HStack(spacing: 8) {
+                    Text("Mascot Collection")
+                    if !subscriptionManager.isPro {
+                        Text("PRO")
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Capsule().fill(Theme.sun))
+                    }
+                }
+            } footer: {
+                Text(subscriptionManager.isPro
+                     ? "Pick a mascot to accompany your hydration quests."
+                     : "Unlock the full mascot collection with Thirsty.ai Pro.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
             }
 
             Section("Milestones") {
@@ -61,6 +96,15 @@ struct AchievementsView: View {
                 }
             }
         }
+        .sheet(isPresented: $showPaywall) {
+            PaywallView(isDismissible: true)
+        }
+        .onAppear {
+            enforceMascotSelectionRules()
+        }
+        .onChange(of: subscriptionManager.isPro) { _, _ in
+            enforceMascotSelectionRules()
+        }
     }
 
     private var summarySection: some View {
@@ -83,6 +127,62 @@ struct AchievementsView: View {
             .foregroundStyle(.secondary)
         }
         .padding(.vertical, 8)
+    }
+
+    private var mascotSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            LazyVGrid(columns: columns, spacing: 12) {
+                ForEach(mascotOptions) { option in
+                    Button {
+                        handleMascotSelection(option)
+                    } label: {
+                        MascotCard(
+                            option: option,
+                            isSelected: selectedMascotID == option.id,
+                            isLocked: isMascotLocked(option)
+                        )
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+
+            if !subscriptionManager.isPro {
+                Button {
+                    showPaywall = true
+                } label: {
+                    HStack {
+                        Image(systemName: "sparkles")
+                        Text("Unlock mascot collection")
+                            .font(.subheadline.weight(.semibold))
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.tertiary)
+                    }
+                    .foregroundStyle(Theme.sun)
+                }
+            }
+        }
+        .padding(.vertical, 4)
+    }
+
+    private func handleMascotSelection(_ option: MascotOption) {
+        if subscriptionManager.isPro {
+            Haptics.selection()
+            selectedMascotID = option.id
+        } else {
+            showPaywall = true
+        }
+    }
+
+    private func isMascotLocked(_ option: MascotOption) -> Bool {
+        !subscriptionManager.isPro
+    }
+
+    private func enforceMascotSelectionRules() {
+        if !subscriptionManager.isPro, selectedMascotID != Self.defaultMascotID {
+            selectedMascotID = Self.defaultMascotID
+        }
     }
 }
 
@@ -182,6 +282,79 @@ private struct AchievementCell: View {
             RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .stroke(Theme.glassBorder, lineWidth: 1)
         )
+    }
+}
+
+private struct MascotOption: Identifiable, Hashable {
+    let id: String
+    let name: String
+    let tagline: String
+    let systemImage: String
+    let colors: [Color]
+}
+
+private struct MascotCard: View {
+    let option: MascotOption
+    let isSelected: Bool
+    let isLocked: Bool
+
+    var body: some View {
+        ZStack(alignment: .topTrailing) {
+            VStack(alignment: .leading, spacing: 8) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: option.colors,
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(height: 72)
+
+                    Image(systemName: option.systemImage)
+                        .font(.system(size: 28, weight: .semibold))
+                        .foregroundStyle(.white)
+                }
+
+                Text(option.name)
+                    .font(.subheadline.weight(.semibold))
+
+                Text(option.tagline)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            if isSelected && !isLocked {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundStyle(Theme.mint)
+                    .padding(6)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(10)
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(Theme.cardSurface)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(isSelected ? Theme.mint : Theme.glassBorder, lineWidth: isSelected ? 1.5 : 1)
+        )
+        .overlay(lockedOverlay)
+    }
+
+    @ViewBuilder
+    private var lockedOverlay: some View {
+        if isLocked {
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(.ultraThinMaterial)
+                .overlay(
+                    Image(systemName: "lock.fill")
+                        .font(.title3.weight(.semibold))
+                        .foregroundStyle(Theme.sun)
+                )
+        }
     }
 }
 

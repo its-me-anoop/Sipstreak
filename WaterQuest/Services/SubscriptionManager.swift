@@ -1,49 +1,34 @@
 import Foundation
 import StoreKit
 
-// MARK: - Product IDs
-// Replace these with your actual App Store Connect product identifiers before shipping.
 enum ProductID: String, CaseIterable {
     case monthly = "com.waterquest.pro.monthly"
-    case annual  = "com.waterquest.pro.annual"
 }
 
-// MARK: - SubscriptionManager
-/// Manages the 7-day free trial and StoreKit 2 auto-renewable subscription.
-/// Trial start date is persisted in UserDefaults so it survives app re-launches.
 @MainActor
 final class SubscriptionManager: ObservableObject {
     static let trialLengthDays = 7
 
     private enum Pricing {
         static let currencyCode = "GBP"
-        static let monthly = Decimal(string: "2.99") ?? Decimal(2.99)
-        static let annual = Decimal(string: "29.99") ?? Decimal(29.99)
+        static let monthly = Decimal(string: "5.99") ?? Decimal(5.99)
     }
 
-    /// `true` while the user is within the 7-day trial window OR has an active subscription.
     @Published private(set) var isPro: Bool = false
-    /// `true` when an active paid entitlement is found in StoreKit.
     @Published private(set) var hasActiveSubscription: Bool = false
-    /// `true` once initial products and status have been loaded.
     @Published private(set) var isInitialized: Bool = false
-
-    /// The fetched StoreKit products (monthly & annual).
     @Published private(set) var products: [Product] = []
 
-    /// `true` if the trial is still active (within 7 days of first launch).
     var isTrialActive: Bool {
         guard let start = trialStartDate else { return false }
         return Date().timeIntervalSince(start) < trialDuration
     }
 
-    /// The date the trial expires, or `nil` if no trial has started.
     var trialExpirationDate: Date? {
         guard let start = trialStartDate else { return nil }
         return start.addingTimeInterval(trialDuration)
     }
 
-    /// Number of whole/partial days remaining in trial (rounded up), 0 if expired.
     var trialDaysRemaining: Int {
         guard let expiration = trialExpirationDate else { return 0 }
         let remaining = expiration.timeIntervalSinceNow
@@ -51,19 +36,22 @@ final class SubscriptionManager: ObservableObject {
         return Int(ceil(remaining / (24 * 60 * 60)))
     }
 
-    static var monthlyPriceText: String {
-        formatPrice(Pricing.monthly)
-    }
-
-    static var annualPriceText: String {
-        formatPrice(Pricing.annual)
-    }
-
     static var trialLengthLabel: String {
         "\(trialLengthDays)-day"
     }
 
-    // MARK: - Private
+    static var monthlyPriceText: String {
+        formatPrice(Pricing.monthly)
+    }
+
+    var monthlyProduct: Product? {
+        products.first { $0.id == ProductID.monthly.rawValue }
+    }
+
+    var monthlyPriceText: String {
+        monthlyProduct?.displayPrice ?? Self.monthlyPriceText
+    }
+
     private static let trialStartKey = "WaterQuest.trialStartDate"
     private let trialDuration: TimeInterval = TimeInterval(SubscriptionManager.trialLengthDays * 24 * 60 * 60)
 
@@ -77,55 +65,50 @@ final class SubscriptionManager: ObservableObject {
         }
     }
 
-    // MARK: - Initialisation
     init() {
-        // Seed the trial start date on first launch.
         if trialStartDate == nil {
             trialStartDate = Date()
         }
         isPro = isTrialActive
     }
 
-    // MARK: - Lifecycle
-    /// Call once early in the app lifecycle (e.g. in a `.task` on the root view).
-    /// Fetches products and checks for an active subscription.
     func initialise() async {
-        await fetchProducts()
+        await ensureProductsLoaded()
         await refreshSubscriptionStatus()
         isInitialized = true
     }
 
-    // MARK: - Products
-    private func fetchProducts() async {
+    func ensureProductsLoaded() async {
+        guard products.isEmpty else { return }
         do {
-            let ids = Set(ProductID.allCases.map { $0.rawValue })
-            products = try await Product.products(for: ids)
+            let ids = Set(ProductID.allCases.map(\.rawValue))
+            products = try await Product.products(for: ids).sorted { $0.id < $1.id }
         } catch {
-            print("SubscriptionManager: failed to fetch products – \(error)")
+            print("SubscriptionManager: failed to fetch products - \(error)")
         }
     }
 
-    /// Returns the monthly product, if loaded.
-    var monthlyProduct: Product? {
-        products.first { $0.id == ProductID.monthly.rawValue }
+    func purchaseMonthly() async -> Bool {
+        await ensureProductsLoaded()
+        guard let monthlyProduct else { return false }
+        return await purchase(monthlyProduct)
     }
 
-    /// Returns the annual product, if loaded.
-    var annualProduct: Product? {
-        products.first { $0.id == ProductID.annual.rawValue }
-    }
-
-    // MARK: - Purchase
-    /// Initiates a purchase for the given product.  Returns `true` on success.
     func purchase(_ product: Product) async -> Bool {
         do {
             let result = try await product.purchase()
             switch result {
             case .success(let verification):
                 switch verification {
-                case .verified:
+                case .verified(let transaction):
+                    let purchasedKnownProduct = ProductID(rawValue: transaction.productID) != nil
+                    await transaction.finish()
+                    if purchasedKnownProduct {
+                        hasActiveSubscription = true
+                        isPro = true
+                    }
                     await refreshSubscriptionStatus()
-                    return true
+                    return purchasedKnownProduct || hasActiveSubscription
                 case .unverified:
                     return false
                 }
@@ -135,60 +118,49 @@ final class SubscriptionManager: ObservableObject {
                 return false
             }
         } catch {
-            print("SubscriptionManager: purchase failed – \(error)")
+            print("SubscriptionManager: purchase failed - \(error)")
             return false
         }
     }
 
-    // MARK: - Restore
-    /// Restores previous purchases.  Returns `true` if an active entitlement was found.
     func restore() async -> Bool {
         do {
             try await AppStore.sync()
             await refreshSubscriptionStatus()
-            return isPro
+            return hasActiveSubscription
         } catch {
-            print("SubscriptionManager: restore failed – \(error)")
+            print("SubscriptionManager: restore failed - \(error)")
             return false
         }
     }
 
-    // MARK: - Status
-    /// Checks `Transaction.currentEntitlements` for an active subscription
-    /// and updates `isPro` accordingly.
-    private func refreshSubscriptionStatus() async {
-        var hasActive = false
-        for await result in Transaction.currentEntitlements {
-            if case .verified(let transaction) = result {
-                if ProductID(rawValue: transaction.productID) != nil {
-                    // Subscription is in currentEntitlements → it is active or in a grace period.
-                    hasActive = true
-                    break
-                }
-            }
-        }
-        hasActiveSubscription = hasActive
-        isPro = hasActive || isTrialActive
-    }
-
-    /// Public wrapper to re-check the current entitlement state.
     func refreshStatus() async {
         await refreshSubscriptionStatus()
     }
 
-    // MARK: - Transaction listener
-    /// Starts a background task that listens for new transactions (e.g. renewals
-    /// or purchases made outside the app).  Call once and keep the returned task alive.
     func startTransactionListener() -> Task<Void, Never> {
         Task {
             for await result in Transaction.updates {
-                if case .verified(let transaction) = result {
-                    if ProductID(rawValue: transaction.productID) != nil {
-                        await refreshSubscriptionStatus()
-                    }
+                if case .verified(let transaction) = result,
+                   ProductID(rawValue: transaction.productID) != nil {
+                    await transaction.finish()
+                    await refreshSubscriptionStatus()
                 }
             }
         }
+    }
+
+    private func refreshSubscriptionStatus() async {
+        var hasActive = false
+        for await result in Transaction.currentEntitlements {
+            if case .verified(let transaction) = result,
+               ProductID(rawValue: transaction.productID) != nil {
+                hasActive = true
+                break
+            }
+        }
+        hasActiveSubscription = hasActive
+        isPro = hasActive || isTrialActive
     }
 
     private static func formatPrice(_ amount: Decimal) -> String {
