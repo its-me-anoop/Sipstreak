@@ -62,6 +62,31 @@ struct InsightsView: View {
         .navigationTitle("Insights")
     }
 
+    private var proContent: some View {
+        List {
+            Section {
+                headerSummary
+            }
+
+            Section("Weekly Intake") {
+                chartSection
+            }
+
+            Section("Goal Breakdown") {
+                breakdownSection
+            }
+
+            Section("Recent Entries") {
+                recentEntriesSection
+            }
+        }
+        .listStyle(.insetGrouped)
+        .scrollContentBackground(.hidden)
+        .background(AppWaterBackground().ignoresSafeArea())
+        .navigationTitle("Insights")
+    }
+
+
     private var headerSummary: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Your hydration trend")
@@ -117,6 +142,8 @@ struct InsightsView: View {
             BreakdownRow(title: "Weather adjustment", value: goal.weatherAdjustmentML, unitSystem: store.profile.unitSystem, icon: "cloud.sun", tint: Theme.sun)
             BreakdownRow(title: "Workout adjustment", value: goal.workoutAdjustmentML, unitSystem: store.profile.unitSystem, icon: "figure.run", tint: Theme.coral)
 
+            weatherAttributionRow
+
             Divider()
 
             HStack {
@@ -128,6 +155,21 @@ struct InsightsView: View {
             }
         }
         .padding(.vertical, 6)
+    }
+
+    private var weatherAttributionRow: some View {
+        HStack(spacing: 12) {
+            Text(" Weather")
+                .font(.caption2.weight(.semibold))
+                .foregroundStyle(.secondary)
+
+            Spacer()
+
+            if let legalURL = URL(string: "https://weatherkit.apple.com/legal-attribution.html") {
+                Link("Legal attribution", destination: legalURL)
+                    .font(.caption2)
+            }
+        }
     }
 
     private var recentEntriesSection: some View {
@@ -214,8 +256,10 @@ private struct BreakdownRow: View {
     }
 }
 
+#if DEBUG
 #Preview("Insights") {
     PreviewEnvironment {
         InsightsView()
     }
 }
+#endif

@@ -97,10 +97,6 @@ enum GamificationEngine {
         goalML: Double,
         allEntries: [HydrationEntry]
     ) {
-        let xpGain = max(5, Int(entry.volumeML / 30))
-        state.xp += xpGain
-        state.coins += max(1, Int(entry.volumeML / 200))
-
         let hour = Calendar.current.component(.hour, from: entry.date)
         for index in state.quests.indices {
             if state.quests[index].isCompleted { continue }
@@ -108,8 +104,6 @@ enum GamificationEngine {
             state.quests[index].progressML = min(goalML, todayTotalML)
             if state.quests[index].progressML >= state.quests[index].targetML {
                 state.quests[index].isCompleted = true
-                state.xp += state.quests[index].rewardXP
-                state.coins += 5
             }
         }
 
@@ -206,8 +200,6 @@ enum GamificationEngine {
         if !state.achievements[index].isUnlocked {
             state.achievements[index].isUnlocked = true
             state.achievements[index].unlockedAt = Date()
-            state.xp += 80
-            state.coins += 10
         }
     }
 }

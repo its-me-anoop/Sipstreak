@@ -2,74 +2,29 @@ import Foundation
 import StoreKit
 
 enum ProductID: String, CaseIterable {
-    case monthly = "com.waterquest.pro.monthly"
+    case monthly = "com.waterquest.monthly"
 }
 
 @MainActor
 final class SubscriptionManager: ObservableObject {
-    static let trialLengthDays = 7
-
-    private enum Pricing {
-        static let currencyCode = "GBP"
-        static let monthly = Decimal(string: "5.99") ?? Decimal(5.99)
-    }
-
     @Published private(set) var isPro: Bool = false
     @Published private(set) var hasActiveSubscription: Bool = false
     @Published private(set) var isInitialized: Bool = false
     @Published private(set) var products: [Product] = []
 
-    var isTrialActive: Bool {
-        guard let start = trialStartDate else { return false }
-        return Date().timeIntervalSince(start) < trialDuration
-    }
-
-    var trialExpirationDate: Date? {
-        guard let start = trialStartDate else { return nil }
-        return start.addingTimeInterval(trialDuration)
-    }
-
-    var trialDaysRemaining: Int {
-        guard let expiration = trialExpirationDate else { return 0 }
-        let remaining = expiration.timeIntervalSinceNow
-        guard remaining > 0 else { return 0 }
-        return Int(ceil(remaining / (24 * 60 * 60)))
-    }
-
-    static var trialLengthLabel: String {
-        "\(trialLengthDays)-day"
-    }
-
-    static var monthlyPriceText: String {
-        formatPrice(Pricing.monthly)
-    }
+    /// Set by the app root so we can schedule trial-end reminders after purchase.
+    weak var notificationScheduler: NotificationScheduler?
 
     var monthlyProduct: Product? {
         products.first { $0.id == ProductID.monthly.rawValue }
     }
 
-    var monthlyPriceText: String {
-        monthlyProduct?.displayPrice ?? Self.monthlyPriceText
-    }
-
-    private static let trialStartKey = "WaterQuest.trialStartDate"
-    private let trialDuration: TimeInterval = TimeInterval(SubscriptionManager.trialLengthDays * 24 * 60 * 60)
-
-    private var trialStartDate: Date? {
-        get {
-            guard let interval = UserDefaults.standard.object(forKey: Self.trialStartKey) as? Double else { return nil }
-            return Date(timeIntervalSince1970: interval)
-        }
-        set {
-            UserDefaults.standard.set(newValue?.timeIntervalSince1970, forKey: Self.trialStartKey)
-        }
+    var monthlyPriceText: String? {
+        monthlyProduct?.displayPrice
     }
 
     init() {
-        if trialStartDate == nil {
-            trialStartDate = Date()
-        }
-        isPro = isTrialActive
+        isPro = false
     }
 
     func initialise() async {
@@ -106,6 +61,7 @@ final class SubscriptionManager: ObservableObject {
                     if purchasedKnownProduct {
                         hasActiveSubscription = true
                         isPro = true
+                        scheduleTrialReminderIfApplicable(for: product)
                     }
                     await refreshSubscriptionStatus()
                     return purchasedKnownProduct || hasActiveSubscription
@@ -160,14 +116,27 @@ final class SubscriptionManager: ObservableObject {
             }
         }
         hasActiveSubscription = hasActive
-        isPro = hasActive || isTrialActive
+        isPro = hasActive
     }
 
-    private static func formatPrice(_ amount: Decimal) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = Pricing.currencyCode
-        formatter.locale = Locale(identifier: "en_GB")
-        return formatter.string(from: NSDecimalNumber(decimal: amount)) ?? "£0.00"
+    /// If the product has a free trial, schedule a reminder one day before it ends.
+    private func scheduleTrialReminderIfApplicable(for product: Product) {
+        guard
+            let introOffer = product.subscription?.introductoryOffer,
+            introOffer.paymentMode == .freeTrial
+        else { return }
+
+        let period = introOffer.period
+        let trialDays: Int
+        switch period.unit {
+        case .day:   trialDays = period.value
+        case .week:  trialDays = period.value * 7
+        case .month: trialDays = period.value * 30
+        case .year:  trialDays = period.value * 365
+        @unknown default: trialDays = period.value
+        }
+
+        notificationScheduler?.scheduleTrialEndReminder(trialDays: trialDays)
     }
+
 }

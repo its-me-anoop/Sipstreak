@@ -22,13 +22,12 @@ final class WeatherClient: ObservableObject {
 
     func refresh() async {
         guard let location = locationManager.lastLocation else {
-            if locationManager.authorizationStatus == .notDetermined {
-                locationManager.requestPermission()
-            }
             if locationManager.authorizationStatus == .authorizedWhenInUse || locationManager.authorizationStatus == .authorizedAlways {
                 locationManager.requestLocation()
+                status = .loading
+            } else {
+                status = .failed
             }
-            status = .loading
             return
         }
         status = .loading

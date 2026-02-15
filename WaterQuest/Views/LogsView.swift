@@ -113,6 +113,37 @@ struct LogsView: View {
         .navigationTitle("Logs")
     }
 
+    private var proContent: some View {
+        List {
+            Section {
+                summarySection
+            }
+
+            Section("Heat Map") {
+                heatMapSection
+            }
+
+            Section("Logs by Date") {
+                if entriesByDay.isEmpty {
+                    Text("No logs yet. Add your first hydration entry.")
+                        .foregroundStyle(.secondary)
+                } else {
+                    ForEach(entriesByDay) { day in
+                        LogDayCard(day: day, unitSystem: store.profile.unitSystem)
+                            .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
+                    }
+                }
+            }
+        }
+        .listStyle(.insetGrouped)
+        .scrollContentBackground(.hidden)
+        .background(AppWaterBackground().ignoresSafeArea())
+        .navigationTitle("Logs")
+    }
+
+
     private var summarySection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Detailed insights")
@@ -209,7 +240,8 @@ struct LogsView: View {
         let calendar = Calendar.current
         let symbols = calendar.shortWeekdaySymbols
         let shift = calendar.firstWeekday - 1
-        return Array(symbols[shift...] + symbols[..<shift]).map { String($0.prefix(1)) }
+        let reordered = Array(symbols[shift...]) + Array(symbols[..<shift])
+        return reordered.map { String($0.prefix(1)) }
     }
 }
 
@@ -272,7 +304,7 @@ private struct HeatMapSquare: View {
                     RoundedRectangle(cornerRadius: 4, style: .continuous)
                         .stroke(Theme.glassBorder.opacity(0.8), lineWidth: 0.6)
                 )
-                .accessibilityLabel(date, format: .dateTime.month().day())
+                .accessibilityLabel(Text(date, format: .dateTime.month().day()))
         } else {
             Color.clear
                 .frame(height: 16)
@@ -304,6 +336,7 @@ private struct HeatMapLegendSquare: View {
 private struct LogDayCard: View {
     let day: LogDay
     let unitSystem: UnitSystem
+
 
     var body: some View {
         LiquidGlassCard(cornerRadius: 18, tintColor: Theme.lagoon.opacity(0.18), isInteractive: false) {
@@ -380,8 +413,10 @@ private struct LogEntryRow: View {
     }
 }
 
+#if DEBUG
 #Preview("Logs") {
     PreviewEnvironment {
         LogsView()
     }
 }
+#endif

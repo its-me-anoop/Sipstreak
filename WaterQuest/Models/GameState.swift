@@ -2,7 +2,6 @@ import Foundation
 
 struct GameState: Codable {
     var xp: Int
-    var coins: Int
     var streakDays: Int
     var lastStreakDate: Date?
     var lastQuestRefresh: Date?
@@ -11,7 +10,6 @@ struct GameState: Codable {
 
     static let `default` = GameState(
         xp: 0,
-        coins: 0,
         streakDays: 0,
         lastStreakDate: nil,
         lastQuestRefresh: nil,

@@ -1,9 +1,9 @@
-WaterQuest Privacy Policy
+Thirsty.ai Privacy Policy
 
 Last updated: February 6, 2026
 
 Summary
-WaterQuest helps you track hydration and optionally use device data to personalize goals. We collect only what we need to provide the service. You can manage permissions in Settings at any time.
+Thirsty.ai helps you track hydration and optionally use device data to personalize goals. We collect only what we need to provide the service. You can manage permissions in Settings at any time.
 
 Information We Collect
 - Account and subscription data provided by Apple (e.g., purchase status) via StoreKit.
@@ -42,10 +42,13 @@ Your Choices
 - You can delete the app to remove local data. If iCloud sync is enabled, you can manage iCloud data in iOS Settings.
 
 Children
-WaterQuest is not intended for children under 13.
+Thirsty.ai is not intended for children under 13.
 
 Changes
 We may update this policy from time to time. If we make material changes, we will update the date above.
 
 Contact
-If you have questions, contact us at: support@waterquest.app
+If you have questions, contact us at: anoop@flutterly.co.uk
+Privacy Policy URL
+https://docs.google.com/document/d/1g8aUo5wOtiWswv1djQhdrgtMhgYgR1lAoCPQXKBt-uI/edit?usp=sharing
+

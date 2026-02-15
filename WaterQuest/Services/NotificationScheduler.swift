@@ -190,7 +190,7 @@ final class NotificationScheduler: ObservableObject {
                 """
 
             let session = LanguageModelSession(instructions: """
-                You are a cheerful hydration coach inside a mobile app called WaterQuest.
+                You are a cheerful hydration coach inside a mobile app called Thirsty.ai.
                 You write short, warm, motivational nudges to help people drink more water.
                 Keep every response under 12 words. Be encouraging, never guilt-tripping.
                 """)
@@ -241,7 +241,7 @@ final class NotificationScheduler: ObservableObject {
         "Midday check-in: how's your water intake?",
         "A quick sip keeps the energy flowing.",
         "Halfway there — keep sipping!",
-        "Take a water break and claim some XP."
+        "Take a water break and stay on track."
     ]
 
     private let lateMessages = [
@@ -251,13 +251,35 @@ final class NotificationScheduler: ObservableObject {
         "Hydrate to keep your streak alive."
     ]
 
+    // MARK: - Trial expiry reminder
+
+    /// Schedules a notification one day before the free trial ends.
+    /// For a 7-day trial this fires on Day 6.
+    func scheduleTrialEndReminder(trialDays: Int) {
+        guard trialDays > 1 else { return }
+
+        let reminderDays = trialDays - 1
+        let fireDate = Calendar.current.date(byAdding: .day, value: reminderDays, to: Date()) ?? Date()
+
+        let content = UNMutableNotificationContent()
+        content.title = "Your free trial ends tomorrow"
+        content.body = "Your Thirsty.ai subscription will begin billing tomorrow. Open the app to manage your subscription."
+        content.sound = .default
+
+        let components = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: fireDate)
+        let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
+        let request = UNNotificationRequest(identifier: "waterquest.trial-end", content: content, trigger: trigger)
+
+        UNUserNotificationCenter.current().add(request)
+    }
+
     // MARK: - Classic (fixed-schedule) reminders
 
     private func scheduleClassicReminders(profile: UserProfile) {
         let times = classicReminderTimes(wakeMinutes: profile.wakeMinutes, sleepMinutes: profile.sleepMinutes, count: profile.dailyReminderCount)
         let staticMessages = [
             "Sip time! Your future self is cheering.",
-            "Take a water break and claim some XP.",
+            "Take a water break and stay on track.",
             "Quest check-in: a few sips goes far.",
             "Hydrate to keep your streak alive.",
             "Tiny sip, big win. Let's go!"

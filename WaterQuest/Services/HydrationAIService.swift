@@ -67,6 +67,7 @@ final class HydrationAIService: ObservableObject {
                 goalML: 2000,
                 streakDays: 0,
                 weatherTemp: nil,
+                weatherHumidity: nil,
                 exerciseMinutes: 0,
                 timeOfDay: TimeOfDay.current
             )
@@ -87,6 +88,7 @@ final class HydrationAIService: ObservableObject {
         goalML: Double,
         streakDays: Int,
         weatherTemp: Double?,
+        weatherHumidity: Double?,
         exerciseMinutes: Int,
         timeOfDay: TimeOfDay
     ) async {
@@ -100,6 +102,7 @@ final class HydrationAIService: ObservableObject {
                 progress: progress,
                 streakDays: streakDays,
                 weatherTemp: weatherTemp,
+                weatherHumidity: weatherHumidity,
                 exerciseMinutes: exerciseMinutes,
                 timeOfDay: timeOfDay
             )
@@ -119,6 +122,7 @@ final class HydrationAIService: ObservableObject {
         progress: Int,
         streakDays: Int,
         weatherTemp: Double?,
+        weatherHumidity: Double?,
         exerciseMinutes: Int,
         timeOfDay: TimeOfDay
     ) -> HydrationTip {
@@ -128,6 +132,7 @@ final class HydrationAIService: ObservableObject {
             progress: progress,
             streakDays: streakDays,
             weatherTemp: weatherTemp,
+            weatherHumidity: weatherHumidity,
             exerciseMinutes: exerciseMinutes,
             timeOfDay: timeOfDay
         )
@@ -156,14 +161,24 @@ final class HydrationAIService: ObservableObject {
         progress: Int,
         streakDays: Int,
         weatherTemp: Double?,
+        weatherHumidity: Double?,
         exerciseMinutes: Int,
         timeOfDay: TimeOfDay
     ) -> String {
         switch category {
         case .celebration:
+            if exerciseMinutes > 30 {
+                return "Goal crushed on an active day! Your body is well fuelled."
+            }
+            if let temp = weatherTemp, temp > 28 {
+                return "You hit your goal despite the heat — well done!"
+            }
             return celebrationMessages.randomElement() ?? "Amazing! You've hit your goal!"
 
         case .reminder:
+            if let temp = weatherTemp, temp > 25, let humidity = weatherHumidity, humidity > 60 {
+                return "It's \(Int(temp))° and humid — you lose more water through sweat in these conditions."
+            }
             if let temp = weatherTemp, temp > 25 {
                 return hotWeatherReminders.randomElement() ?? "It's warm out there - drink up!"
             }
@@ -173,23 +188,47 @@ final class HydrationAIService: ObservableObject {
             return generalReminders[timeOfDay]?.randomElement() ?? "Time for a hydration break!"
 
         case .encouragement:
+            if exerciseMinutes > 0, let temp = weatherTemp, temp > 25 {
+                return "Active and warm — you're doing great staying hydrated through both!"
+            }
             if streakDays > 3 {
                 return streakEncouragements.randomElement() ?? "Your streak is going strong!"
             }
             return generalEncouragements.randomElement() ?? "You're doing great! Almost there!"
 
         case .tip:
-            return getTipForContext(timeOfDay: timeOfDay, weatherTemp: weatherTemp, exerciseMinutes: exerciseMinutes)
+            return getTipForContext(timeOfDay: timeOfDay, weatherTemp: weatherTemp, weatherHumidity: weatherHumidity, exerciseMinutes: exerciseMinutes)
         }
     }
 
-    private func getTipForContext(timeOfDay: TimeOfDay, weatherTemp: Double?, exerciseMinutes: Int) -> String {
+    private func getTipForContext(timeOfDay: TimeOfDay, weatherTemp: Double?, weatherHumidity: Double?, exerciseMinutes: Int) -> String {
+        // Combined weather + exercise context
+        if exerciseMinutes > 0, let temp = weatherTemp, temp > 28 {
+            return "Exercising in \(Int(temp))° heat means you need significantly more water than usual."
+        }
+
+        if let temp = weatherTemp, temp > 28, let humidity = weatherHumidity, humidity > 65 {
+            return "High heat and \(Int(humidity))% humidity — your body loses water faster. Sip consistently."
+        }
+
         if let temp = weatherTemp, temp > 28 {
             return hotWeatherTips.randomElement() ?? "Hot day! Aim for extra water intake."
         }
 
+        if let humidity = weatherHumidity, humidity < 30 {
+            return "Low humidity dries you out faster than you'd think — keep sipping."
+        }
+
+        if exerciseMinutes > 60 {
+            return "Over an hour of activity today — aim for at least an extra 500 ml to recover."
+        }
+
         if exerciseMinutes > 0 {
             return exerciseTips.randomElement() ?? "Great workout! Replenish those fluids."
+        }
+
+        if let temp = weatherTemp, temp < 10 {
+            return "Cold weather can mask thirst — you still need water even when it's cool outside."
         }
 
         return generalTips[timeOfDay]?.randomElement() ?? "Stay hydrated!"

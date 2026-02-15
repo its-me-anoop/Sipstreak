@@ -176,6 +176,28 @@ final class HydrationStore: ObservableObject {
 
     func resetToday() {
         entries.removeAll { $0.date.isSameDay(as: Date()) }
+        GamificationEngine.refreshDailyQuests(state: &gameState, goalML: dailyGoal.totalML)
+        GamificationEngine.refreshMilestones(
+            state: &gameState,
+            entries: entries,
+            goalML: dailyGoal.totalML,
+            todayTotalML: todayTotalML
+        )
+        notificationScheduler?.scheduleReminders(profile: profile, entries: entries, goalML: dailyGoal.totalML)
+        persist()
+    }
+
+    func resetAllData() {
+        entries = []
+        profile = .default
+        gameState = .default
+        lastWeather = nil
+        lastWorkout = .empty
+        pendingAchievements.removeAll()
+        activeAchievement = nil
+        GamificationEngine.ensureAchievements(state: &gameState)
+        GamificationEngine.refreshDailyQuests(state: &gameState, goalML: dailyGoal.totalML)
+        notificationScheduler?.scheduleReminders(profile: profile, entries: entries, goalML: dailyGoal.totalML)
         persist()
     }
 
@@ -239,6 +261,7 @@ final class HydrationStore: ObservableObject {
             activeAchievement = pendingAchievements.removeFirst()
         }
     }
+
 }
 
 struct PersistedState: Codable {

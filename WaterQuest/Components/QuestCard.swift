@@ -44,25 +44,6 @@ struct QuestCard: View {
                 }
 
                 Spacer()
-
-                HStack(spacing: 4) {
-                    Image(systemName: "star.fill")
-                        .font(.system(size: 10))
-                    Text("+\(quest.rewardXP)")
-                        .font(Theme.bodyFont(size: 11))
-                        .fontWeight(.semibold)
-                }
-                .foregroundColor(Theme.sunText)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 6)
-                .background(
-                    Capsule()
-                        .fill(Theme.sun.opacity(0.18))
-                        .overlay(
-                            Capsule()
-                                .strokeBorder(Theme.sun.opacity(0.35), lineWidth: 0.8)
-                        )
-                )
             }
 
             GeometryReader { geometry in

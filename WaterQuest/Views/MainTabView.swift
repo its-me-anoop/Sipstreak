@@ -9,9 +9,10 @@ struct MainTabView: View {
         case settings
     }
 
-    @EnvironmentObject private var subscriptionManager: SubscriptionManager
     @State private var selectedTab: Tab = .dashboard
-    @State private var showPaywall = false
+    @State private var lastNonAddTab: Tab = .dashboard
+    @State private var showAddIntakeSheet = false
+    @State private var isLogPulseActive = false
 
     init() {
         let tabAppearance = UITabBarAppearance()
@@ -45,22 +46,7 @@ struct MainTabView: View {
                 .tag(Tab.dashboard)
 
                 NavigationStack {
-                    AddIntakeView()
-                }
-                .background(Color.clear)
-                .toolbarBackground(.hidden, for: .navigationBar)
-                .tabItem {
-                    Label("Log", systemImage: "plus.circle")
-                }
-                .tag(Tab.add)
-
-                NavigationStack {
-                    gatedContainer(
-                        title: "Insights",
-                        systemImage: "chart.line.uptrend.xyaxis",
-                        description: "Unlock weekly trends and richer hydration analysis.",
-                        content: { InsightsView() }
-                    )
+                    InsightsView()
                 }
                 .background(Color.clear)
                 .toolbarBackground(.hidden, for: .navigationBar)
@@ -69,13 +55,14 @@ struct MainTabView: View {
                 }
                 .tag(Tab.insights)
 
+                Color.clear
+                    .tabItem {
+                        Label("Log", systemImage: "plus.circle.fill")
+                    }
+                    .tag(Tab.add)
+
                 NavigationStack {
-                    gatedContainer(
-                        title: "Goals",
-                        systemImage: "trophy",
-                        description: "Unlock full quests, rewards, and milestone tracking.",
-                        content: { AchievementsView() }
-                    )
+                    AchievementsView()
                 }
                 .background(Color.clear)
                 .toolbarBackground(.hidden, for: .navigationBar)
@@ -95,84 +82,80 @@ struct MainTabView: View {
                 .tag(Tab.settings)
             }
             .background(Color.clear)
+
+            addLogFloatingButton
+                .ignoresSafeArea(edges: .bottom)
         }
         .tint(Theme.lagoon)
-        .onChange(of: selectedTab) {
+        .onAppear {
+            withAnimation(.easeInOut(duration: 1.4).repeatForever(autoreverses: true)) {
+                isLogPulseActive = true
+            }
+        }
+        .onChange(of: selectedTab) { _, newValue in
             Haptics.selection()
+            if newValue == .add {
+                showAddIntakeSheet = true
+                selectedTab = lastNonAddTab
+            } else {
+                lastNonAddTab = newValue
+            }
         }
-        .sheet(isPresented: $showPaywall) {
-            PaywallView(isDismissible: true)
-        }
-    }
-
-    @ViewBuilder
-    private func gatedContainer<Content: View>(
-        title: String,
-        systemImage: String,
-        description: String,
-        @ViewBuilder content: () -> Content
-    ) -> some View {
-        if subscriptionManager.isPro {
-            content()
-        } else {
-            LockedFeatureView(
-                title: title,
-                systemImage: systemImage,
-                description: description,
-                onUnlock: { showPaywall = true }
-            )
+        .sheet(isPresented: $showAddIntakeSheet) {
+            NavigationStack {
+                AddIntakeView()
+            }
+            .presentationDetents([.large])
+            .presentationDragIndicator(.visible)
         }
     }
-}
 
-private struct LockedFeatureView: View {
-    let title: String
-    let systemImage: String
-    let description: String
-    let onUnlock: () -> Void
-
-    var body: some View {
-        VStack(spacing: 20) {
+    private var addLogFloatingButton: some View {
+        VStack {
             Spacer()
 
-            Image(systemName: systemImage)
-                .font(.system(size: 42, weight: .semibold))
-                .foregroundStyle(Theme.lagoon)
-                .frame(width: 88, height: 88)
-                .background(
-                    Circle()
-                        .fill(.ultraThinMaterial)
-                )
-
-            VStack(spacing: 8) {
-                Text("\(title) is part of Pro")
-                    .font(.title2.weight(.semibold))
-
-                Text(description)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 20)
-            }
-
-            Button("Unlock Pro") {
+            Button {
                 Haptics.impact(.medium)
-                onUnlock()
-            }
-            .buttonStyle(.borderedProminent)
+                showAddIntakeSheet = true
+            } label: {
+                ZStack {
+                    Circle()
+                        .stroke(Theme.lagoon.opacity(0.35), lineWidth: 10)
+                        .frame(width: 76, height: 76)
+                        .scaleEffect(isLogPulseActive ? 1.15 : 0.9)
+                        .opacity(isLogPulseActive ? 0.0 : 1.0)
 
-            Spacer()
+                    Circle()
+                        .fill(Theme.lagoon)
+                        .frame(width: 58, height: 58)
+                        .shadow(color: Theme.lagoon.opacity(0.35), radius: 12, x: 0, y: 6)
+
+                    Image(systemName: "plus")
+                        .font(.system(size: 24, weight: .bold))
+                        .foregroundStyle(.white)
+                }
+            }
+            .buttonStyle(OpaqueButtonStyle())
+            .padding(.bottom, 13)
+            .accessibilityLabel("Log water")
+            .accessibilityHint("Opens the add intake sheet")
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(.horizontal, 24)
-        .background(AppWaterBackground().ignoresSafeArea())
-        .navigationTitle(title)
-        .navigationBarTitleDisplayMode(.large)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
     }
+
+    private struct OpaqueButtonStyle: ButtonStyle {
+        func makeBody(configuration: Configuration) -> some View {
+            configuration.label
+                .opacity(1)
+        }
+    }
+
 }
 
+#if DEBUG
 #Preview("Main Tabs") {
     PreviewEnvironment {
         MainTabView()
     }
 }
+#endif

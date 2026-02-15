@@ -12,16 +12,9 @@ struct AddIntakeView: View {
     @State private var showSavedBanner = false
 
     var body: some View {
-        GeometryReader { proxy in
-            let topInset = proxy.safeAreaInsets.top
-
+        GeometryReader { _ in
             ScrollView {
                 VStack(spacing: 20) {
-                    StretchyHeader(height: 220 + topInset) {
-                        HeroHeader(topInset: topInset)
-                    }
-                    .padding(.top, -topInset)
-
                     HStack(alignment: .center, spacing: 16) {
                         MascotView(size: 64, animated: true)
 
@@ -116,7 +109,6 @@ struct AddIntakeView: View {
                 .padding(.top, 16)
                 .padding(.bottom, 28)
             }
-            .coordinateSpace(name: "scroll")
         }
         .navigationTitle("Log Intake")
         .background(AppWaterBackground().ignoresSafeArea())
@@ -155,7 +147,7 @@ struct AddIntakeView: View {
         let entry = store.addIntake(amount: amount, source: .manual, note: trimmed.isEmpty ? nil : trimmed)
 
         Task {
-            if subscriptionManager.hasActiveSubscription {
+            if subscriptionManager.isPro {
                 await healthKit.saveWaterIntake(ml: entry.volumeML, date: entry.date, entryID: entry.id)
             }
         }
@@ -173,61 +165,6 @@ struct AddIntakeView: View {
         note = ""
         selectedPreset = nil
         dismiss()
-    }
-}
-
-private struct StretchyHeader<Content: View>: View {
-    let height: CGFloat
-    let content: Content
-
-    init(height: CGFloat, @ViewBuilder content: () -> Content) {
-        self.height = height
-        self.content = content()
-    }
-
-    var body: some View {
-        GeometryReader { proxy in
-            let minY = proxy.frame(in: .named("scroll")).minY
-            let extraHeight = minY > 0 ? minY : 0
-
-            content
-                .frame(height: height + extraHeight)
-                .frame(maxWidth: .infinity)
-                .offset(y: extraHeight > 0 ? -extraHeight : 0)
-        }
-        .frame(height: height)
-    }
-}
-
-private struct HeroHeader: View {
-    let topInset: CGFloat
-
-    var body: some View {
-        ZStack(alignment: .bottomLeading) {
-            LinearGradient(
-                colors: [Theme.lagoon.opacity(0.65), Theme.mint.opacity(0.45), Color.clear],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .overlay(
-                WaveView()
-                    .opacity(0.25)
-                    .offset(y: 18)
-            )
-
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Hydration Boost")
-                    .font(.title.weight(.bold))
-                    .foregroundStyle(.primary)
-                Text("Top off your day with a quick log.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
-            .padding(.horizontal, 20)
-            .padding(.bottom, 18)
-            .padding(.top, topInset + 12)
-        }
-        .background(Theme.lagoon.opacity(0.2))
     }
 }
 
@@ -272,8 +209,10 @@ private struct SavedBanner: View {
     }
 }
 
+#if DEBUG
 #Preview("Add Intake") {
     PreviewEnvironment {
         AddIntakeView()
     }
 }
+#endif

@@ -2,6 +2,7 @@ import SwiftUI
 
 struct RootView: View {
     @AppStorage("hasOnboarded") private var hasOnboarded: Bool = false
+    @AppStorage("hasOnboardedLocally") private var hasOnboardedLocally: Bool = false
     @EnvironmentObject private var store: HydrationStore
     @EnvironmentObject private var subscriptionManager: SubscriptionManager
 
@@ -11,15 +12,16 @@ struct RootView: View {
 
     var body: some View {
         ZStack {
-            if hasOnboarded {
+            if hasOnboardedLocally {
                 MainTabView()
             } else {
                 OnboardingView {
                     hasOnboarded = true
+                    hasOnboardedLocally = true
                 }
             }
 
-            if let achievement = store.activeAchievement {
+            if subscriptionManager.isPro, let achievement = store.activeAchievement {
                 AchievementCelebrationView(achievement: achievement) {
                     store.dismissActiveAchievement()
                 }
@@ -41,15 +43,17 @@ struct RootView: View {
         .onChange(of: subscriptionManager.isPro) { _, isPro in
             if isPro {
                 showTrialExpiredPaywall = false
+            } else if hasOnboardedLocally {
+                showTrialExpiredPaywall = true
             }
         }
         .onChange(of: subscriptionManager.isInitialized) { _, initialized in
-            guard initialized, pendingPaywallCheck, hasOnboarded else { return }
+            guard initialized, pendingPaywallCheck, hasOnboardedLocally else { return }
             pendingPaywallCheck = false
             showTrialExpiredPaywall = !subscriptionManager.isPro
         }
         .sheet(isPresented: $showTrialExpiredPaywall) {
-            PaywallView(isDismissible: true)
+            PaywallView(isDismissible: false)
         }
     }
 
@@ -64,7 +68,7 @@ struct RootView: View {
             }
         }
 
-        guard hasOnboarded else { return }
+        guard hasOnboardedLocally else { return }
 
         if subscriptionManager.isInitialized {
             if !subscriptionManager.isPro {

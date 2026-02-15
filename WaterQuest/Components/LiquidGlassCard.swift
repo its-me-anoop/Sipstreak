@@ -329,7 +329,6 @@ struct WaveDivider: View {
 
                 HStack(spacing: 12) {
                     FluidStatCard(label: "Streak", value: "7 days", icon: "flame.fill", accentColor: Theme.coral)
-                    FluidStatCard(label: "Coins", value: "250", icon: "bitcoinsign.circle.fill", accentColor: Theme.sun)
                 }
 
                 HStack(spacing: 10) {

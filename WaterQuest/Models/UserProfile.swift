@@ -46,8 +46,8 @@ struct UserProfile: Codable {
         wakeMinutes: 7 * 60,
         sleepMinutes: 22 * 60,
         dailyReminderCount: 7,
-        prefersWeatherGoal: true,
-        prefersHealthKit: true,
+        prefersWeatherGoal: false,
+        prefersHealthKit: false,
         smartRemindersEnabled: true
     )
 }

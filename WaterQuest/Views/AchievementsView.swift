@@ -2,24 +2,17 @@ import SwiftUI
 
 struct AchievementsView: View {
     @EnvironmentObject private var store: HydrationStore
-    @EnvironmentObject private var subscriptionManager: SubscriptionManager
 
     private let columns = [
         GridItem(.flexible(), spacing: 12),
         GridItem(.flexible(), spacing: 12)
     ]
 
-    private static let defaultMascotID = "ripple"
-    private let mascotOptions: [MascotOption] = [
-        MascotOption(id: "ripple", name: "Ripple", tagline: "Classic aqua companion", systemImage: "drop.fill", colors: [Theme.lagoon, Theme.mint]),
-        MascotOption(id: "blaze", name: "Blaze", tagline: "Fiery streak booster", systemImage: "flame.fill", colors: [Theme.coral, Theme.sun]),
-        MascotOption(id: "leafy", name: "Leafy", tagline: "Fresh and balanced", systemImage: "leaf.fill", colors: [Theme.mint, Theme.lagoon]),
-        MascotOption(id: "bolt", name: "Bolt", tagline: "Lightning quick energy", systemImage: "bolt.fill", colors: [Theme.lavender, Theme.lagoon]),
-        MascotOption(id: "frost", name: "Frost", tagline: "Cool and collected", systemImage: "snowflake", colors: [Theme.lagoon.opacity(0.7), Theme.lavender])
-    ]
+    private static let defaultMascotID = MascotStyle.ripple.rawValue
+    private let mascotOptions: [MascotStyle] = MascotStyle.allCases
 
     @AppStorage("WaterQuest.selectedMascot") private var selectedMascotID: String = AchievementsView.defaultMascotID
-    @State private var showPaywall = false
+
 
     private var completedAchievements: Int {
         store.gameState.achievements.filter { $0.unlockedAt != nil }.count
@@ -28,6 +21,7 @@ struct AchievementsView: View {
     private var completedQuests: Int {
         store.gameState.quests.filter { $0.isCompleted }.count
     }
+
 
     var body: some View {
         List {
@@ -51,19 +45,9 @@ struct AchievementsView: View {
             } header: {
                 HStack(spacing: 8) {
                     Text("Mascot Collection")
-                    if !subscriptionManager.isPro {
-                        Text("PRO")
-                            .font(.caption2.weight(.semibold))
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(Capsule().fill(Theme.sun))
-                    }
                 }
             } footer: {
-                Text(subscriptionManager.isPro
-                     ? "Pick a mascot to accompany your hydration quests."
-                     : "Unlock the full mascot collection with Thirsty.ai Pro.")
+                Text("Pick a mascot to accompany your hydration quests.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
@@ -96,27 +80,77 @@ struct AchievementsView: View {
                 }
             }
         }
-        .sheet(isPresented: $showPaywall) {
-            PaywallView(isDismissible: true)
-        }
         .onAppear {
             enforceMascotSelectionRules()
         }
-        .onChange(of: subscriptionManager.isPro) { _, _ in
-            enforceMascotSelectionRules()
+    }
+
+    private var proContent: some View {
+        List {
+            Section {
+                summarySection
+            }
+
+            Section("Daily Missions") {
+                if store.gameState.quests.isEmpty {
+                    Text("No active quests right now.")
+                        .foregroundStyle(.secondary)
+                } else {
+                    ForEach(store.gameState.quests) { quest in
+                        QuestStatusRow(quest: quest)
+                    }
+                }
+            }
+
+            Section {
+                mascotSection
+            } header: {
+                HStack(spacing: 8) {
+                    Text("Mascot Collection")
+                }
+            } footer: {
+                Text("Pick a mascot to accompany your hydration quests.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+
+            Section("Milestones") {
+                if store.gameState.achievements.isEmpty {
+                    Text("Milestones will appear as you keep logging hydration.")
+                        .foregroundStyle(.secondary)
+                } else {
+                    LazyVGrid(columns: columns, spacing: 12) {
+                        ForEach(store.gameState.achievements) { achievement in
+                            AchievementCell(achievement: achievement)
+                        }
+                    }
+                    .padding(.vertical, 4)
+                }
+            }
+        }
+        .listStyle(.insetGrouped)
+        .scrollContentBackground(.hidden)
+        .background(AppWaterBackground().ignoresSafeArea())
+        .navigationTitle("Goals")
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    Haptics.selection()
+                    store.refreshQuests()
+                } label: {
+                    Image(systemName: "arrow.clockwise")
+                }
+            }
         }
     }
+
 
     private var summarySection: some View {
         VStack(alignment: .leading, spacing: 14) {
             Text("Progress at a glance")
                 .font(.title3.weight(.semibold))
 
-            HStack(spacing: 12) {
-                SummaryTile(title: "Streak", value: "\(store.gameState.streakDays) days", icon: "flame.fill", color: Theme.coral)
-                SummaryTile(title: "Level", value: "\(store.gameState.level)", icon: "star.fill", color: Theme.sun)
-                SummaryTile(title: "Coins", value: "\(store.gameState.coins)", icon: "bitcoinsign.circle.fill", color: Theme.lagoon)
-            }
+            SummaryTile(title: "Streak", value: "\(store.gameState.streakDays) days", icon: "flame.fill", color: Theme.coral)
 
             HStack {
                 Text("\(completedQuests)/\(max(1, store.gameState.quests.count)) quests complete")
@@ -131,57 +165,43 @@ struct AchievementsView: View {
 
     private var mascotSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            LazyVGrid(columns: columns, spacing: 12) {
-                ForEach(mascotOptions) { option in
-                    Button {
-                        handleMascotSelection(option)
-                    } label: {
-                        MascotCard(
-                            option: option,
-                            isSelected: selectedMascotID == option.id,
-                            isLocked: isMascotLocked(option)
-                        )
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 12) {
+                    ForEach(mascotOptions) { option in
+                        Button {
+                            handleMascotSelection(option)
+                        } label: {
+                            MascotCard(
+                                option: option,
+                                isSelected: selectedMascotID == option.id,
+                                isLocked: isMascotLocked(option)
+                            )
+                        }
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
                 }
+                .padding(.horizontal, 12)
             }
+            .scrollClipDisabled()
 
-            if !subscriptionManager.isPro {
-                Button {
-                    showPaywall = true
-                } label: {
-                    HStack {
-                        Image(systemName: "sparkles")
-                        Text("Unlock mascot collection")
-                            .font(.subheadline.weight(.semibold))
-                        Spacer()
-                        Image(systemName: "chevron.right")
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(.tertiary)
-                    }
-                    .foregroundStyle(Theme.sun)
-                }
-            }
         }
         .padding(.vertical, 4)
     }
 
-    private func handleMascotSelection(_ option: MascotOption) {
-        if subscriptionManager.isPro {
-            Haptics.selection()
-            selectedMascotID = option.id
-        } else {
-            showPaywall = true
-        }
+
+    private func handleMascotSelection(_ option: MascotStyle) {
+        Haptics.selection()
+        selectedMascotID = option.id
     }
 
-    private func isMascotLocked(_ option: MascotOption) -> Bool {
-        !subscriptionManager.isPro
+    private func isMascotLocked(_ option: MascotStyle) -> Bool {
+        false
     }
 
     private func enforceMascotSelectionRules() {
-        if !subscriptionManager.isPro, selectedMascotID != Self.defaultMascotID {
+        guard mascotOptions.contains(where: { $0.id == selectedMascotID }) else {
             selectedMascotID = Self.defaultMascotID
+            return
         }
     }
 }
@@ -230,9 +250,11 @@ private struct QuestStatusRow: View {
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
-                Label("+\(quest.rewardXP)", systemImage: "star.fill")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(Theme.sun)
+
+                if quest.isCompleted {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(Theme.mint)
+                }
             }
 
             ProgressView(value: progress)
@@ -285,16 +307,8 @@ private struct AchievementCell: View {
     }
 }
 
-private struct MascotOption: Identifiable, Hashable {
-    let id: String
-    let name: String
-    let tagline: String
-    let systemImage: String
-    let colors: [Color]
-}
-
 private struct MascotCard: View {
-    let option: MascotOption
+    let option: MascotStyle
     let isSelected: Bool
     let isLocked: Bool
 
@@ -310,11 +324,9 @@ private struct MascotCard: View {
                                 endPoint: .bottomTrailing
                             )
                         )
-                        .frame(height: 72)
+                        .frame(height: 96)
 
-                    Image(systemName: option.systemImage)
-                        .font(.system(size: 28, weight: .semibold))
-                        .foregroundStyle(.white)
+                    MascotPreview(option: option)
                 }
 
                 Text(option.name)
@@ -331,7 +343,7 @@ private struct MascotCard: View {
                     .padding(6)
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(width: 170, alignment: .leading)
         .padding(10)
         .background(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
@@ -358,8 +370,124 @@ private struct MascotCard: View {
     }
 }
 
+private struct MascotPreview: View {
+    let option: MascotStyle
+
+    @State private var bobOffset: CGFloat = 0
+    @State private var blink: Bool = false
+    @State private var glowScale: CGFloat = 1
+
+    private let size: CGFloat = 58
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .fill(Color.white.opacity(0.22))
+                .frame(width: size * 1.6, height: size * 1.6)
+                .scaleEffect(glowScale)
+                .blur(radius: 10)
+
+            gradient
+                .mask(maskShape)
+                .frame(width: size * 1.1, height: size * 1.25)
+                .shadow(color: .black.opacity(0.16), radius: 6, x: 0, y: 4)
+
+            mascotFace
+                .offset(y: size * 0.1)
+        }
+        .offset(y: bobOffset)
+        .onAppear {
+            withAnimation(.easeInOut(duration: 2.2).repeatForever(autoreverses: true)) {
+                bobOffset = -4
+            }
+            withAnimation(.easeInOut(duration: 2.8).repeatForever(autoreverses: true)) {
+                glowScale = 1.12
+            }
+            startBlinking()
+        }
+    }
+
+    private var gradient: some View {
+        LinearGradient(
+            colors: option.colors,
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+        .hueRotation(.degrees(option.hueRotation))
+    }
+
+    private var maskShape: some View {
+        switch option {
+        case .ripple:
+            return AnyView(
+                Image(systemName: "drop.fill")
+                    .resizable()
+                    .scaledToFit()
+            )
+        case .blaze:
+            return AnyView(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .rotation(.degrees(8))
+            )
+        case .leafy:
+            return AnyView(
+                Capsule(style: .continuous)
+                    .rotation(.degrees(-18))
+            )
+        case .bolt:
+            return AnyView(DiamondShape())
+        case .frost:
+            return AnyView(HexagonShape())
+        }
+    }
+
+    private var mascotFace: some View {
+        VStack(spacing: size * 0.08) {
+            HStack(spacing: size * 0.14) {
+                eye
+                eye
+            }
+
+            Capsule(style: .continuous)
+                .fill(Color.white.opacity(0.9))
+                .frame(width: size * 0.28, height: size * 0.07)
+                .overlay(
+                    Capsule(style: .continuous)
+                        .fill(Color.white.opacity(0.6))
+                        .frame(width: size * 0.16, height: size * 0.05)
+                        .offset(y: size * 0.02)
+                )
+        }
+    }
+
+    private var eye: some View {
+        Capsule(style: .continuous)
+            .fill(Color.white.opacity(0.95))
+            .frame(width: size * 0.12, height: blink ? size * 0.03 : size * 0.12)
+            .overlay(
+                Circle()
+                    .fill(Color.black.opacity(0.85))
+                    .frame(width: size * 0.05, height: size * 0.05)
+                    .opacity(blink ? 0 : 1)
+                    .offset(y: size * 0.01)
+            )
+            .animation(.easeInOut(duration: 0.12), value: blink)
+    }
+
+    private func startBlinking() {
+        Timer.scheduledTimer(withTimeInterval: 3.6, repeats: true) { _ in
+            blink = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                blink = false
+            }
+        }
+    }
+}
+
+#if DEBUG
 #Preview("Achievements") {
     PreviewEnvironment {
         AchievementsView()
     }
 }
+#endif

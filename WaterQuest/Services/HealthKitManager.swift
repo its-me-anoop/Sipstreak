@@ -4,11 +4,19 @@ import HealthKit
 @MainActor
 final class HealthKitManager: ObservableObject {
     private let healthStore = HKHealthStore()
-    private let waterEntryMetadataKey = "WaterQuestEntryID"
+    private let waterEntryMetadataKey = "Thirsty.aiEntryID"
     private var waterObserverQuery: HKObserverQuery?
 
     @Published var isAvailable: Bool = HKHealthStore.isHealthDataAvailable()
     @Published var isAuthorized: Bool = false
+
+    var isPermissionDenied: Bool {
+        guard isAvailable,
+              let waterType = HKQuantityType.quantityType(forIdentifier: .dietaryWater) else {
+            return false
+        }
+        return healthStore.authorizationStatus(for: waterType) == .sharingDenied
+    }
 
     func refreshAuthorizationStatus() async {
         isAvailable = HKHealthStore.isHealthDataAvailable()
@@ -122,12 +130,10 @@ final class HealthKitManager: ObservableObject {
 
         waterObserverQuery = query
         healthStore.execute(query)
-        healthStore.enableBackgroundDelivery(for: waterType, frequency: .immediate) { success, error in
-            if let error {
-                print("HealthKit background delivery error: \(error)")
-            } else if !success {
-                print("HealthKit background delivery was not enabled for water samples.")
-            }
+        do {
+            try await healthStore.enableBackgroundDelivery(for: waterType, frequency: .immediate)
+        } catch {
+            print("HealthKit background delivery error: \(error)")
         }
 
         if let entries = await fetchRecentWaterEntries(days: days) {
@@ -145,11 +151,11 @@ final class HealthKitManager: ObservableObject {
             return
         }
 
-        healthStore.disableBackgroundDelivery(for: waterType) { success, error in
-            if let error {
+        Task {
+            do {
+                try await healthStore.disableBackgroundDelivery(for: waterType)
+            } catch {
                 print("HealthKit disable background delivery error: \(error)")
-            } else if !success {
-                print("HealthKit background delivery remained enabled for water samples.")
             }
         }
     }

@@ -2,8 +2,9 @@ import SwiftUI
 
 @main
 struct WaterQuestApp: App {
-    @AppStorage("appTheme") private var appTheme: AppTheme = .system
+    @AppStorage("appTheme") private var appThemeRawValue: Int = AppTheme.system.rawValue
     @AppStorage("hasOnboarded") private var hasOnboarded: Bool = false
+    @AppStorage("WaterQuest.selectedMascot") private var selectedMascotID: String = MascotStyle.ripple.rawValue
     @Environment(\.scenePhase) private var scenePhase
 
     @StateObject private var store = HydrationStore()
@@ -39,12 +40,14 @@ struct WaterQuestApp: App {
             .preferredColorScheme(appTheme.colorScheme)
             .task {
                 store.notificationScheduler = notifier
-                store.setPremiumAccess(subscriptionManager.hasActiveSubscription)
+                subscriptionManager.notificationScheduler = notifier
+                store.setPremiumAccess(subscriptionManager.isPro)
                 await notifier.refreshAuthorizationStatus()
                 notifier.scheduleReminders(profile: store.profile, entries: store.entries, goalML: store.dailyGoal.totalML)
                 await subscriptionManager.initialise()
-                store.setPremiumAccess(subscriptionManager.hasActiveSubscription)
-                if subscriptionManager.hasActiveSubscription {
+                store.setPremiumAccess(subscriptionManager.isPro)
+                enforcePremiumRestrictions(for: subscriptionManager.isPro)
+                if subscriptionManager.isPro {
                     await healthKit.refreshAuthorizationStatus()
                 } else {
                     healthKit.stopWaterIntakeObserver()
@@ -54,11 +57,19 @@ struct WaterQuestApp: App {
                 await synchronizeWithServer()
             }
             .task(id: store.canUseWorkoutAdjustment) {
-                if store.canUseWorkoutAdjustment {
+                if hasOnboarded && store.canUseWorkoutAdjustment && healthKit.isAuthorized {
                     await startHealthKitAutoSync()
                 } else {
                     healthKit.stopWaterIntakeObserver()
                 }
+            }
+            .task(id: store.canUseWeatherAdjustment) {
+                guard hasOnboarded, store.canUseWeatherAdjustment else { return }
+                await refreshWeatherSnapshot()
+            }
+            .task(id: locationManager.lastLocation?.timestamp) {
+                guard hasOnboarded, store.canUseWeatherAdjustment else { return }
+                await refreshWeatherSnapshot()
             }
             .task(id: syncTrigger) {
                 guard syncTrigger > 0, !isApplyingRemoteSync else { return }
@@ -66,9 +77,18 @@ struct WaterQuestApp: App {
                 guard !isApplyingRemoteSync else { return }
                 await synchronizeWithServer()
             }
-            .onChange(of: subscriptionManager.hasActiveSubscription) { _, hasSubscription in
-                store.setPremiumAccess(hasSubscription)
+            .onChange(of: subscriptionManager.isPro) { _, isPro in
+                store.setPremiumAccess(isPro)
+                enforcePremiumRestrictions(for: isPro)
                 if !store.canUseWorkoutAdjustment {
+                    healthKit.stopWaterIntakeObserver()
+                }
+            }
+            .onChange(of: healthKit.isAuthorized) { _, isAuthorized in
+                guard hasOnboarded else { return }
+                if isAuthorized && store.canUseWorkoutAdjustment {
+                    Task { await startHealthKitAutoSync() }
+                } else if !isAuthorized {
                     healthKit.stopWaterIntakeObserver()
                 }
             }
@@ -81,7 +101,7 @@ struct WaterQuestApp: App {
                 guard !isApplyingRemoteSync else { return }
                 store.touchForSync()
             }
-            .onChange(of: appTheme) { _, _ in
+            .onChange(of: appThemeRawValue) { _, _ in
                 guard !isApplyingRemoteSync else { return }
                 store.touchForSync()
             }
@@ -89,11 +109,14 @@ struct WaterQuestApp: App {
                 if phase == .active {
                     Task {
                         await subscriptionManager.refreshStatus()
-                        store.setPremiumAccess(subscriptionManager.hasActiveSubscription)
-                        if subscriptionManager.hasActiveSubscription {
+                        store.setPremiumAccess(subscriptionManager.isPro)
+                        enforcePremiumRestrictions(for: subscriptionManager.isPro)
+                        if hasOnboarded && subscriptionManager.isPro {
                             await healthKit.refreshAuthorizationStatus()
                         }
-                        await refreshHealthKitWaterEntries()
+                        if hasOnboarded {
+                            await refreshHealthKitWaterEntries()
+                        }
                         await synchronizeWithServer()
                     }
                 } else if phase == .background {
@@ -108,13 +131,27 @@ struct WaterQuestApp: App {
         await healthKit.startWaterIntakeObserver(days: 7) { entries in
             store.syncHealthKitEntriesRange(entries, days: 7)
         }
+        let summary = await healthKit.fetchTodayWorkoutSummary()
+        store.updateWorkout(summary)
     }
 
     @MainActor
     private func refreshHealthKitWaterEntries() async {
         guard store.canUseWorkoutAdjustment else { return }
+        let summary = await healthKit.fetchTodayWorkoutSummary()
+        store.updateWorkout(summary)
         if let entries = await healthKit.fetchRecentWaterEntries(days: 7) {
             store.syncHealthKitEntriesRange(entries, days: 7)
+        }
+    }
+
+    @MainActor
+    private func refreshWeatherSnapshot() async {
+        await weatherClient.refresh()
+        if let snapshot = weatherClient.currentWeather {
+            store.updateWeather(snapshot)
+        } else if locationManager.authorizationStatus == .authorizedAlways || locationManager.authorizationStatus == .authorizedWhenInUse {
+            locationManager.requestLocation()
         }
     }
 
@@ -136,9 +173,29 @@ struct WaterQuestApp: App {
             store.applySyncedState(remote.persistedState)
             hasOnboarded = remote.hasOnboarded
             if let rawValue = remote.appThemeRawValue, let syncedTheme = AppTheme(rawValue: rawValue) {
-                appTheme = syncedTheme
+                appThemeRawValue = syncedTheme.rawValue
             }
             notifier.scheduleReminders(profile: store.profile, entries: store.entries, goalML: store.dailyGoal.totalML)
         }
+    }
+
+    private var appTheme: AppTheme {
+        AppTheme(rawValue: appThemeRawValue) ?? .system
+    }
+
+    private func enforcePremiumRestrictions(for isPro: Bool) {
+        if !isPro, store.profile.prefersWeatherGoal || store.profile.prefersHealthKit {
+            store.updateProfile { profile in
+                profile.prefersWeatherGoal = false
+                profile.prefersHealthKit = false
+            }
+        }
+        enforceMascotAccess(for: isPro)
+    }
+
+    private func enforceMascotAccess(for isPro: Bool) {
+        let sanitized = MascotStyle.sanitizedSelectionID(from: selectedMascotID, isPro: isPro)
+        guard sanitized != selectedMascotID else { return }
+        selectedMascotID = sanitized
     }
 }

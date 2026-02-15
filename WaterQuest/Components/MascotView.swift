@@ -9,6 +9,10 @@ enum MascotStyle: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
+    var isPremium: Bool {
+        self != .ripple
+    }
+
     var name: String {
         switch self {
         case .ripple: return "Ripple"
@@ -51,6 +55,14 @@ enum MascotStyle: String, CaseIterable, Identifiable {
 
     static func from(id: String) -> MascotStyle {
         MascotStyle(rawValue: id) ?? .ripple
+    }
+
+    static func sanitizedSelectionID(from id: String, isPro: Bool) -> String {
+        let style = from(id: id)
+        if style.isPremium && !isPro {
+            return MascotStyle.ripple.rawValue
+        }
+        return style.rawValue
     }
 }
 
@@ -137,6 +149,7 @@ struct MascotView: View {
             }
             .offset(y: size * 0.12)
 
+
             // Sparkle highlights
             Circle()
                 .fill(Color.white.opacity(0.5))
@@ -174,20 +187,22 @@ struct MascotView: View {
     }
 
     private var eye: some View {
-        ZStack {
-            // Eye white
-            Capsule()
-                .fill(Color.white.opacity(0.9))
-                .frame(width: size * 0.09, height: eyeBlink ? size * 0.02 : size * 0.09)
-            // Pupil
-            if !eyeBlink {
+        let eyeHeight = eyeBlink ? size * 0.035 : size * 0.09
+        let pupilOpacity: Double = eyeBlink ? 0.75 : 1
+        let pupilSize = eyeBlink ? size * 0.04 : size * 0.055
+
+        return Capsule(style: .continuous)
+            .fill(Color.white.opacity(0.9))
+            .frame(width: size * 0.09, height: eyeHeight)
+            .overlay {
                 Circle()
                     .fill(Color.black.opacity(0.85))
-                    .frame(width: size * 0.055, height: size * 0.055)
-                    .offset(y: size * 0.005)
+                    .frame(width: pupilSize, height: pupilSize)
+                    .scaleEffect(x: 1, y: eyeBlink ? 0.45 : 1)
+                    .opacity(pupilOpacity)
             }
-        }
-        .animation(.easeInOut(duration: 0.12), value: eyeBlink)
+            .clipShape(Capsule(style: .continuous))
+            .animation(.easeInOut(duration: 0.12), value: eyeBlink)
     }
 
     private func startBlinking() {
@@ -292,11 +307,21 @@ private struct MascotFaceView: View {
     var blink: Bool = false
 
     private var eyeScaleY: CGFloat {
-        blink ? 0.2 : 0.75 + (0.35 * happiness)
+        blink ? 0.24 : 0.62 + (0.45 * happiness)
     }
 
     private var mouthCurvature: CGFloat {
         -0.35 + (0.85 * happiness)
+    }
+
+    private var faceOffsetY: CGFloat {
+        (1 - happiness) * size * 0.035
+    }
+
+    private var eyeOffsetY: CGFloat {
+        let expressionLift = (0.5 - happiness) * size * 0.07
+        let blinkDip = blink ? size * 0.01 : 0
+        return expressionLift + blinkDip
     }
 
     var body: some View {
@@ -305,27 +330,33 @@ private struct MascotFaceView: View {
                 eye
                 eye
             }
+            .offset(y: eyeOffsetY)
 
             MascotMouthShape(curvature: mouthCurvature)
                 .stroke(Color.white.opacity(0.9), style: StrokeStyle(lineWidth: size * 0.12, lineCap: .round))
                 .frame(width: size * 0.55, height: size * 0.28)
                 .shadow(color: Color.white.opacity(0.4), radius: 2, x: 0, y: 1)
         }
+        .offset(y: faceOffsetY)
         .animation(.easeInOut(duration: 0.12), value: blink)
+        .animation(.easeInOut(duration: 0.35), value: happiness)
     }
 
     private var eye: some View {
-        Capsule(style: .continuous)
+        let pupilSize = blink ? size * 0.075 : size * 0.09
+
+        return Capsule(style: .continuous)
             .fill(Color.white.opacity(0.9))
             .frame(width: size * 0.18, height: size * 0.18)
             .scaleEffect(x: 1, y: eyeScaleY)
             .overlay(
                 Circle()
                     .fill(Color.black.opacity(0.85))
-                    .frame(width: size * 0.09, height: size * 0.09)
-                    .opacity(blink ? 0 : 1)
-                    .offset(y: size * 0.02)
+                    .frame(width: pupilSize, height: pupilSize)
+                    .scaleEffect(x: 1, y: blink ? 0.45 : 1)
+                    .opacity(blink ? 0.75 : 1)
             )
+            .clipShape(Capsule(style: .continuous))
     }
 }
 
@@ -425,10 +456,7 @@ struct DiamondShape: Shape {
 struct HexagonShape: Shape {
     func path(in rect: CGRect) -> Path {
         let width = rect.width
-        let height = rect.height
         let xOffset = width * 0.1
-        let yOffset = height * 0.2
-
         var path = Path()
         path.move(to: CGPoint(x: rect.minX + xOffset, y: rect.minY))
         path.addLine(to: CGPoint(x: rect.maxX - xOffset, y: rect.minY))
