@@ -3,6 +3,7 @@ import Charts
 
 struct InsightsView: View {
     @EnvironmentObject private var store: HydrationStore
+    @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var selectedDate: Date?
 
     private var weeklyData: [WeeklyDay] {
@@ -62,31 +63,33 @@ struct InsightsView: View {
         .navigationTitle("Insights")
     }
 
-    private var headerSummary: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Your hydration trend")
-                .font(.title3.weight(.semibold))
+    private var isRegular: Bool { sizeClass == .regular }
 
-            HStack(spacing: 14) {
-                MetricTile(title: "Today", value: Formatters.percentString(min(1, store.todayTotalML / max(1, store.dailyGoal.totalML))), icon: "drop.fill", color: Theme.lagoon)
-                MetricTile(title: "7-day avg", value: Formatters.volumeString(ml: weeklyAverageML, unit: store.profile.unitSystem), icon: "chart.bar.fill", color: Theme.mint)
-                MetricTile(title: "Goal days", value: "\(daysGoalMet)/7", icon: "checkmark.circle.fill", color: Theme.sun)
+    private var headerSummary: some View {
+        VStack(alignment: .leading, spacing: isRegular ? 16 : 12) {
+            Text("Your hydration trend")
+                .font(isRegular ? .title2.weight(.semibold) : .title3.weight(.semibold))
+
+            HStack(spacing: isRegular ? 16 : 14) {
+                MetricTile(title: "Today", value: Formatters.percentString(min(1, store.todayTotalML / max(1, store.dailyGoal.totalML))), icon: "drop.fill", color: Theme.lagoon, isRegular: isRegular)
+                MetricTile(title: "7-day avg", value: Formatters.volumeString(ml: weeklyAverageML, unit: store.profile.unitSystem), icon: "chart.bar.fill", color: Theme.mint, isRegular: isRegular)
+                MetricTile(title: "Goal days", value: "\(daysGoalMet)/7", icon: "checkmark.circle.fill", color: Theme.sun, isRegular: isRegular)
             }
         }
-        .padding(.vertical, 8)
+        .padding(.vertical, isRegular ? 12 : 8)
     }
 
     private var chartSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: isRegular ? 16 : 12) {
             Chart(weeklyData) { day in
                 BarMark(
                     x: .value("Day", day.date, unit: .day),
                     y: .value("Intake", day.totalML)
                 )
                 .foregroundStyle(day.totalML >= store.dailyGoal.totalML ? Theme.mint : Theme.lagoon)
-                .cornerRadius(4)
+                .cornerRadius(isRegular ? 6 : 4)
             }
-            .frame(height: 190)
+            .frame(height: isRegular ? 280 : 190)
             .chartYAxis {
                 AxisMarks(position: .leading)
             }
@@ -174,21 +177,23 @@ private struct MetricTile: View {
     let value: String
     let icon: String
     let color: Color
+    var isRegular: Bool = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: isRegular ? 8 : 6) {
             Image(systemName: icon)
+                .font(isRegular ? .title3 : .body)
                 .foregroundStyle(color)
             Text(value)
-                .font(.headline)
+                .font(isRegular ? .title3.weight(.semibold) : .headline)
             Text(title)
-                .font(.caption)
+                .font(isRegular ? .subheadline : .caption)
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(10)
+        .padding(isRegular ? 14 : 10)
         .background(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
+            RoundedRectangle(cornerRadius: isRegular ? 14 : 12, style: .continuous)
                 .fill(Theme.cardSurface)
         )
     }

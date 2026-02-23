@@ -2,11 +2,12 @@ import SwiftUI
 
 struct AchievementsView: View {
     @EnvironmentObject private var store: HydrationStore
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
-    private let columns = [
-        GridItem(.flexible(), spacing: 12),
-        GridItem(.flexible(), spacing: 12)
-    ]
+    private var columns: [GridItem] {
+        let count = sizeClass == .regular ? 3 : 2
+        return Array(repeating: GridItem(.flexible(), spacing: 14), count: count)
+    }
 
     private var completedAchievements: Int {
         store.gameState.achievements.filter { $0.unlockedAt != nil }.count
@@ -63,15 +64,17 @@ struct AchievementsView: View {
         }
     }
 
-    private var summarySection: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Text("Progress at a glance")
-                .font(.title3.weight(.semibold))
+    private var isRegular: Bool { sizeClass == .regular }
 
-            HStack(spacing: 12) {
-                SummaryTile(title: "Streak", value: "\(store.gameState.streakDays) days", icon: "flame.fill", color: Theme.coral)
-                SummaryTile(title: "Level", value: "\(store.gameState.level)", icon: "star.fill", color: Theme.sun)
-                SummaryTile(title: "Coins", value: "\(store.gameState.coins)", icon: "bitcoinsign.circle.fill", color: Theme.lagoon)
+    private var summarySection: some View {
+        VStack(alignment: .leading, spacing: isRegular ? 18 : 14) {
+            Text("Progress at a glance")
+                .font(isRegular ? .title2.weight(.semibold) : .title3.weight(.semibold))
+
+            HStack(spacing: isRegular ? 16 : 12) {
+                SummaryTile(title: "Streak", value: "\(store.gameState.streakDays) days", icon: "flame.fill", color: Theme.coral, isRegular: isRegular)
+                SummaryTile(title: "Level", value: "\(store.gameState.level)", icon: "star.fill", color: Theme.sun, isRegular: isRegular)
+                SummaryTile(title: "Coins", value: "\(store.gameState.coins)", icon: "bitcoinsign.circle.fill", color: Theme.lagoon, isRegular: isRegular)
             }
 
             HStack {
@@ -79,10 +82,10 @@ struct AchievementsView: View {
                 Spacer()
                 Text("\(completedAchievements)/\(max(1, store.gameState.achievements.count)) milestones")
             }
-            .font(.footnote)
+            .font(isRegular ? .subheadline : .footnote)
             .foregroundStyle(.secondary)
         }
-        .padding(.vertical, 8)
+        .padding(.vertical, isRegular ? 12 : 8)
     }
 }
 
@@ -91,21 +94,23 @@ private struct SummaryTile: View {
     let value: String
     let icon: String
     let color: Color
+    var isRegular: Bool = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: isRegular ? 8 : 6) {
             Image(systemName: icon)
+                .font(isRegular ? .title3 : .body)
                 .foregroundStyle(color)
             Text(value)
-                .font(.headline)
+                .font(isRegular ? .title3.weight(.semibold) : .headline)
             Text(title)
-                .font(.caption)
+                .font(isRegular ? .subheadline : .caption)
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(10)
+        .padding(isRegular ? 14 : 10)
         .background(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
+            RoundedRectangle(cornerRadius: isRegular ? 14 : 12, style: .continuous)
                 .fill(Theme.cardSurface)
         )
     }

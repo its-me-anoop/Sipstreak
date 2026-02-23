@@ -3,29 +3,32 @@ import SwiftUI
 struct AddIntakeView: View {
     @EnvironmentObject private var store: HydrationStore
     @EnvironmentObject private var healthKit: HealthKitManager
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     @State private var amount: Double = 250
     @State private var note = ""
     @State private var selectedPreset: Int?
     @State private var showSavedBanner = false
 
+    private var isRegular: Bool { sizeClass == .regular }
+
     var body: some View {
         Form {
             Section {
-                VStack(alignment: .leading, spacing: 10) {
+                VStack(alignment: .leading, spacing: isRegular ? 14 : 10) {
                     Text("Log Water")
-                        .font(.title2.weight(.semibold))
+                        .font(isRegular ? .title.weight(.semibold) : .title2.weight(.semibold))
                     Text("Fast, accurate intake tracking with Health integration.")
-                        .font(.subheadline)
+                        .font(isRegular ? .body : .subheadline)
                         .foregroundStyle(.secondary)
                 }
-                .padding(.vertical, 6)
+                .padding(.vertical, isRegular ? 10 : 6)
 
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
                     Text("\(Int(amount))")
-                        .font(.system(size: 44, weight: .bold, design: .default))
+                        .font(.system(size: isRegular ? 56 : 44, weight: .bold, design: .default))
                     Text(store.profile.unitSystem.volumeUnit)
-                        .font(.title3)
+                        .font(isRegular ? .title2 : .title3)
                         .foregroundStyle(.secondary)
                     Spacer()
                 }
@@ -38,20 +41,21 @@ struct AddIntakeView: View {
             }
 
             Section("Quick Picks") {
-                HStack(spacing: 8) {
+                HStack(spacing: isRegular ? 14 : 8) {
                     ForEach(Array(presetAmounts.enumerated()), id: \.offset) { index, preset in
                         Button {
                             Haptics.selection()
                             selectedPreset = index
                             amount = Double(preset)
                         } label: {
-                            VStack(spacing: 2) {
+                            VStack(spacing: isRegular ? 4 : 2) {
                                 Text("\(preset)")
-                                    .font(.headline)
+                                    .font(isRegular ? .title3.weight(.semibold) : .headline)
                                 Text(store.profile.unitSystem.volumeUnit)
-                                    .font(.caption)
+                                    .font(isRegular ? .subheadline : .caption)
                             }
                             .frame(maxWidth: .infinity)
+                            .padding(.vertical, isRegular ? 6 : 0)
                         }
                         .buttonStyle(.bordered)
                         .tint(selectedPreset == index ? Theme.lagoon : nil)

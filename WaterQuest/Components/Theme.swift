@@ -226,17 +226,19 @@ struct FloatingBubble: View {
 
 struct AnimatedMeshBackground: View {
     var body: some View {
-        ZStack {
-            AppWaterBackground().ignoresSafeArea()
+        GeometryReader { geo in
+            ZStack {
+                AppWaterBackground().ignoresSafeArea()
 
-            FloatingBubble(size: 220, color: Theme.lagoon, delay: 0.0)
-                .position(x: 80, y: 160)
+                FloatingBubble(size: min(220, geo.size.width * 0.5), color: Theme.lagoon, delay: 0.0)
+                    .position(x: geo.size.width * 0.2, y: geo.size.height * 0.2)
 
-            FloatingBubble(size: 180, color: Theme.mint, delay: 0.5)
-                .position(x: 310, y: 370)
+                FloatingBubble(size: min(180, geo.size.width * 0.4), color: Theme.mint, delay: 0.5)
+                    .position(x: geo.size.width * 0.75, y: geo.size.height * 0.45)
 
-            FloatingBubble(size: 150, color: Theme.lavender, delay: 0.8)
-                .position(x: 220, y: 600)
+                FloatingBubble(size: min(150, geo.size.width * 0.35), color: Theme.lavender, delay: 0.8)
+                    .position(x: geo.size.width * 0.5, y: geo.size.height * 0.75)
+            }
         }
     }
 }

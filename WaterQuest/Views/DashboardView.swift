@@ -115,28 +115,32 @@ struct DashboardView: View {
         .listRowSeparator(.hidden)
     }
 
+    @Environment(\.horizontalSizeClass) private var sizeClass
+
     private var quickAddSection: some View {
         let unit = store.profile.unitSystem
         let options = unit == .metric ? [200, 350, 500, 750] : [8, 12, 16, 24]
+        let isRegular = sizeClass == .regular
 
-        return VStack(alignment: .leading, spacing: 12) {
+        return VStack(alignment: .leading, spacing: isRegular ? 16 : 12) {
             Text("Tap to log instantly")
-                .font(.footnote)
+                .font(isRegular ? .subheadline : .footnote)
                 .foregroundStyle(.secondary)
 
-            HStack(spacing: 8) {
+            HStack(spacing: isRegular ? 14 : 8) {
                 ForEach(options, id: \.self) { value in
                     Button {
                         addIntake(Double(value))
                     } label: {
-                        VStack(spacing: 2) {
+                        VStack(spacing: isRegular ? 4 : 2) {
                             Text("\(value)")
-                                .font(.headline)
+                                .font(isRegular ? .title3.weight(.semibold) : .headline)
                             Text(unit.volumeUnit)
-                                .font(.caption)
+                                .font(isRegular ? .subheadline : .caption)
                                 .foregroundStyle(.secondary)
                         }
                         .frame(maxWidth: .infinity)
+                        .padding(.vertical, isRegular ? 6 : 0)
                     }
                     .buttonStyle(.bordered)
                 }
@@ -333,41 +337,45 @@ private struct HydrationSummaryCard: View {
     let level: Int
     let xp: Int
 
+    @Environment(\.horizontalSizeClass) private var sizeClass
+
+    private var isRegular: Bool { sizeClass == .regular }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack(alignment: .top, spacing: 12) {
-                VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: isRegular ? 20 : 14) {
+            HStack(alignment: .top, spacing: isRegular ? 20 : 12) {
+                VStack(alignment: .leading, spacing: isRegular ? 8 : 4) {
                     Text(greeting)
-                        .font(.title3.weight(.semibold))
+                        .font(isRegular ? .title.weight(.semibold) : .title3.weight(.semibold))
                     Text("\(Formatters.volumeString(ml: todayTotalML, unit: unitSystem)) of \(Formatters.volumeString(ml: goalTotalML, unit: unitSystem))")
-                        .font(.subheadline)
+                        .font(isRegular ? .title3 : .subheadline)
                         .foregroundStyle(.secondary)
                 }
 
                 Spacer(minLength: 8)
 
-                AnimatedProgressLoader(progress: progress)
-                    .frame(width: 84, height: 84)
+                AnimatedProgressLoader(progress: progress, isRegular: isRegular)
+                    .frame(width: isRegular ? 120 : 84, height: isRegular ? 120 : 84)
             }
 
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: isRegular ? 14 : 10) {
                 ProgressView(value: progress)
                     .tint(Theme.lagoon)
 
-                HStack(spacing: 8) {
+                HStack(spacing: isRegular ? 12 : 8) {
                     statChip(text: "\(streakDays) day streak", icon: "flame.fill", tint: Theme.coral)
                     statChip(text: "Level \(level)", icon: "star.fill", tint: Theme.sun)
                     statChip(text: "\(xp) XP", icon: "sparkles", tint: Theme.lagoon)
                 }
             }
         }
-        .padding(16)
+        .padding(isRegular ? 24 : 16)
         .background(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
+            RoundedRectangle(cornerRadius: isRegular ? 22 : 18, style: .continuous)
                 .fill(Theme.card)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
+            RoundedRectangle(cornerRadius: isRegular ? 22 : 18, style: .continuous)
                 .stroke(Theme.glassBorder, lineWidth: 1)
         )
         .shadow(color: Theme.shadowColor, radius: 12, x: 0, y: 6)
@@ -376,10 +384,10 @@ private struct HydrationSummaryCard: View {
 
     private func statChip(text: String, icon: String, tint: Color) -> some View {
         Label(text, systemImage: icon)
-            .font(.caption.weight(.semibold))
+            .font(isRegular ? .subheadline.weight(.semibold) : .caption.weight(.semibold))
             .foregroundStyle(tint)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
+            .padding(.horizontal, isRegular ? 14 : 10)
+            .padding(.vertical, isRegular ? 8 : 6)
             .background(
                 Capsule(style: .continuous)
                     .fill(tint.opacity(0.12))
@@ -389,19 +397,21 @@ private struct HydrationSummaryCard: View {
 
 private struct AnimatedProgressLoader: View {
     let progress: Double
+    var isRegular: Bool = false
 
     var body: some View {
         TimelineView(.animation) { timeline in
             let time = timeline.date.timeIntervalSinceReferenceDate
             let clamped = min(1, max(0, progress))
             let pulse = 1 + (sin(time * 2.4) * 0.04)
+            let strokeWidth: CGFloat = isRegular ? 9 : 7
 
             ZStack {
                 Circle()
                     .fill(Theme.lagoon.opacity(0.08))
 
                 Circle()
-                    .stroke(Theme.glassBorder, lineWidth: 7)
+                    .stroke(Theme.glassBorder, lineWidth: strokeWidth)
 
                 Circle()
                     .trim(from: 0, to: max(0.03, clamped))
@@ -410,7 +420,7 @@ private struct AnimatedProgressLoader: View {
                             colors: [Theme.lagoon, Theme.mint, Theme.lagoon],
                             center: .center
                         ),
-                        style: StrokeStyle(lineWidth: 7, lineCap: .round)
+                        style: StrokeStyle(lineWidth: strokeWidth, lineCap: .round)
                     )
                     .rotationEffect(.degrees(-90))
                     .animation(.spring(response: 0.45, dampingFraction: 0.84), value: clamped)
@@ -422,9 +432,9 @@ private struct AnimatedProgressLoader: View {
 
                 VStack(spacing: 1) {
                     Text(Formatters.percentString(clamped))
-                        .font(.caption.weight(.bold))
+                        .font(isRegular ? .body.weight(.bold) : .caption.weight(.bold))
                     Text("Goal")
-                        .font(.caption2)
+                        .font(isRegular ? .caption : .caption2)
                         .foregroundStyle(.secondary)
                 }
             }

@@ -25,6 +25,9 @@ struct OnboardingView: View {
     @State private var prefersWeather = true
     @State private var prefersHealthKit = true
 
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    private var isRegular: Bool { sizeClass == .regular }
+
     private let totalSteps = 4
 
     var body: some View {
@@ -49,6 +52,7 @@ struct OnboardingView: View {
                     .padding(.horizontal, 24)
                     .padding(.vertical, 16)
             }
+            .frame(maxWidth: isRegular ? 600 : .infinity)
         }
     }
 
@@ -65,25 +69,25 @@ struct OnboardingView: View {
 
     private var welcomeStep: some View {
         ScrollView {
-            VStack(spacing: 24) {
-                Spacer(minLength: 30)
+            VStack(spacing: isRegular ? 32 : 24) {
+                Spacer(minLength: isRegular ? 50 : 30)
 
                 Image(systemName: "drop.fill")
-                    .font(.system(size: 60, weight: .semibold))
+                    .font(.system(size: isRegular ? 80 : 60, weight: .semibold))
                     .foregroundStyle(Theme.lagoon)
-                    .frame(width: 120, height: 120)
+                    .frame(width: isRegular ? 160 : 120, height: isRegular ? 160 : 120)
                     .background(
                         Circle()
                             .fill(.ultraThinMaterial)
                     )
 
-                VStack(spacing: 10) {
+                VStack(spacing: isRegular ? 14 : 10) {
                     Text("Welcome to WaterQuest")
                         .font(.largeTitle.weight(.bold))
                         .multilineTextAlignment(.center)
 
                     Text("Build a hydration routine with smart goals, simple logging, and daily momentum.")
-                        .font(.body)
+                        .font(isRegular ? .title3 : .body)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 18)
