@@ -366,7 +366,7 @@
 		20E2B65A66C386AFC42D1A24 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-	
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = WaterQuest/Supporting/WaterQuest.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
@@ -449,7 +449,7 @@
 		59E4C3849D114E63DD2217AF /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-	
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = WaterQuest/Supporting/WaterQuest.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
