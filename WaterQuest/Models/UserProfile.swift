@@ -31,10 +31,51 @@ struct UserProfile: Codable {
     var remindersEnabled: Bool
     var wakeMinutes: Int
     var sleepMinutes: Int
-    var dailyReminderCount: Int
     var prefersWeatherGoal: Bool
     var prefersHealthKit: Bool
     var smartRemindersEnabled: Bool
+
+    init(
+        name: String,
+        unitSystem: UnitSystem,
+        weightKg: Double,
+        activityLevel: ActivityLevel,
+        customGoalML: Double?,
+        remindersEnabled: Bool,
+        wakeMinutes: Int,
+        sleepMinutes: Int,
+        prefersWeatherGoal: Bool,
+        prefersHealthKit: Bool,
+        smartRemindersEnabled: Bool
+    ) {
+        self.name = name
+        self.unitSystem = unitSystem
+        self.weightKg = weightKg
+        self.activityLevel = activityLevel
+        self.customGoalML = customGoalML
+        self.remindersEnabled = remindersEnabled
+        self.wakeMinutes = wakeMinutes
+        self.sleepMinutes = sleepMinutes
+        self.prefersWeatherGoal = prefersWeatherGoal
+        self.prefersHealthKit = prefersHealthKit
+        self.smartRemindersEnabled = smartRemindersEnabled
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        name = try container.decode(String.self, forKey: .name)
+        unitSystem = try container.decode(UnitSystem.self, forKey: .unitSystem)
+        weightKg = try container.decode(Double.self, forKey: .weightKg)
+        activityLevel = try container.decode(ActivityLevel.self, forKey: .activityLevel)
+        customGoalML = try container.decodeIfPresent(Double.self, forKey: .customGoalML)
+        remindersEnabled = try container.decode(Bool.self, forKey: .remindersEnabled)
+        wakeMinutes = try container.decode(Int.self, forKey: .wakeMinutes)
+        sleepMinutes = try container.decode(Int.self, forKey: .sleepMinutes)
+        prefersWeatherGoal = try container.decode(Bool.self, forKey: .prefersWeatherGoal)
+        prefersHealthKit = try container.decode(Bool.self, forKey: .prefersHealthKit)
+        smartRemindersEnabled = try container.decode(Bool.self, forKey: .smartRemindersEnabled)
+        // dailyReminderCount was removed — ignore if present in old data
+    }
 
     static let `default` = UserProfile(
         name: "",
@@ -45,7 +86,6 @@ struct UserProfile: Codable {
         remindersEnabled: true,
         wakeMinutes: 7 * 60,
         sleepMinutes: 22 * 60,
-        dailyReminderCount: 7,
         prefersWeatherGoal: true,
         prefersHealthKit: true,
         smartRemindersEnabled: true

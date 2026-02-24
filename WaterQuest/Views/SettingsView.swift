@@ -303,51 +303,6 @@ struct SettingsView: View {
                         }
                     )
                 )
-
-                Divider().opacity(0.3)
-
-                HStack {
-                    HStack(spacing: 8) {
-                        Image(systemName: "number")
-                            .foregroundStyle(Theme.lagoon)
-                            .frame(width: 22)
-                        Text("Reminders per day")
-                            .font(.subheadline.weight(.medium))
-                    }
-                    Spacer()
-                    HStack(spacing: 12) {
-                        Button {
-                            guard store.profile.dailyReminderCount > 3 else { return }
-                            Haptics.selection()
-                            store.updateProfile { $0.dailyReminderCount -= 1 }
-                            rescheduleReminders()
-                        } label: {
-                            Image(systemName: "minus.circle.fill")
-                                .font(.title3)
-                                .foregroundStyle(store.profile.dailyReminderCount <= 3 ? Color.secondary.opacity(0.5) : Theme.lagoon)
-                        }
-                        .disabled(store.profile.dailyReminderCount <= 3)
-
-                        Text("\(store.profile.dailyReminderCount)")
-                            .font(.system(.title3, design: .rounded).weight(.bold))
-                            .foregroundStyle(Theme.lagoon)
-                            .frame(minWidth: 28)
-                            .contentTransition(.numericText())
-
-                        Button {
-                            guard store.profile.dailyReminderCount < 12 else { return }
-                            Haptics.selection()
-                            store.updateProfile { $0.dailyReminderCount += 1 }
-                            rescheduleReminders()
-                        } label: {
-                            Image(systemName: "plus.circle.fill")
-                                .font(.title3)
-                                .foregroundStyle(store.profile.dailyReminderCount >= 12 ? Color.secondary.opacity(0.5) : Theme.lagoon)
-                        }
-                        .disabled(store.profile.dailyReminderCount >= 12)
-                    }
-                    .buttonStyle(.plain)
-                }
             }
         }
     }
@@ -493,6 +448,30 @@ struct SettingsView: View {
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
                         .stroke(Theme.glassBorder, lineWidth: 1)
                 )
+
+                Link(destination: URL(string: "https://apps.apple.com/account/subscriptions")!) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "creditcard.fill")
+                            .foregroundStyle(.secondary)
+                            .frame(width: 22)
+                        Text("Manage Subscription")
+                            .font(.subheadline.weight(.medium))
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        Image(systemName: "arrow.up.right")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.tertiary)
+                    }
+                    .padding(12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(.ultraThinMaterial)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .stroke(Theme.glassBorder, lineWidth: 1)
+                    )
+                }
             }
         }
     }

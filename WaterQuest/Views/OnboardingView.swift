@@ -396,7 +396,6 @@ struct OnboardingView: View {
             profile.remindersEnabled = true
             profile.wakeMinutes = minutes(from: wakeTime)
             profile.sleepMinutes = minutes(from: sleepTime)
-            profile.dailyReminderCount = 7
             profile.prefersWeatherGoal = true
             profile.prefersHealthKit = true
         }

@@ -154,11 +154,13 @@ final class NotificationScheduler: ObservableObject {
         if isQuiet { didFireEscalation = true }
     }
 
-    /// Base interval between reminders, derived from wake/sleep span and count.
+    /// Base interval between reminders, auto-calculated from awake hours.
+    /// Targets ~8 reminders per day, clamped to 60–150 minutes.
     private func computeInterval(profile: UserProfile) -> Double {
-        let span = max(60, profile.sleepMinutes - profile.wakeMinutes) // minutes
-        let count = max(1, min(12, profile.dailyReminderCount))
-        return Double(span / count) * 60.0 // convert to seconds
+        let awakeMinutes = max(60, profile.sleepMinutes - profile.wakeMinutes)
+        let intervalMinutes = Double(awakeMinutes) / 8.0
+        let clamped = min(max(intervalMinutes, 60), 150) // 1hr floor, 2.5hr ceiling
+        return clamped * 60.0 // convert to seconds
     }
 
     // MARK: - Message generation
@@ -254,7 +256,9 @@ final class NotificationScheduler: ObservableObject {
     // MARK: - Classic (fixed-schedule) reminders
 
     private func scheduleClassicReminders(profile: UserProfile) {
-        let times = classicReminderTimes(wakeMinutes: profile.wakeMinutes, sleepMinutes: profile.sleepMinutes, count: profile.dailyReminderCount)
+        let awakeMinutes = max(60, profile.sleepMinutes - profile.wakeMinutes)
+        let count = max(1, min(12, Int(round(Double(awakeMinutes) / min(max(Double(awakeMinutes) / 8.0, 60), 150)))))
+        let times = classicReminderTimes(wakeMinutes: profile.wakeMinutes, sleepMinutes: profile.sleepMinutes, count: count)
         let staticMessages = [
             "Sip time! Your future self is cheering.",
             "Take a water break — you deserve it.",
