@@ -376,12 +376,10 @@ struct DashboardView: View {
                 // Apple Weather Attribution
                 Link(destination: URL(string: "https://weatherkit.apple.com/legal-attribution.html")!) {
                     HStack(spacing: 4) {
+                        Text("Weather data provided by")
                         Image(systemName: "applelogo")
                         Text("Weather")
                             .fontWeight(.medium)
-                        Text("—")
-                        Text("Legal attribution")
-                            .underline()
                     }
                     .font(.caption)
                     .foregroundStyle(Theme.lagoon.opacity(0.8))
