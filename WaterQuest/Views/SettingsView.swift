@@ -15,18 +15,25 @@ struct SettingsView: View {
     @State private var wakeTime: Date = Date()
     @State private var sleepTime: Date = Date()
 
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    private var isRegular: Bool { sizeClass == .regular }
+
     var body: some View {
-        Form {
-            profileSection
-            appearanceSection
-            goalSection
-            scheduleSection
-            reminderSection
-            permissionsSection
-            aboutSection
+        ScrollView {
+            VStack(spacing: 16) {
+                profileCard
+                appearanceCard
+                goalCard
+                scheduleCard
+                reminderCard
+                permissionsCard
+                aboutCard
+            }
+            .padding(.horizontal, 16)
+            .padding(.bottom, 24)
         }
+        .scrollIndicators(.hidden)
         .navigationTitle("Settings")
-        .scrollContentBackground(.hidden)
         .background(AppWaterBackground().ignoresSafeArea())
         .task {
             await notifier.refreshAuthorizationStatus()
@@ -37,123 +44,228 @@ struct SettingsView: View {
         }
     }
 
-    private var profileSection: some View {
-        Section("Profile") {
-            TextField("Name", text: Binding(
-                get: { store.profile.name },
-                set: { value in
-                    store.updateProfile { $0.name = value }
-                }
-            ))
-            .textInputAutocapitalization(.words)
-            .disableAutocorrection(true)
+    // MARK: - Profile
 
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Text("Weight")
-                    Spacer()
-                    Text("\(Int(store.profile.unitSystem.amountFromKG(store.profile.weightKg))) \(store.profile.unitSystem.bodyWeightUnit)")
+    private var profileCard: some View {
+        DashboardCard(title: "Profile", icon: "person.fill") {
+            VStack(spacing: 20) {
+                // Name
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Name")
+                        .font(.subheadline.weight(.medium))
                         .foregroundStyle(.secondary)
+                    TextField("Your Name", text: Binding(
+                        get: { store.profile.name },
+                        set: { value in
+                            store.updateProfile { $0.name = value }
+                        }
+                    ))
+                    .textInputAutocapitalization(.words)
+                    .disableAutocorrection(true)
+                    .padding(12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(.ultraThinMaterial)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .stroke(Theme.glassBorder, lineWidth: 1)
+                    )
                 }
 
-                Slider(
-                    value: Binding(
-                        get: { store.profile.unitSystem.amountFromKG(store.profile.weightKg) },
+                // Weight
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("Weight")
+                            .font(.subheadline.weight(.medium))
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        Text("\(Int(store.profile.unitSystem.amountFromKG(store.profile.weightKg))) \(store.profile.unitSystem.bodyWeightUnit)")
+                            .font(.system(.subheadline, design: .rounded).weight(.bold))
+                            .foregroundStyle(Theme.lagoon)
+                            .contentTransition(.numericText())
+                    }
+                    Slider(
+                        value: Binding(
+                            get: { store.profile.unitSystem.amountFromKG(store.profile.weightKg) },
+                            set: { value in
+                                store.updateProfile { profile in
+                                    profile.weightKg = profile.unitSystem.kg(from: value)
+                                }
+                            }
+                        ),
+                        in: store.profile.unitSystem == .metric ? 40...140 : 90...300,
+                        step: store.profile.unitSystem == .metric ? 1 : 2
+                    )
+                    .tint(Theme.lagoon)
+                }
+
+                // Units
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Units")
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(.secondary)
+                    Picker("Units", selection: Binding(
+                        get: { store.profile.unitSystem },
                         set: { value in
-                            store.updateProfile { profile in
-                                profile.weightKg = profile.unitSystem.kg(from: value)
+                            store.updateProfile { $0.unitSystem = value }
+                            if customGoalEnabled {
+                                let mlValue = store.profile.customGoalML ?? store.dailyGoal.totalML
+                                customGoalValue = store.profile.unitSystem.amount(fromML: mlValue)
                             }
                         }
-                    ),
-                    in: store.profile.unitSystem == .metric ? 40...140 : 90...300,
-                    step: store.profile.unitSystem == .metric ? 1 : 2
-                )
-                .tint(Theme.lagoon)
-            }
-
-            Picker("Units", selection: Binding(
-                get: { store.profile.unitSystem },
-                set: { value in
-                    store.updateProfile { $0.unitSystem = value }
-                    if customGoalEnabled {
-                        let mlValue = store.profile.customGoalML ?? store.dailyGoal.totalML
-                        customGoalValue = store.profile.unitSystem.amount(fromML: mlValue)
+                    )) {
+                        Text("Metric").tag(UnitSystem.metric)
+                        Text("Imperial").tag(UnitSystem.imperial)
                     }
+                    .pickerStyle(.segmented)
                 }
-            )) {
-                Text("Metric").tag(UnitSystem.metric)
-                Text("Imperial").tag(UnitSystem.imperial)
             }
-            .pickerStyle(.segmented)
         }
     }
 
-    private var appearanceSection: some View {
-        Section("Appearance") {
-            Picker("Theme", selection: $appTheme) {
+    // MARK: - Appearance
+
+    private var appearanceCard: some View {
+        DashboardCard(title: "Appearance", icon: "paintbrush.fill") {
+            HStack(spacing: 10) {
                 ForEach(AppTheme.allCases) { theme in
-                    Label(theme.label, systemImage: theme.icon)
-                        .tag(theme)
+                    Button {
+                        Haptics.selection()
+                        withAnimation(Theme.quickSpring) {
+                            appTheme = theme
+                        }
+                    } label: {
+                        VStack(spacing: 8) {
+                            Image(systemName: theme.icon)
+                                .font(.title3)
+                                .foregroundStyle(appTheme == theme ? .white : Theme.lagoon)
+                                .frame(width: 44, height: 44)
+                                .background(
+                                    Circle()
+                                        .fill(appTheme == theme ? Theme.lagoon : Theme.lagoon.opacity(0.12))
+                                )
+                            Text(theme.label)
+                                .font(.caption.weight(.medium))
+                                .foregroundStyle(appTheme == theme ? .primary : .secondary)
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.plain)
                 }
             }
         }
     }
 
-    private var goalSection: some View {
-        Section("Daily Goal") {
-            Toggle("Use custom goal", isOn: $customGoalEnabled)
+    // MARK: - Daily Goal
+
+    private var goalCard: some View {
+        DashboardCard(title: "Daily Goal", icon: "target") {
+            VStack(spacing: 18) {
+                settingsToggle(
+                    "Custom goal",
+                    icon: "slider.horizontal.3",
+                    isOn: $customGoalEnabled
+                )
                 .onChange(of: customGoalEnabled) { _, enabled in
                     store.updateProfile { profile in
                         profile.customGoalML = enabled ? profile.unitSystem.ml(from: customGoalValue) : nil
                     }
                 }
 
-            if customGoalEnabled {
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Text("Target")
-                        Spacer()
-                        Text("\(Int(customGoalValue)) \(store.profile.unitSystem.volumeUnit)")
-                            .foregroundStyle(.secondary)
-                    }
-
-                    Slider(
-                        value: $customGoalValue,
-                        in: store.profile.unitSystem == .metric ? 1500...4500 : 50...150,
-                        step: store.profile.unitSystem == .metric ? 50 : 2
-                    )
-                    .tint(Theme.sun)
-                    .onChange(of: customGoalValue) { _, value in
-                        store.updateProfile { profile in
-                            profile.customGoalML = profile.unitSystem.ml(from: value)
+                if customGoalEnabled {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Text("Target")
+                                .font(.subheadline.weight(.medium))
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                            Text("\(Int(customGoalValue)) \(store.profile.unitSystem.volumeUnit)")
+                                .font(.system(.subheadline, design: .rounded).weight(.bold))
+                                .foregroundStyle(Theme.sun)
+                                .contentTransition(.numericText())
+                        }
+                        Slider(
+                            value: $customGoalValue,
+                            in: store.profile.unitSystem == .metric ? 1500...4500 : 50...150,
+                            step: store.profile.unitSystem == .metric ? 50 : 2
+                        )
+                        .tint(Theme.sun)
+                        .onChange(of: customGoalValue) { _, value in
+                            store.updateProfile { profile in
+                                profile.customGoalML = profile.unitSystem.ml(from: value)
+                            }
                         }
                     }
+                    .transition(.move(edge: .top).combined(with: .opacity))
                 }
+
+                Divider().opacity(0.3)
+
+                settingsToggle(
+                    "Weather adjustment",
+                    icon: "cloud.sun.fill",
+                    isOn: Binding(
+                        get: { store.profile.prefersWeatherGoal },
+                        set: { value in
+                            store.updateProfile { $0.prefersWeatherGoal = value }
+                            if value {
+                                locationManager.requestPermission()
+                            }
+                        }
+                    )
+                )
+
+                settingsToggle(
+                    "Workout adjustment",
+                    icon: "figure.run",
+                    isOn: Binding(
+                        get: { store.profile.prefersHealthKit },
+                        set: { value in
+                            store.updateProfile { $0.prefersHealthKit = value }
+                        }
+                    )
+                )
             }
-
-            Toggle("Weather adjustment", isOn: Binding(
-                get: { store.profile.prefersWeatherGoal },
-                set: { value in
-                    store.updateProfile { $0.prefersWeatherGoal = value }
-                    if value {
-                        locationManager.requestPermission()
-                    }
-                }
-            ))
-
-            Toggle("Workout adjustment", isOn: Binding(
-                get: { store.profile.prefersHealthKit },
-                set: { value in
-                    store.updateProfile { $0.prefersHealthKit = value }
-                }
-            ))
+            .animation(Theme.fluidSpring, value: customGoalEnabled)
         }
     }
 
-    private var scheduleSection: some View {
-        Section("Schedule") {
-            DatePicker("Wake", selection: $wakeTime, displayedComponents: .hourAndMinute)
-            DatePicker("Sleep", selection: $sleepTime, displayedComponents: .hourAndMinute)
+    // MARK: - Schedule
+
+    private var scheduleCard: some View {
+        DashboardCard(title: "Schedule", icon: "sun.and.horizon.fill") {
+            VStack(spacing: 16) {
+                HStack {
+                    HStack(spacing: 8) {
+                        Image(systemName: "sunrise.fill")
+                            .foregroundStyle(Theme.sun)
+                            .frame(width: 22)
+                        Text("Wake")
+                            .font(.subheadline.weight(.medium))
+                    }
+                    Spacer()
+                    DatePicker("", selection: $wakeTime, displayedComponents: .hourAndMinute)
+                        .labelsHidden()
+                        .tint(Theme.lagoon)
+                }
+
+                Divider().opacity(0.3)
+
+                HStack {
+                    HStack(spacing: 8) {
+                        Image(systemName: "moon.fill")
+                            .foregroundStyle(Theme.lavender)
+                            .frame(width: 22)
+                        Text("Sleep")
+                            .font(.subheadline.weight(.medium))
+                    }
+                    Spacer()
+                    DatePicker("", selection: $sleepTime, displayedComponents: .hourAndMinute)
+                        .labelsHidden()
+                        .tint(Theme.lagoon)
+                }
+            }
         }
         .onChange(of: wakeTime) {
             updateSchedule()
@@ -163,108 +275,241 @@ struct SettingsView: View {
         }
     }
 
-    private var reminderSection: some View {
-        Section("Reminders") {
-            Toggle("Enable reminders", isOn: Binding(
-                get: { store.profile.remindersEnabled },
-                set: { value in
-                    store.updateProfile { $0.remindersEnabled = value }
-                    rescheduleReminders()
-                }
-            ))
+    // MARK: - Reminders
 
-            Toggle("Smart reminders", isOn: Binding(
-                get: { store.profile.smartRemindersEnabled },
-                set: { value in
-                    store.updateProfile { $0.smartRemindersEnabled = value }
-                    rescheduleReminders()
-                }
-            ))
+    private var reminderCard: some View {
+        DashboardCard(title: "Reminders", icon: "bell.badge.fill") {
+            VStack(spacing: 18) {
+                settingsToggle(
+                    "Enable reminders",
+                    icon: "bell.fill",
+                    isOn: Binding(
+                        get: { store.profile.remindersEnabled },
+                        set: { value in
+                            store.updateProfile { $0.remindersEnabled = value }
+                            rescheduleReminders()
+                        }
+                    )
+                )
 
-            Stepper(value: Binding(
-                get: { store.profile.dailyReminderCount },
-                set: { value in
-                    store.updateProfile { $0.dailyReminderCount = value }
-                    rescheduleReminders()
-                }
-            ), in: 3...12) {
+                settingsToggle(
+                    "Smart reminders",
+                    icon: "brain.head.profile.fill",
+                    isOn: Binding(
+                        get: { store.profile.smartRemindersEnabled },
+                        set: { value in
+                            store.updateProfile { $0.smartRemindersEnabled = value }
+                            rescheduleReminders()
+                        }
+                    )
+                )
+
+                Divider().opacity(0.3)
+
                 HStack {
-                    Text("Reminders per day")
+                    HStack(spacing: 8) {
+                        Image(systemName: "number")
+                            .foregroundStyle(Theme.lagoon)
+                            .frame(width: 22)
+                        Text("Reminders per day")
+                            .font(.subheadline.weight(.medium))
+                    }
                     Spacer()
-                    Text("\(store.profile.dailyReminderCount)")
+                    HStack(spacing: 12) {
+                        Button {
+                            guard store.profile.dailyReminderCount > 3 else { return }
+                            Haptics.selection()
+                            store.updateProfile { $0.dailyReminderCount -= 1 }
+                            rescheduleReminders()
+                        } label: {
+                            Image(systemName: "minus.circle.fill")
+                                .font(.title3)
+                                .foregroundStyle(store.profile.dailyReminderCount <= 3 ? Color.secondary.opacity(0.5) : Theme.lagoon)
+                        }
+                        .disabled(store.profile.dailyReminderCount <= 3)
+
+                        Text("\(store.profile.dailyReminderCount)")
+                            .font(.system(.title3, design: .rounded).weight(.bold))
+                            .foregroundStyle(Theme.lagoon)
+                            .frame(minWidth: 28)
+                            .contentTransition(.numericText())
+
+                        Button {
+                            guard store.profile.dailyReminderCount < 12 else { return }
+                            Haptics.selection()
+                            store.updateProfile { $0.dailyReminderCount += 1 }
+                            rescheduleReminders()
+                        } label: {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.title3)
+                                .foregroundStyle(store.profile.dailyReminderCount >= 12 ? Color.secondary.opacity(0.5) : Theme.lagoon)
+                        }
+                        .disabled(store.profile.dailyReminderCount >= 12)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+    }
+
+    // MARK: - Permissions
+
+    private var permissionsCard: some View {
+        DashboardCard(title: "Permissions", icon: "shield.fill") {
+            VStack(spacing: 14) {
+                permissionRow(
+                    title: "HealthKit",
+                    subtitle: healthStatusText,
+                    systemImage: "heart.fill",
+                    tint: healthKit.isAuthorized ? Theme.mint : Theme.sun
+                ) {
+                    Task { await healthKit.requestAuthorization() }
+                }
+
+                Button {
+                    Haptics.impact(.light)
+                    Task {
+                        guard let entries = await healthKit.fetchRecentWaterEntries(days: 7) else { return }
+                        await MainActor.run {
+                            store.syncHealthKitEntriesRange(entries, days: 7)
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "arrow.triangle.2.circlepath")
+                            .foregroundStyle(Theme.lagoon)
+                            .frame(width: 22)
+                        Text("Sync HealthKit Now")
+                            .font(.subheadline.weight(.medium))
+                            .foregroundStyle(.primary)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.tertiary)
+                    }
+                    .padding(12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(.ultraThinMaterial)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .stroke(Theme.glassBorder, lineWidth: 1)
+                    )
+                }
+                .buttonStyle(.plain)
+
+                permissionRow(
+                    title: "Location",
+                    subtitle: locationStatusText,
+                    systemImage: "location.fill",
+                    tint: locationEnabled ? Theme.mint : Theme.sun
+                ) {
+                    locationManager.requestPermission()
+                }
+
+                permissionRow(
+                    title: "Notifications",
+                    subtitle: notificationStatusText,
+                    systemImage: "bell.badge.fill",
+                    tint: notificationEnabled ? Theme.mint : Theme.sun
+                ) {
+                    Task { await notifier.requestAuthorization() }
+                }
+            }
+        }
+    }
+
+    // MARK: - About
+
+    private var aboutCard: some View {
+        DashboardCard(title: "About", icon: "info.circle.fill") {
+            VStack(spacing: 14) {
+                Link(destination: Legal.privacyURL) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "hand.raised.fill")
+                            .foregroundStyle(Theme.lagoon)
+                            .frame(width: 22)
+                        Text("Privacy Policy")
+                            .font(.subheadline.weight(.medium))
+                            .foregroundStyle(.primary)
+                        Spacer()
+                        Image(systemName: "arrow.up.right")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.tertiary)
+                    }
+                    .padding(12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(.ultraThinMaterial)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .stroke(Theme.glassBorder, lineWidth: 1)
+                    )
+                }
+
+                Link(destination: Legal.termsURL) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "doc.text.fill")
+                            .foregroundStyle(Theme.lagoon)
+                            .frame(width: 22)
+                        Text("Terms of Use")
+                            .font(.subheadline.weight(.medium))
+                            .foregroundStyle(.primary)
+                        Spacer()
+                        Image(systemName: "arrow.up.right")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.tertiary)
+                    }
+                    .padding(12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(.ultraThinMaterial)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .stroke(Theme.glassBorder, lineWidth: 1)
+                    )
+                }
+
+                HStack(spacing: 8) {
+                    Image(systemName: "number")
+                        .foregroundStyle(Theme.lagoon)
+                        .frame(width: 22)
+                    Text("Version")
+                        .font(.subheadline.weight(.medium))
+                    Spacer()
+                    Text(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0")
+                        .font(.system(.subheadline, design: .rounded).weight(.medium))
                         .foregroundStyle(.secondary)
                 }
+                .padding(12)
+                .background(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(.ultraThinMaterial)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .stroke(Theme.glassBorder, lineWidth: 1)
+                )
             }
         }
     }
 
-    private var permissionsSection: some View {
-        Section("Permissions") {
-            permissionRow(
-                title: "HealthKit",
-                subtitle: healthStatusText,
-                systemImage: "heart.fill",
-                tint: healthKit.isAuthorized ? Theme.mint : Theme.sun
-            ) {
-                Task { await healthKit.requestAuthorization() }
-            }
+    // MARK: - Reusable Components
 
-            Button("Sync HealthKit Now") {
-                Task {
-                    guard let entries = await healthKit.fetchRecentWaterEntries(days: 7) else { return }
-                    await MainActor.run {
-                        store.syncHealthKitEntriesRange(entries, days: 7)
-                    }
-                }
-            }
-
-            permissionRow(
-                title: "Location",
-                subtitle: locationStatusText,
-                systemImage: "location.fill",
-                tint: locationEnabled ? Theme.mint : Theme.sun
-            ) {
-                locationManager.requestPermission()
-            }
-
-            permissionRow(
-                title: "Notifications",
-                subtitle: notificationStatusText,
-                systemImage: "bell.badge.fill",
-                tint: notificationEnabled ? Theme.mint : Theme.sun
-            ) {
-                Task { await notifier.requestAuthorization() }
+    private func settingsToggle(_ title: String, icon: String, isOn: Binding<Bool>) -> some View {
+        Toggle(isOn: isOn) {
+            HStack(spacing: 8) {
+                Image(systemName: icon)
+                    .foregroundStyle(Theme.lagoon)
+                    .frame(width: 22)
+                Text(title)
+                    .font(.subheadline.weight(.medium))
             }
         }
-    }
-
-    private var aboutSection: some View {
-        Section("About") {
-            Link(destination: Legal.privacyURL) {
-                HStack {
-                    Label("Privacy Policy", systemImage: "hand.raised.fill")
-                    Spacer()
-                    Image(systemName: "arrow.up.right")
-                        .font(.caption)
-                        .foregroundStyle(.tertiary)
-                }
-            }
-            Link(destination: Legal.termsURL) {
-                HStack {
-                    Label("Terms of Use", systemImage: "doc.text.fill")
-                    Spacer()
-                    Image(systemName: "arrow.up.right")
-                        .font(.caption)
-                        .foregroundStyle(.tertiary)
-                }
-            }
-            HStack {
-                Text("Version")
-                Spacer()
-                Text(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0")
-                    .foregroundStyle(.secondary)
-            }
-        }
+        .tint(Theme.lagoon)
     }
 
     private func permissionRow(
@@ -274,14 +519,18 @@ struct SettingsView: View {
         tint: Color,
         action: @escaping () -> Void
     ) -> some View {
-        Button(action: action) {
+        Button(action: {
+            Haptics.selection()
+            action()
+        }) {
             HStack(spacing: 10) {
                 Image(systemName: systemImage)
                     .foregroundStyle(tint)
-                    .frame(width: 24)
+                    .frame(width: 22)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
+                        .font(.subheadline.weight(.medium))
                         .foregroundStyle(.primary)
                     Text(subtitle)
                         .font(.caption)
@@ -294,8 +543,20 @@ struct SettingsView: View {
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.tertiary)
             }
+            .padding(12)
+            .background(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(.ultraThinMaterial)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .stroke(Theme.glassBorder, lineWidth: 1)
+            )
         }
+        .buttonStyle(.plain)
     }
+
+    // MARK: - Status Helpers
 
     private var healthStatusText: String {
         if !healthKit.isAvailable { return "Unavailable" }
@@ -343,6 +604,8 @@ struct SettingsView: View {
             return "Unknown"
         }
     }
+
+    // MARK: - State Sync
 
     private func hydrateLocalStateFromProfile() {
         if let custom = store.profile.customGoalML {
