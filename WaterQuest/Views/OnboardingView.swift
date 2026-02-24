@@ -27,7 +27,6 @@ struct OnboardingView: View {
     @State private var wakeTime = Calendar.current.date(bySettingHour: 7, minute: 0, second: 0, of: Date()) ?? Date()
     @State private var sleepTime = Calendar.current.date(bySettingHour: 22, minute: 0, second: 0, of: Date()) ?? Date()
 
-    @State private var selectedPlan: Product?
     @State private var isPurchasing = false
     @State private var purchaseError: String?
 
@@ -319,7 +318,7 @@ struct OnboardingView: View {
                         .font(.title.bold())
                         .multilineTextAlignment(.center)
 
-                    Text("Build better hydration habits with personalized goals. Start with a 7-day free trial.")
+                    Text("Start your 1-week free trial, then continue with a monthly subscription.")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -343,40 +342,39 @@ struct OnboardingView: View {
                         .stroke(Theme.glassBorder, lineWidth: 1)
                 )
 
-                // Plan selector
-                VStack(spacing: 12) {
-                    if subscriptionManager.products.isEmpty {
-                        ProgressView()
-                            .frame(maxWidth: .infinity, minHeight: 60)
-                    } else {
-                        if let annual = subscriptionManager.annualProduct {
-                            onboardingPlanRow(
-                                title: "Yearly",
-                                subtitle: perMonthText(for: annual).map { "(\($0)/mo)" } ?? "",
-                                price: annual.displayPrice,
-                                period: billingPeriod(for: annual),
-                                isSelected: selectedPlan?.id == annual.id,
-                                isBestValue: true
-                            ) { selectedPlan = annual }
-                        }
-
-                        if let monthly = subscriptionManager.monthlyProduct {
-                            onboardingPlanRow(
-                                title: "Monthly",
-                                subtitle: "",
-                                price: monthly.displayPrice,
-                                period: billingPeriod(for: monthly),
-                                isSelected: selectedPlan?.id == monthly.id,
-                                isBestValue: false
-                            ) { selectedPlan = monthly }
+                // Monthly plan display
+                if subscriptionManager.products.isEmpty {
+                    ProgressView()
+                        .frame(maxWidth: .infinity, minHeight: 60)
+                } else if let monthly = subscriptionManager.monthlyProduct {
+                    HStack(alignment: .center, spacing: 10) {
+                        Text("Monthly")
+                            .font(.subheadline.weight(.semibold))
+                        Spacer()
+                        HStack(alignment: .firstTextBaseline, spacing: 1) {
+                            Text(monthly.displayPrice)
+                                .font(.title3.weight(.bold))
+                                .foregroundStyle(Theme.lagoon)
+                            Text("/mo")
+                                .font(.caption.weight(.medium))
+                                .foregroundStyle(.secondary)
                         }
                     }
+                    .padding(14)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(.ultraThinMaterial)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .stroke(Theme.lagoon, lineWidth: 1.5)
+                    )
                 }
 
                 // Subscribe button
-                if let plan = selectedPlan ?? subscriptionManager.annualProduct ?? subscriptionManager.monthlyProduct {
+                if let monthly = subscriptionManager.monthlyProduct {
                     Button {
-                        purchasePlan(plan)
+                        purchasePlan(monthly)
                     } label: {
                         Group {
                             if isPurchasing {
@@ -385,7 +383,7 @@ struct OnboardingView: View {
                                     Text("Processing...")
                                 }
                             } else {
-                                Text("Subscribe — \(plan.displayPrice)\(billingPeriod(for: plan))")
+                                Text("Try Free for 1 Week — then \(monthly.displayPrice)/mo")
                             }
                         }
                         .font(.headline)
@@ -413,7 +411,7 @@ struct OnboardingView: View {
                 .foregroundStyle(Theme.lagoon)
                 .disabled(isPurchasing)
 
-                Text("After the 7-day free trial, your subscription automatically renews at the price shown above unless canceled at least 24 hours before the end of the current period. Payment is charged to your Apple ID. Manage or cancel anytime in Settings \u{203A} Apple ID \u{203A} Subscriptions.")
+                Text("Enjoy a 1-week free trial. After the trial, your subscription automatically renews at the price shown above unless canceled at least 24 hours before the end of the current period. Payment is charged to your Apple ID. Manage or cancel anytime in Settings \u{203A} Apple ID \u{203A} Subscriptions.")
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
                     .multilineTextAlignment(.center)
@@ -432,86 +430,13 @@ struct OnboardingView: View {
             }
             .padding(.horizontal, 24)
         }
-        .task {
-            if selectedPlan == nil {
-                selectedPlan = subscriptionManager.annualProduct ?? subscriptionManager.monthlyProduct
-            }
-        }
     }
 
-    private func onboardingPlanRow(title: String, subtitle: String, price: String, period: String, isSelected: Bool, isBestValue: Bool, onSelect: @escaping () -> Void) -> some View {
-        Button(action: {
-            Haptics.selection()
-            onSelect()
-        }) {
-            HStack(alignment: .center, spacing: 10) {
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 6) {
-                        Text(title)
-                            .font(.subheadline.weight(.semibold))
-                        if isBestValue {
-                            Text("Best Value")
-                                .font(.caption2.weight(.semibold))
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
-                                .background(Capsule().fill(Theme.sun.opacity(0.2)))
-                        }
-                    }
-                    if !subtitle.isEmpty {
-                        Text(subtitle)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                Spacer()
-                // Total billed amount — most prominent pricing element
-                HStack(alignment: .firstTextBaseline, spacing: 1) {
-                    Text(price)
-                        .font(.title3.weight(.bold))
-                        .foregroundStyle(Theme.lagoon)
-                    Text(period)
-                        .font(.caption.weight(.medium))
-                        .foregroundStyle(.secondary)
-                }
-                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                    .foregroundStyle(isSelected ? Theme.lagoon : .secondary)
-            }
-            .padding(14)
-            .background(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(.ultraThinMaterial)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .stroke(isSelected ? Theme.lagoon : Theme.glassBorder, lineWidth: isSelected ? 1.5 : 1)
-            )
-        }
-        .buttonStyle(.plain)
-    }
-
-    private var trialButtonLabel: String {
-        if let plan = selectedPlan ?? subscriptionManager.annualProduct ?? subscriptionManager.monthlyProduct {
-            return "Try Free — then \(plan.displayPrice)\(billingPeriod(for: plan))"
+    private var subscribeButtonLabel: String {
+        if let monthly = subscriptionManager.monthlyProduct {
+            return "Try Free — then \(monthly.displayPrice)/mo"
         }
         return "Start Free Trial"
-    }
-
-    private func billingPeriod(for product: Product) -> String {
-        guard let period = product.subscription?.subscriptionPeriod else { return "" }
-        switch period.unit {
-        case .year: return "/yr"
-        case .month: return "/mo"
-        case .week: return "/wk"
-        case .day: return "/day"
-        @unknown default: return ""
-        }
-    }
-
-    private func perMonthText(for annual: Product) -> String? {
-        let monthly = annual.price / 12
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        return formatter.string(from: NSDecimalNumber(decimal: monthly))
     }
 
     private func purchasePlan(_ product: Product) {
@@ -594,7 +519,7 @@ struct OnboardingView: View {
                         }
                     }
                 }) {
-                    Text(step == totalSteps - 1 ? trialButtonLabel : "Continue")
+                    Text(step == totalSteps - 1 ? subscribeButtonLabel : "Continue")
                         .font(.headline)
                         .foregroundStyle(.white)
                         .padding(.horizontal, step == totalSteps - 1 ? 20 : 32)

@@ -8,9 +8,7 @@ struct MainTabView: View {
         case settings
     }
 
-    @EnvironmentObject private var subscriptionManager: SubscriptionManager
     @State private var selectedTab: Tab = .dashboard
-    @State private var showPaywall = false
     @State private var showAddIntake = false
 
     init() {
@@ -45,9 +43,6 @@ struct MainTabView: View {
         .tint(Theme.lagoon)
         .onChange(of: selectedTab) {
             Haptics.selection()
-        }
-        .sheet(isPresented: $showPaywall) {
-            PaywallView(isDismissible: true)
         }
         .sheet(isPresented: $showAddIntake) {
             NavigationStack {
@@ -93,12 +88,7 @@ struct MainTabView: View {
             .tag(Tab.dashboard)
 
             NavigationStack {
-                gatedContainer(
-                    title: "Insights",
-                    systemImage: "chart.line.uptrend.xyaxis",
-                    description: "Unlock weekly trends and richer hydration analysis.",
-                    content: { InsightsView() }
-                )
+                InsightsView()
             }
             .background(Color.clear)
             .toolbarBackground(.hidden, for: .navigationBar)
@@ -129,71 +119,6 @@ struct MainTabView: View {
         }
         .background(Color.clear)
         .iPadSidebarStyle()
-    }
-
-    @ViewBuilder
-    private func gatedContainer<Content: View>(
-        title: String,
-        systemImage: String,
-        description: String,
-        @ViewBuilder content: () -> Content
-    ) -> some View {
-        if subscriptionManager.isPro {
-            content()
-        } else {
-            LockedFeatureView(
-                title: title,
-                systemImage: systemImage,
-                description: description,
-                onUnlock: { showPaywall = true }
-            )
-        }
-    }
-}
-
-private struct LockedFeatureView: View {
-    let title: String
-    let systemImage: String
-    let description: String
-    let onUnlock: () -> Void
-
-    var body: some View {
-        VStack(spacing: 20) {
-            Spacer()
-
-            Image(systemName: systemImage)
-                .font(.system(size: 42, weight: .semibold))
-                .foregroundStyle(Theme.lagoon)
-                .frame(width: 88, height: 88)
-                .background(
-                    Circle()
-                        .fill(.ultraThinMaterial)
-                )
-
-            VStack(spacing: 8) {
-                Text("\(title) is part of Pro")
-                    .font(.title2.weight(.semibold))
-
-                Text(description)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 20)
-            }
-
-            Button("Unlock Pro") {
-                Haptics.impact(.medium)
-                onUnlock()
-            }
-            .buttonStyle(.borderedProminent)
-
-            Spacer()
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(.horizontal, 24)
-        .background(AppWaterBackground().ignoresSafeArea())
-        .navigationTitle(title)
-        .navigationBarTitleDisplayMode(.large)
     }
 }
 

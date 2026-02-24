@@ -22,7 +22,6 @@
 		368738D16B3E40D6E50CF1D8 /* StatPill.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ABC282C313B061E1E34EDF7 /* StatPill.swift */; };
 		371AD185C88F6CB932BDEF79 /* SubscriptionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26785D44340E5C0A267B325 /* SubscriptionManager.swift */; };
 		3BB230DF2DB8B5BC7C5AEECE /* WaveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9728B3EA3CEC0654348AC8A3 /* WaveView.swift */; };
-		3CF5B71CC12E2A9212F122C0 /* PaywallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E104C11EDA7CCFEDC3F822C /* PaywallView.swift */; };
 		3F684105CCCD5783655879E4 /* WaterQuestApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4AE7C21F7B60BC9212AFC46 /* WaterQuestApp.swift */; };
 		449C15C42674C41122CC02B6 /* ProgressRing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B8BDAA9F823F748DDAD26EB /* ProgressRing.swift */; };
 		4E93E1598D092FFCC6C6381F /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22C158CF127D3436999E3C2B /* RootView.swift */; };
@@ -72,7 +71,6 @@
 		4B013DED6E9276AA1DBE33BC /* WaterQuest.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = WaterQuest.entitlements; sourceTree = "<group>"; };
 		50CF0F6325F9C80BFB71AA0D /* UserProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfile.swift; sourceTree = "<group>"; };
 		55B57443B7032DDCF70ACB8C /* HydrationAIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HydrationAIService.swift; sourceTree = "<group>"; };
-		5E104C11EDA7CCFEDC3F822C /* PaywallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallView.swift; sourceTree = "<group>"; };
 		63F661B4016F8BE1E8DDA5B5 /* HealthKitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitManager.swift; sourceTree = "<group>"; };
 		6862392928A13FBD5E45D6E3 /* LocationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationManager.swift; sourceTree = "<group>"; };
 		69F362557BEECECFAA26285A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -210,7 +208,6 @@
 				EB90E806138FFE1C09E7187A /* InsightsView.swift */,
 				B2126EAEDD87BD49B24C7BE2 /* MainTabView.swift */,
 				98496F0A352BC5A580943E39 /* OnboardingView.swift */,
-				5E104C11EDA7CCFEDC3F822C /* PaywallView.swift */,
 				22C158CF127D3436999E3C2B /* RootView.swift */,
 				FD0B42119D7BD312FCDAF766 /* SettingsView.swift */,
 				FE848C59D9014D3ABE6E04BE /* SplashScreenView.swift */,
@@ -342,7 +339,6 @@
 				94AF3267A3C90279716F2BE6 /* MotionManager.swift in Sources */,
 				747A7C4F8A906C71164AB9DE /* NotificationScheduler.swift in Sources */,
 				0A5C95DCB74AE59638E495D3 /* OnboardingView.swift in Sources */,
-				3CF5B71CC12E2A9212F122C0 /* PaywallView.swift in Sources */,
 				83C67F5F3E24629A72299C6E /* PersistenceService.swift in Sources */,
 				E367CAB1741850BAFCE4F3F9 /* PrimaryButton.swift in Sources */,
 				449C15C42674C41122CC02B6 /* ProgressRing.swift in Sources */,
