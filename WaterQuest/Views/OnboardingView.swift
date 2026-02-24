@@ -432,13 +432,6 @@ struct OnboardingView: View {
         }
     }
 
-    private var subscribeButtonLabel: String {
-        if let monthly = subscriptionManager.monthlyProduct {
-            return "Try Free — then \(monthly.displayPrice)/mo"
-        }
-        return "Start Free Trial"
-    }
-
     private func purchasePlan(_ product: Product) {
         isPurchasing = true
         purchaseError = nil
@@ -504,41 +497,30 @@ struct OnboardingView: View {
 
                 Spacer()
 
-                // Continue / Start button
-                Button(action: {
-                    Haptics.impact(.medium)
-                    Task {
-                        await requestPermissionForCurrentStep()
-                        if step == totalSteps - 1 {
-                            finishOnboarding()
-                        } else {
+                // Continue button (hidden on paywall step — subscribe button is inline)
+                if step < totalSteps - 1 {
+                    Button(action: {
+                        Haptics.impact(.medium)
+                        Task {
+                            await requestPermissionForCurrentStep()
                             direction = .forward
                             withAnimation(Theme.fluidSpring) {
                                 step += 1
                             }
                         }
+                    }) {
+                        Text("Continue")
+                            .font(.headline)
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 32)
+                            .padding(.vertical, 14)
+                            .background(Theme.lagoon)
+                            .clipShape(Capsule())
+                            .shadow(color: Theme.lagoon.opacity(0.3), radius: 8, y: 4)
                     }
-                }) {
-                    Text(step == totalSteps - 1 ? subscribeButtonLabel : "Continue")
-                        .font(.headline)
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, step == totalSteps - 1 ? 20 : 32)
-                        .padding(.vertical, 14)
-                        .background(Theme.lagoon)
-                        .clipShape(Capsule())
-                        .shadow(color: Theme.lagoon.opacity(0.3), radius: 8, y: 4)
-                        .overlay(
-                            Group {
-                                if step == totalSteps - 1 {
-                                    Capsule()
-                                        .fill(.clear)
-                                        .shimmer()
-                                }
-                            }
-                        )
+                    .buttonStyle(BouncyButtonStyle())
+                    .animation(Theme.quickSpring, value: step)
                 }
-                .buttonStyle(BouncyButtonStyle())
-                .animation(Theme.quickSpring, value: step)
             }
         }
     }
