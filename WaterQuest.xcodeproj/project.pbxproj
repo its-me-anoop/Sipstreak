@@ -103,7 +103,7 @@
 		FA3274E7BB562AF2F4517F9D /* GoalBreakdown.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalBreakdown.swift; sourceTree = "<group>"; };
 		FD0B42119D7BD312FCDAF766 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		FE848C59D9014D3ABE6E04BE /* SplashScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashScreenView.swift; sourceTree = "<group>"; };
-
+		AABB1122CCDDEEFF /* Products.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = Products.storekit; sourceTree = "<group>"; };
 
 /* End PBXFileReference section */
 
@@ -179,6 +179,7 @@
 				39EF82B8B03A482B4BC8CBF9 /* LaunchScreen.storyboard */,
 				E2B3C4D5F6071829A3B4C5D6 /* PrivacyInfo.xcprivacy */,
 				4B013DED6E9276AA1DBE33BC /* WaterQuest.entitlements */,
+				AABB1122CCDDEEFF /* Products.storekit */,
 			);
 			path = Supporting;
 			sourceTree = "<group>";
