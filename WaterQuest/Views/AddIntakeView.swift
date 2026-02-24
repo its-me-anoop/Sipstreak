@@ -7,7 +7,6 @@ struct AddIntakeView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var amount: Double = 250
-    @State private var note = ""
     @State private var selectedPreset: Int?
     @State private var selectedFluidType: FluidType = .water
     @State private var showSavedBanner = false
@@ -90,34 +89,6 @@ struct AddIntakeView: View {
                 }
             }
 
-            Section("Quick Picks") {
-                HStack(spacing: isRegular ? 14 : 8) {
-                    ForEach(Array(presetAmounts.enumerated()), id: \.offset) { index, preset in
-                        Button {
-                            Haptics.selection()
-                            selectedPreset = index
-                            amount = Double(preset)
-                        } label: {
-                            VStack(spacing: isRegular ? 4 : 2) {
-                                Text("\(preset)")
-                                    .font(isRegular ? .title3.weight(.semibold) : .headline)
-                                Text(store.profile.unitSystem.volumeUnit)
-                                    .font(isRegular ? .subheadline : .caption)
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, isRegular ? 6 : 0)
-                        }
-                        .buttonStyle(.bordered)
-                        .tint(selectedPreset == index ? selectedFluidType.color : nil)
-                    }
-                }
-            }
-
-            Section("Note") {
-                TextField("Optional context", text: $note, axis: .vertical)
-                    .lineLimit(2...4)
-            }
-
             Section {
                 Button {
                     addIntake()
@@ -131,6 +102,7 @@ struct AddIntakeView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(selectedFluidType.color)
+                .listRowBackground(Color.clear)
             }
         }
         .navigationTitle("Log Intake")
@@ -159,15 +131,10 @@ struct AddIntakeView: View {
         store.profile.unitSystem == .metric ? 25 : 1
     }
 
-    private var presetAmounts: [Int] {
-        store.profile.unitSystem == .metric ? [200, 350, 500, 750] : [8, 12, 16, 24]
-    }
-
     private func addIntake() {
         Haptics.splash()
 
-        let trimmed = note.trimmingCharacters(in: .whitespacesAndNewlines)
-        let entry = store.addIntake(amount: amount, source: .manual, fluidType: selectedFluidType, note: trimmed.isEmpty ? nil : trimmed)
+        let entry = store.addIntake(amount: amount, source: .manual, fluidType: selectedFluidType, note: nil)
 
         Task {
             await healthKit.saveWaterIntake(ml: entry.volumeML, date: entry.date, entryID: entry.id)
@@ -181,7 +148,6 @@ struct AddIntakeView: View {
             dismiss()
         }
 
-        note = ""
         selectedPreset = nil
         selectedFluidType = .water
     }
