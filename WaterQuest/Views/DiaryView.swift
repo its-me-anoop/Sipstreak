@@ -77,7 +77,7 @@ struct DiaryView: View {
             .padding(.horizontal, 16)
             .padding(.bottom, 24)
         }
-        .scrollIndicators(.hidden)
+        .scrollIndicators(.automatic)
         .background(AppWaterBackground().ignoresSafeArea())
     }
 
@@ -101,7 +101,7 @@ struct DiaryView: View {
                 }
                 .padding(.bottom, 24)
             }
-            .scrollIndicators(.hidden)
+            .scrollIndicators(.automatic)
         }
         .padding(.horizontal, 24)
         .padding(.top, 16)

@@ -131,7 +131,7 @@ struct DashboardView: View {
             .padding(.horizontal, 16)
             .padding(.bottom, 24)
         }
-        .scrollIndicators(.hidden)
+        .scrollIndicators(.automatic)
         .background(AppWaterBackground().ignoresSafeArea())
     }
 

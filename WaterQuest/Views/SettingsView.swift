@@ -32,7 +32,7 @@ struct SettingsView: View {
             .padding(.horizontal, 16)
             .padding(.bottom, 24)
         }
-        .scrollIndicators(.hidden)
+        .scrollIndicators(.automatic)
         .navigationTitle("Settings")
         .background(AppWaterBackground().ignoresSafeArea())
         .task {
