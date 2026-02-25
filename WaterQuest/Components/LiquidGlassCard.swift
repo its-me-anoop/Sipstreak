@@ -133,7 +133,7 @@ struct LiquidGlassButton: View {
                     .font(Theme.bodyFont(size.textStyle))
                     .fontWeight(.medium)
             }
-            .foregroundColor(style.textColor)
+            .foregroundStyle(style.textColor)
             .padding(size.padding)
             .background(
                 Capsule()
@@ -178,12 +178,12 @@ struct FluidStatCard: View {
                     HStack(spacing: 8) {
                         Image(systemName: icon)
                             .font(.footnote.weight(.semibold))
-                            .foregroundColor(accentColor)
+                            .foregroundStyle(accentColor)
                             .rotationEffect(.degrees(iconRotation))
 
                         Text(label)
                             .font(Theme.captionFont(.caption))
-                            .foregroundColor(Theme.textSecondary)
+                            .foregroundStyle(Theme.textSecondary)
                     }
 
                     Spacer()
@@ -199,7 +199,7 @@ struct FluidStatCard: View {
 
                 Text(animatedValue)
                     .font(Theme.titleFont(.title3))
-                    .foregroundColor(Theme.textPrimary)
+                    .foregroundStyle(Theme.textPrimary)
                     .contentTransition(.numericText())
             }
             .padding(16)
@@ -248,7 +248,7 @@ struct QuickAddPill: View {
                 Text("+\(amount) \(unit)")
                     .font(Theme.bodyFont(.footnote))
                     .fontWeight(.medium)
-                    .foregroundColor(Theme.textPrimary)
+                    .foregroundStyle(Theme.textPrimary)
                     .padding(.vertical, 12)
                     .padding(.horizontal, 16)
                     .background(
@@ -319,10 +319,10 @@ struct WaveDivider: View {
                     VStack(spacing: 12) {
                         Text("Liquid Glass Card")
                             .font(Theme.titleFont(.title3))
-                            .foregroundColor(Theme.textPrimary)
+                            .foregroundStyle(Theme.textPrimary)
                         Text("Beautiful fluid effects")
                             .font(Theme.bodyFont(.footnote))
-                            .foregroundColor(Theme.textSecondary)
+                            .foregroundStyle(Theme.textSecondary)
                     }
                     .padding(24)
                 }

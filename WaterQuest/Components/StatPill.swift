@@ -13,17 +13,17 @@ struct StatPill: View {
             if let iconName = icon {
                 Image(systemName: iconName)
                     .font(.subheadline.weight(.semibold))
-                    .foregroundColor(accentColor)
+                    .foregroundStyle(accentColor)
             }
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(label)
                     .font(Theme.captionFont(.caption2))
-                    .foregroundColor(Theme.textTertiary)
+                    .foregroundStyle(Theme.textTertiary)
 
                 Text(animatedValue)
                     .font(Theme.titleFont(.subheadline))
-                    .foregroundColor(Theme.textPrimary)
+                    .foregroundStyle(Theme.textPrimary)
                     .contentTransition(.numericText())
             }
         }

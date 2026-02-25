@@ -84,13 +84,13 @@ struct LiquidProgressView: View {
             VStack(spacing: 0) {
                 Text(Formatters.percentString(clampedProgress))
                     .font(.system(isRegular ? .largeTitle : .title, design: .rounded).weight(.heavy))
-                    .foregroundColor(clampedProgress > 0.5 ? .white : Theme.textPrimary)
+                    .foregroundStyle(clampedProgress > 0.5 ? .white : Theme.textPrimary)
                     .contentTransition(.numericText())
 
                 if clampedProgress >= 1.0 {
                     Image(systemName: "star.fill")
                         .font(isRegular ? .title3 : .subheadline)
-                        .foregroundColor(Theme.sun)
+                        .foregroundStyle(Theme.sun)
                         .padding(.top, 4)
                         .transition(.scale)
                 }

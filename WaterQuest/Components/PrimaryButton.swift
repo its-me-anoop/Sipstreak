@@ -17,7 +17,7 @@ struct PrimaryButtonStyle: ButtonStyle {
                             .strokeBorder(Theme.lagoon.opacity(0.65), lineWidth: 1)
                     )
             )
-            .foregroundColor(Color.white.opacity(0.95))
+            .foregroundStyle(Color.white.opacity(0.95))
             .scaleEffect(configuration.isPressed ? 0.97 : 1.0)
             .shadow(color: Theme.lagoon.opacity(configuration.isPressed ? 0.16 : 0.30), radius: configuration.isPressed ? 5 : 12, x: 0, y: configuration.isPressed ? 3 : 6)
             .animation(Theme.quickSpring, value: configuration.isPressed)
@@ -38,7 +38,7 @@ struct SecondaryButtonStyle: ButtonStyle {
                             .stroke(Theme.glassBorder.opacity(0.75), lineWidth: 1)
                     )
             )
-            .foregroundColor(Theme.textPrimary)
+            .foregroundStyle(Theme.textPrimary)
             .scaleEffect(configuration.isPressed ? 0.97 : 1.0)
             .animation(Theme.quickSpring, value: configuration.isPressed)
     }
@@ -62,18 +62,18 @@ struct GlowingIconButton: View {
                         .frame(width: 44, height: 44)
                     Image(systemName: icon)
                         .font(.body.weight(.semibold))
-                        .foregroundColor(isActive ? color : Theme.textSecondary)
+                        .foregroundStyle(isActive ? color : Theme.textSecondary)
                 }
 
                 Text(label)
                     .font(Theme.bodyFont(.subheadline))
-                    .foregroundColor(Theme.textPrimary)
+                    .foregroundStyle(Theme.textPrimary)
 
                 Spacer()
 
                 if isActive {
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(color)
+                        .foregroundStyle(color)
                         .transition(.scale.combined(with: .opacity))
                 }
             }
