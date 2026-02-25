@@ -84,7 +84,7 @@ final class NotificationScheduler: ObservableObject {
 
         guard let profile = currentProfile, profile.remindersEnabled, profile.smartRemindersEnabled else { return }
         // Cancel pending smart notifications and reschedule based on new state.
-        let smartIds = (0..<20).map { "thirsty.ai.smart.\($0)" }
+        let smartIds = (0..<20).map { "sipstreak.smart.\($0)" }
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: smartIds)
         scheduleSmartReminders(profile: profile, goalML: currentGoalML)
     }

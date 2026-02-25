@@ -3,7 +3,7 @@ import StoreKit
 
 // MARK: - Product IDs
 enum ProductID: String, CaseIterable {
-    case monthly = "com.waterquest.monthly"
+    case monthly = "com.sipstreak.monthly"
 }
 
 // MARK: - SubscriptionManager
@@ -33,7 +33,9 @@ final class SubscriptionManager: ObservableObject {
             let ids = Set(ProductID.allCases.map { $0.rawValue })
             products = try await Product.products(for: ids)
         } catch {
+            #if DEBUG
             print("SubscriptionManager: failed to fetch products – \(error)")
+            #endif
         }
     }
 
@@ -84,7 +86,9 @@ final class SubscriptionManager: ObservableObject {
             await refreshSubscriptionStatus()
             return isPro
         } catch {
+            #if DEBUG
             print("SubscriptionManager: restore failed – \(error)")
+            #endif
             return false
         }
     }

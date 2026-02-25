@@ -28,10 +28,10 @@ final class HealthKitManager: ObservableObject {
     }
 
     func requestAuthorization() async {
-        guard isAvailable else { return }
-        let waterType = HKQuantityType.quantityType(forIdentifier: .dietaryWater)!
+        guard isAvailable,
+              let waterType = HKQuantityType.quantityType(forIdentifier: .dietaryWater),
+              let energyType = HKQuantityType.quantityType(forIdentifier: .activeEnergyBurned) else { return }
         let workoutType = HKObjectType.workoutType()
-        let energyType = HKQuantityType.quantityType(forIdentifier: .activeEnergyBurned)!
 
         let shareTypes: Set = [waterType]
         let readTypes: Set = [waterType, workoutType, energyType]
@@ -41,7 +41,9 @@ final class HealthKitManager: ObservableObject {
             await refreshAuthorizationStatus()
         } catch {
             isAuthorized = false
+            #if DEBUG
             print("HealthKit auth failed: \(error)")
+            #endif
         }
     }
 
@@ -107,7 +109,9 @@ final class HealthKitManager: ObservableObject {
             }
 
             if let error {
+                #if DEBUG
                 print("HealthKit water observer error: \(error)")
+                #endif
                 completionHandler()
                 return
             }
@@ -125,7 +129,9 @@ final class HealthKitManager: ObservableObject {
         do {
             try await healthStore.enableBackgroundDelivery(for: waterType, frequency: .immediate)
         } catch {
+            #if DEBUG
             print("HealthKit background delivery error: \(error)")
+            #endif
         }
 
         if let entries = await fetchRecentWaterEntries(days: days) {
@@ -147,7 +153,9 @@ final class HealthKitManager: ObservableObject {
             do {
                 try await healthStore.disableBackgroundDelivery(for: waterType)
             } catch {
-                print("HealthKit disable background delivery error: \(error)")
+                #if DEBUG
+            print("HealthKit disable background delivery error: \(error)")
+            #endif
             }
         }
     }
@@ -163,7 +171,7 @@ final class HealthKitManager: ObservableObject {
 
         guard isAuthorized else { return }
 
-        let waterType = HKQuantityType.quantityType(forIdentifier: .dietaryWater)!
+        guard let waterType = HKQuantityType.quantityType(forIdentifier: .dietaryWater) else { return }
         let quantity = HKQuantity(unit: .literUnit(with: .milli), doubleValue: ml)
         var metadata: [String: Any] = [:]
         if let entryID {
@@ -173,7 +181,9 @@ final class HealthKitManager: ObservableObject {
         do {
             try await healthStore.save(sample)
         } catch {
+            #if DEBUG
             print("Failed to save water sample: \(error)")
+            #endif
         }
     }
 
@@ -222,7 +232,9 @@ final class HealthKitManager: ObservableObject {
         return await withCheckedContinuation { continuation in
             healthStore.getRequestStatusForAuthorization(toShare: shareTypes, read: readTypes) { status, error in
                 if let error {
+                    #if DEBUG
                     print("HealthKit authorization status failed: \(error)")
+                    #endif
                     continuation.resume(returning: .unknown)
                 } else {
                     continuation.resume(returning: status)

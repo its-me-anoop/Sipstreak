@@ -40,7 +40,7 @@
     <string>UIInterfaceOrientationLandscapeRight</string>
   </array>
   <key>NSHealthShareUsageDescription</key>
-  <string>Sipstreak reads workout data to personalize your hydration goal.</string>
+  <string>Sipstreak reads workout and activity data (exercise minutes and calories burned) to personalize your hydration goal.</string>
   <key>NSHealthUpdateUsageDescription</key>
   <string>Sipstreak writes your water intake to Health.</string>
   <key>NSLocationWhenInUseUsageDescription</key>

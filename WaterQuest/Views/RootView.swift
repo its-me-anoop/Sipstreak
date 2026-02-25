@@ -149,6 +149,13 @@ struct SubscriptionRequiredView: View {
                         )
                     }
 
+                    // Auto-renewal disclosure (must appear BEFORE purchase button per App Store Review Guidelines 3.1.1)
+                    Text("Enjoy a 1-week free trial. After the trial, your subscription automatically renews at the price shown above unless canceled at least 24 hours before the end of the current period. Payment is charged to your Apple ID. Manage or cancel anytime in Settings \u{203A} Apple ID \u{203A} Subscriptions.")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 20)
+
                     // Subscribe button
                     if let monthly = subscriptionManager.monthlyProduct {
                         Button {
@@ -187,12 +194,6 @@ struct SubscriptionRequiredView: View {
                     .font(.subheadline)
                     .foregroundStyle(Theme.lagoon)
                     .disabled(isPurchasing)
-
-                    Text("Enjoy a 1-week free trial. After the trial, your subscription automatically renews at the price shown above unless canceled at least 24 hours before the end of the current period. Payment is charged to your Apple ID. Manage or cancel anytime in Settings \u{203A} Apple ID \u{203A} Subscriptions.")
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 20)
 
                     HStack {
                         Link("Privacy Policy", destination: Legal.privacyURL)

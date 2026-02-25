@@ -42,7 +42,9 @@ final class WeatherClient: ObservableObject {
             status = .idle
         } catch {
             status = .failed
+            #if DEBUG
             print("Weather fetch failed: \(error)")
+            #endif
         }
     }
 }

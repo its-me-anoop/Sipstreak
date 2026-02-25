@@ -454,7 +454,7 @@ struct SettingsView: View {
                         .stroke(Theme.glassBorder, lineWidth: 1)
                 )
 
-                Link(destination: URL(string: "https://apps.apple.com/account/subscriptions")!) {
+                Link(destination: Legal.manageSubscriptionsURL) {
                     HStack(spacing: 8) {
                         Image(systemName: "creditcard.fill")
                             .foregroundStyle(.secondary)
