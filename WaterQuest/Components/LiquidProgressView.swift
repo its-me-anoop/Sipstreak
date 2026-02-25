@@ -30,10 +30,10 @@ struct LiquidProgressView: View {
         // A physical container shape
         ZStack {
             // Background empty state
-            ContainerShape()
+            WaterBottleShape()
                 .fill(Theme.glassLight)
                 .overlay(
-                    ContainerShape()
+                    WaterBottleShape()
                         .stroke(Theme.glassBorder, lineWidth: 2)
                 )
                 .shadow(color: Theme.shadowColor, radius: 8, x: 0, y: 4)
@@ -42,8 +42,7 @@ struct LiquidProgressView: View {
             // The Liquid Fill
             GeometryReader { geo in
                 let height = geo.size.height
-                let width = geo.size.width
-                
+
                 let fillHeight = height * CGFloat(clampedProgress)
                 
                 ZStack {
@@ -70,13 +69,16 @@ struct LiquidProgressView: View {
                                 .offset(y: CGFloat(height - layerFillHeight))
                         }
                     }
+                    
+                    // BUBBLE PARTICLES within the liquid
+                    BubbleParticlesView(progress: clampedProgress)
                 }
                 .animation(.spring(response: 0.8, dampingFraction: 0.7), value: clampedProgress)
                 .animation(.spring(response: 0.8, dampingFraction: 0.7), value: layers)
                 // Apply rotation based on device motion (sloshing)
                 .rotationEffect(.radians(-motionManager.roll), anchor: .center)
             }
-            .mask(ContainerShape())
+            .mask(WaterBottleShape())
             // Progress Text Overlay
             VStack(spacing: 0) {
                 Text(Formatters.percentString(clampedProgress))
@@ -103,17 +105,221 @@ struct LiquidProgressView: View {
     }
 }
 
+// MARK: - Bubble Particle System
+
+private struct BubbleParticle {
+    let xNormalized: Double
+    let diameter: CGFloat
+    let speed: Double
+    let phaseOffset: Double
+    let wobbleAmplitude: CGFloat
+    let wobbleFrequency: Double
+    let opacity: Double
+}
+
+private struct BubbleParticlesView: View {
+    let progress: Double
+    
+    private let particles: [BubbleParticle]
+    
+    init(progress: Double) {
+        self.progress = progress
+        
+        var result: [BubbleParticle] = []
+        for i in 0..<18 {
+            let seed = Double(i)
+            result.append(BubbleParticle(
+                xNormalized: Self.seededRandom(seed: seed * 13.7),
+                diameter: CGFloat(2.5 + Self.seededRandom(seed: seed * 7.3) * 5.5),
+                speed: 0.08 + Self.seededRandom(seed: seed * 11.1) * 0.14,
+                phaseOffset: Self.seededRandom(seed: seed * 5.9),
+                wobbleAmplitude: CGFloat(2 + Self.seededRandom(seed: seed * 3.1) * 5),
+                wobbleFrequency: 1.2 + Self.seededRandom(seed: seed * 9.7) * 2.0,
+                opacity: 0.25 + Self.seededRandom(seed: seed * 2.3) * 0.4
+            ))
+        }
+        self.particles = result
+    }
+    
+    var body: some View {
+        TimelineView(.animation) { timeline in
+            let time = timeline.date.timeIntervalSinceReferenceDate
+            
+            Canvas { context, canvasSize in
+                let fillHeight = canvasSize.height * CGFloat(max(0, progress))
+                let fillTop = canvasSize.height - fillHeight
+                
+                guard fillHeight > 10 else { return }
+                
+                for particle in particles {
+                    // Cycle position from bottom to top of the liquid area
+                    let rawCycle = (time * particle.speed + particle.phaseOffset)
+                    let cycle = rawCycle - rawCycle.rounded(.down) // 0...1
+                    let y = fillTop + fillHeight * CGFloat(1.0 - cycle)
+                    
+                    // Horizontal position with sinusoidal wobble
+                    let margin = particle.diameter + 4
+                    let usableWidth = canvasSize.width - margin * 2
+                    let baseX = margin + usableWidth * CGFloat(particle.xNormalized)
+                    let wobble = particle.wobbleAmplitude * CGFloat(sin(time * particle.wobbleFrequency + particle.phaseOffset * .pi * 2))
+                    let x = baseX + wobble
+                    
+                    // Fade in near bottom, fade out near top
+                    let edgeFade = min(1.0, min(cycle * 5, (1.0 - cycle) * 5))
+                    let alpha = edgeFade * particle.opacity
+                    
+                    let rect = CGRect(
+                        x: x - particle.diameter / 2,
+                        y: y - particle.diameter / 2,
+                        width: particle.diameter,
+                        height: particle.diameter
+                    )
+                    
+                    // Draw a soft white bubble with slight highlight
+                    context.opacity = alpha
+                    context.fill(
+                        Path(ellipseIn: rect),
+                        with: .color(.white)
+                    )
+                    
+                    // Inner highlight for glassy bubble look
+                    if particle.diameter > 4 {
+                        let highlightSize = particle.diameter * 0.4
+                        let highlightRect = CGRect(
+                            x: x - highlightSize / 2 - particle.diameter * 0.15,
+                            y: y - highlightSize / 2 - particle.diameter * 0.15,
+                            width: highlightSize,
+                            height: highlightSize
+                        )
+                        context.opacity = alpha * 0.6
+                        context.fill(
+                            Path(ellipseIn: highlightRect),
+                            with: .color(.white)
+                        )
+                    }
+                }
+            }
+        }
+        .allowsHitTesting(false)
+    }
+    
+    /// Deterministic pseudo-random from a seed, returning 0..<1
+    private static func seededRandom(seed: Double) -> Double {
+        let x = sin(seed * 12.9898 + 78.233) * 43758.5453
+        return x - x.rounded(.down)
+    }
+}
+
 private struct FluidLayer: Identifiable, Equatable {
     var id: String { type.rawValue }
     let type: FluidType
     let proportionTop: Double
 }
 
-// A slightly bubbly shape for the container instead of a perfect circle
-struct ContainerShape: Shape {
+// Water bottle silhouette matching the app icon
+struct WaterBottleShape: Shape {
     func path(in rect: CGRect) -> Path {
-        let path = UIBezierPath(roundedRect: rect, cornerRadius: rect.width * 0.4)
-        return Path(path.cgPath)
+        var path = Path()
+        let w = rect.width
+        let h = rect.height
+        let cx = w / 2
+
+        // Body: main rounded rectangle section (bottom ~75%)
+        let bodyHalfW = w * 0.46
+        let bodyBottom = h
+        let bodyTop = h * 0.25
+        let bodyCorner = bodyHalfW * 0.18
+
+        // Shoulder: transition from body to cap
+        let shoulderTop = h * 0.17
+
+        // Cap: dome-shaped lid
+        let capHalfW = w * 0.30
+        let capTop = h * 0.08
+
+        // Spout: small nub on top
+        let spoutHalfW = w * 0.08
+        let spoutTop: CGFloat = 0
+        let spoutBottom = h * 0.08
+        let spoutCorner = spoutHalfW * 0.5
+
+        // Bottom edge, left to right
+        path.move(to: CGPoint(x: cx - bodyHalfW + bodyCorner, y: bodyBottom))
+        path.addLine(to: CGPoint(x: cx + bodyHalfW - bodyCorner, y: bodyBottom))
+
+        // Bottom-right rounded corner
+        path.addArc(
+            tangent1End: CGPoint(x: cx + bodyHalfW, y: bodyBottom),
+            tangent2End: CGPoint(x: cx + bodyHalfW, y: bodyBottom - bodyCorner),
+            radius: bodyCorner
+        )
+
+        // Right body wall going up
+        path.addLine(to: CGPoint(x: cx + bodyHalfW, y: bodyTop))
+
+        // Right shoulder curve (narrows from body to cap)
+        path.addCurve(
+            to: CGPoint(x: cx + capHalfW, y: shoulderTop),
+            control1: CGPoint(x: cx + bodyHalfW, y: bodyTop - (bodyTop - shoulderTop) * 0.6),
+            control2: CGPoint(x: cx + capHalfW, y: shoulderTop + (bodyTop - shoulderTop) * 0.4)
+        )
+
+        // Right cap dome curve to spout
+        path.addCurve(
+            to: CGPoint(x: cx + spoutHalfW, y: spoutBottom),
+            control1: CGPoint(x: cx + capHalfW, y: capTop),
+            control2: CGPoint(x: cx + spoutHalfW + capHalfW * 0.2, y: spoutBottom)
+        )
+
+        // Spout right side going up
+        path.addLine(to: CGPoint(x: cx + spoutHalfW, y: spoutTop + spoutCorner))
+
+        // Spout top-right corner
+        path.addArc(
+            tangent1End: CGPoint(x: cx + spoutHalfW, y: spoutTop),
+            tangent2End: CGPoint(x: cx, y: spoutTop),
+            radius: spoutCorner
+        )
+
+        // Spout top edge
+        path.addLine(to: CGPoint(x: cx - spoutHalfW + spoutCorner, y: spoutTop))
+
+        // Spout top-left corner
+        path.addArc(
+            tangent1End: CGPoint(x: cx - spoutHalfW, y: spoutTop),
+            tangent2End: CGPoint(x: cx - spoutHalfW, y: spoutBottom),
+            radius: spoutCorner
+        )
+
+        // Spout left side going down
+        path.addLine(to: CGPoint(x: cx - spoutHalfW, y: spoutBottom))
+
+        // Left cap dome curve
+        path.addCurve(
+            to: CGPoint(x: cx - capHalfW, y: shoulderTop),
+            control1: CGPoint(x: cx - spoutHalfW - capHalfW * 0.2, y: spoutBottom),
+            control2: CGPoint(x: cx - capHalfW, y: capTop)
+        )
+
+        // Left shoulder curve (widens from cap to body)
+        path.addCurve(
+            to: CGPoint(x: cx - bodyHalfW, y: bodyTop),
+            control1: CGPoint(x: cx - capHalfW, y: shoulderTop + (bodyTop - shoulderTop) * 0.4),
+            control2: CGPoint(x: cx - bodyHalfW, y: bodyTop - (bodyTop - shoulderTop) * 0.6)
+        )
+
+        // Left body wall going down
+        path.addLine(to: CGPoint(x: cx - bodyHalfW, y: bodyBottom - bodyCorner))
+
+        // Bottom-left rounded corner
+        path.addArc(
+            tangent1End: CGPoint(x: cx - bodyHalfW, y: bodyBottom),
+            tangent2End: CGPoint(x: cx - bodyHalfW + bodyCorner, y: bodyBottom),
+            radius: bodyCorner
+        )
+
+        path.closeSubpath()
+        return path
     }
 }
 
