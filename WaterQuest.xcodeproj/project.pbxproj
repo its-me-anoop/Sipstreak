@@ -47,6 +47,7 @@
 		CCD4444444444444444444D4 /* PersistedState.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8888888888888888888888 /* PersistedState.swift */; };
 		D1A2B3C4E5F60718293A4B5C /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = E2B3C4D5F6071829A3B4C5D6 /* PrivacyInfo.xcprivacy */; };
 		D1B2C3D4E5F6071829A3B4C5 /* DiaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6071829A3B4C5 /* DiaryView.swift */; };
+		D6E8A4F1B37C920E5D1A8F63 /* PreviewEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7F3E9B2C4D61805FA93B1E2 /* PreviewEnvironment.swift */; };
 		E054558C7B7CF349F6CDD709 /* SplashScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE848C59D9014D3ABE6E04BE /* SplashScreenView.swift */; };
 		E27FB3C46FDAA80AD7E43C6F /* Formatters.swift in Sources */ = {isa = PBXBuildFile; fileRef = F021A59BB7CB33328B5ABBC4 /* Formatters.swift */; };
 		E367CAB1741850BAFCE4F3F9 /* PrimaryButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B9CF2D397867B06457E11FA /* PrimaryButton.swift */; };
@@ -133,6 +134,7 @@
 		A139EF313607077443D4FCFE /* FluidType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FluidType.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F6071829A3B4C5 /* DiaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryView.swift; sourceTree = "<group>"; };
 		A37EBA9FC9F1233C2BC105DD /* PersistenceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceService.swift; sourceTree = "<group>"; };
+		A7F3E9B2C4D61805FA93B1E2 /* PreviewEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewEnvironment.swift; sourceTree = "<group>"; };
 		AA1111111111111111111111 /* SipliWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SipliWidget.swift; sourceTree = "<group>"; };
 		AA2222222222222222222222 /* SipliWidgetEntitlements.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SipliWidgetEntitlements.entitlements; sourceTree = "<group>"; };
 		AA3333333333333333333333 /* WidgetDataProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetDataProvider.swift; sourceTree = "<group>"; };
@@ -234,6 +236,7 @@
 				42E0244F70DCB30BB868A196 /* LiquidGlassCard.swift */,
 				85C07CD814951765EE1A1499 /* LiquidProgressView.swift */,
 				ACD53555ACD00A8A78268A7F /* MascotView.swift */,
+				A7F3E9B2C4D61805FA93B1E2 /* PreviewEnvironment.swift */,
 				8B9CF2D397867B06457E11FA /* PrimaryButton.swift */,
 				7B8BDAA9F823F748DDAD26EB /* ProgressRing.swift */,
 				3ABC282C313B061E1E34EDF7 /* StatPill.swift */,
@@ -500,6 +503,7 @@
 				0A5C95DCB74AE59638E495D3 /* OnboardingView.swift in Sources */,
 				CCD4444444444444444444D4 /* PersistedState.swift in Sources */,
 				83C67F5F3E24629A72299C6E /* PersistenceService.swift in Sources */,
+				D6E8A4F1B37C920E5D1A8F63 /* PreviewEnvironment.swift in Sources */,
 				E367CAB1741850BAFCE4F3F9 /* PrimaryButton.swift in Sources */,
 				449C15C42674C41122CC02B6 /* ProgressRing.swift in Sources */,
 				4E93E1598D092FFCC6C6381F /* RootView.swift in Sources */,
