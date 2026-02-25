@@ -1,4 +1,5 @@
 import Foundation
+import WidgetKit
 
 @MainActor
 final class HydrationStore: ObservableObject {
@@ -126,6 +127,7 @@ final class HydrationStore: ObservableObject {
             lastWorkout: lastWorkout
         )
         persistence.save(state)
+        WidgetCenter.shared.reloadAllTimelines()
     }
 }
 
