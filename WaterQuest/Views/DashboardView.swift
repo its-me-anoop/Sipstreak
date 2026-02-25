@@ -407,7 +407,8 @@ struct DashboardView: View {
                         icon: "figure.run",
                         value: "\(Int(workout.exerciseMinutes))",
                         label: "min",
-                        tint: Theme.coral
+                        tint: Theme.coral,
+                        accessibilityDescription: "\(Int(workout.exerciseMinutes)) minutes of exercise"
                     )
 
                     Divider()
@@ -418,7 +419,8 @@ struct DashboardView: View {
                         icon: "flame.fill",
                         value: "\(Int(workout.activeEnergyKcal))",
                         label: "kcal",
-                        tint: Theme.sun
+                        tint: Theme.sun,
+                        accessibilityDescription: "\(Int(workout.activeEnergyKcal)) calories burned"
                     )
 
                     if goal.workoutAdjustmentML > 0 {
@@ -430,7 +432,8 @@ struct DashboardView: View {
                             icon: "drop.fill",
                             value: "+\(Formatters.shortVolume(ml: goal.workoutAdjustmentML, unit: store.profile.unitSystem))",
                             label: store.profile.unitSystem.volumeUnit,
-                            tint: Theme.lagoon
+                            tint: Theme.lagoon,
+                            accessibilityDescription: "Goal increased by \(Formatters.volumeString(ml: goal.workoutAdjustmentML, unit: store.profile.unitSystem))"
                         )
                     }
                 }
@@ -604,6 +607,7 @@ private struct HydrationSummaryCard: View {
                 .stroke(Color.white.opacity(0.5), lineWidth: 1)
         )
         .shadow(color: Theme.shadowColor.opacity(0.6), radius: 15, x: 0, y: 8)
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -735,6 +739,9 @@ struct EntryEditorSheet: View {
                                     }
                                 }
                                 .buttonStyle(.plain)
+                                .accessibilityLabel(type.displayName)
+                                .accessibilityHint("\(type.hydrationLabel). Double tap to select")
+                                .accessibilityAddTraits(selectedFluidType == type ? .isSelected : [])
                             }
                         }
                         .padding(.vertical, 4)
@@ -794,6 +801,7 @@ private struct ActivityMetric: View {
     let value: String
     let label: String
     let tint: Color
+    var accessibilityDescription: String = ""
 
     var body: some View {
         VStack(spacing: 4) {
@@ -808,6 +816,8 @@ private struct ActivityMetric: View {
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(accessibilityDescription)
     }
 }
 
@@ -893,6 +903,9 @@ struct DetailedLogRow: View {
             RoundedRectangle(cornerRadius: 20, style: .continuous)
                 .stroke(Color.white.opacity(0.4), lineWidth: 1)
         )
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(Formatters.volumeString(ml: entry.volumeML, unit: unitSystem)) \(entry.fluidType.displayName) at \(Self.formatter.string(from: entry.date))")
+        .accessibilityHint("Double tap to edit this entry")
     }
 }
 

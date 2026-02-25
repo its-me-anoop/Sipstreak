@@ -261,6 +261,7 @@ struct AppWaterBackground: View {
             }
         }
         .allowsHitTesting(false)
+        .accessibilityHidden(true)
         .ignoresSafeArea()
     }
 

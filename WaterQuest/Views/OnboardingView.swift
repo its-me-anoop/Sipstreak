@@ -725,6 +725,7 @@ private struct AnimatedWelcomeStep: View {
                     .resizable()
                     .scaledToFit()
                     .frame(width: isRegular ? 180 : 140, height: isRegular ? 180 : 140)
+                    .accessibilityHidden(true)
                     .background(
                         Circle()
                             .fill(.ultraThinMaterial)

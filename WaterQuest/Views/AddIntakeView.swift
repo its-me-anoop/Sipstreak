@@ -68,6 +68,9 @@ struct AddIntakeView: View {
                                 }
                             }
                             .buttonStyle(.plain)
+                            .accessibilityLabel(type.displayName)
+                            .accessibilityHint("\(type.hydrationLabel). Double tap to select")
+                            .accessibilityAddTraits(selectedFluidType == type ? .isSelected : [])
                         }
                     }
                     .padding(.vertical, 4)

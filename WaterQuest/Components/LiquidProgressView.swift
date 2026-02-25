@@ -95,6 +95,9 @@ struct LiquidProgressView: View {
             .shadow(color: clampedProgress > 0.5 ? .black.opacity(0.3) : .clear, radius: 2)
         }
         .frame(width: size, height: size)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Hydration progress")
+        .accessibilityValue("\(Int(clampedProgress * 100)) percent of daily goal")
         .onAppear {
             withAnimation(.linear(duration: 2.0).repeatForever(autoreverses: false)) {
                 phase = .pi * 2

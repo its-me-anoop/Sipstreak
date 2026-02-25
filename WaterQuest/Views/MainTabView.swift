@@ -71,6 +71,8 @@ struct MainTabView: View {
                         .shadow(color: Theme.lagoon.opacity(0.4), radius: 12, x: 0, y: 6)
                 )
         }
+        .accessibilityLabel("Log water intake")
+        .accessibilityHint("Opens the intake logging screen")
         .padding(.trailing, sizeClass == .regular ? 32 : 20)
         .padding(.bottom, sizeClass == .regular ? 32 : 78)
     }

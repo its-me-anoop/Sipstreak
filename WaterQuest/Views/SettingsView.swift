@@ -152,6 +152,8 @@ struct SettingsView: View {
                         .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel("\(theme.label) theme")
+                    .accessibilityAddTraits(appTheme == theme ? .isSelected : [])
                 }
             }
         }

@@ -455,6 +455,10 @@ struct InsightsView: View {
                     RoundedRectangle(cornerRadius: 4, style: .continuous)
                         .fill(isFuture ? Color.clear : heatmapColor(for: day))
                         .aspectRatio(1, contentMode: .fit)
+                        .accessibilityElement()
+                        .accessibilityLabel(isFuture
+                            ? "Future date"
+                            : "\(day.date.formatted(.dateTime.month(.abbreviated).day())): \(day.totalML > 0 ? "\(Int(day.ratio * 100)) percent of goal" : "No intake")")
                 }
             }
 
@@ -723,6 +727,8 @@ private struct MetricTile: View {
             RoundedRectangle(cornerRadius: isRegular ? 14 : 12, style: .continuous)
                 .fill(Theme.cardSurface)
         )
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(title): \(value)")
     }
 }
 
@@ -750,6 +756,8 @@ private struct TrendTile: View {
             RoundedRectangle(cornerRadius: isRegular ? 14 : 12, style: .continuous)
                 .fill(Theme.cardSurface)
         )
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(title): \(value)")
     }
 }
 

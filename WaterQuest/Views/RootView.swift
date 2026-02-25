@@ -73,6 +73,7 @@ struct SubscriptionRequiredView: View {
                         .resizable()
                         .scaledToFit()
                         .frame(width: 100, height: 100)
+                        .accessibilityHidden(true)
                         .background(
                             Circle()
                                 .fill(.ultraThinMaterial)

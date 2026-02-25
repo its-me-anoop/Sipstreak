@@ -36,6 +36,7 @@ struct SplashScreenView: View {
                         .scaledToFit()
                         .frame(width: isRegular ? 112 : 84, height: isRegular ? 112 : 84)
                         .shadow(color: Theme.lagoon.opacity(0.35), radius: 16, x: 0, y: 6)
+                        .accessibilityHidden(true)
                 }
                 .animation(.easeInOut(duration: 1.6).repeatForever(autoreverses: true), value: pulse)
 
