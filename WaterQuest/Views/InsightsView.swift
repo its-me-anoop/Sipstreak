@@ -160,9 +160,31 @@ struct InsightsView: View {
 
     // MARK: - Body
 
+    private var hasAnyEntries: Bool {
+        !store.entries.isEmpty
+    }
+
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
+                if !hasAnyEntries {
+                    VStack(spacing: 16) {
+                        Spacer(minLength: 40)
+                        Image(systemName: "chart.bar")
+                            .font(.system(.largeTitle))
+                            .foregroundStyle(.tertiary)
+                        Text("No data yet")
+                            .font(.title3.weight(.semibold))
+                        Text("Start logging water on the Home tab to see your hydration trends, streaks, and insights here.")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 32)
+                        Spacer(minLength: 40)
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+
                 headerSummary
 
                 if isRegular {
