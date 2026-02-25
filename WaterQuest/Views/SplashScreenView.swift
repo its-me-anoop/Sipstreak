@@ -3,6 +3,7 @@ import SwiftUI
 struct SplashScreenView: View {
     @State private var pulse = false
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var isRegular: Bool { sizeClass == .regular }
 
@@ -65,6 +66,7 @@ struct SplashScreenView: View {
             .padding(.horizontal, 24)
         }
         .onAppear {
+            guard !reduceMotion else { return }
             pulse = true
         }
     }

@@ -250,19 +250,29 @@ struct AnimatedMeshBackground: View {
 
 struct AppWaterBackground: View {
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        TimelineView(.animation) { timeline in
+        if reduceMotion {
             GeometryReader { geo in
-                shaderBackground(
-                    size: geo.size,
-                    time: timeline.date.timeIntervalSinceReferenceDate
-                )
+                shaderBackground(size: geo.size, time: 0)
             }
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+            .ignoresSafeArea()
+        } else {
+            TimelineView(.animation) { timeline in
+                GeometryReader { geo in
+                    shaderBackground(
+                        size: geo.size,
+                        time: timeline.date.timeIntervalSinceReferenceDate
+                    )
+                }
+            }
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+            .ignoresSafeArea()
         }
-        .allowsHitTesting(false)
-        .accessibilityHidden(true)
-        .ignoresSafeArea()
     }
 
     private func shaderBackground(size: CGSize, time: TimeInterval) -> some View {

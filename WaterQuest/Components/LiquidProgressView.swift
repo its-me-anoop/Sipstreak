@@ -4,16 +4,17 @@ struct LiquidProgressView: View {
     let progress: Double
     let compositions: [FluidComposition]
     let isRegular: Bool
-    
+
     @StateObject private var motionManager = MotionManager()
-    
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     // Animate a constant wave
     @State private var phase: CGFloat = 0
-    
+
     var body: some View {
         let size: CGFloat = isRegular ? 240 : 180
         let clampedProgress = max(0, progress) // Allow over 100% naturally
-        
+
         let layers: [FluidLayer] = {
             if compositions.isEmpty {
                 return [FluidLayer(type: .water, proportionTop: 1.0)]
@@ -26,7 +27,10 @@ struct LiquidProgressView: View {
             }
             return result.reversed()
         }()
-        
+
+        let waveStrengthBack: CGFloat = reduceMotion ? 0 : 8
+        let waveStrengthFront: CGFloat = reduceMotion ? 0 : 12
+
         // A physical container shape
         ZStack {
             // Background empty state
@@ -38,34 +42,33 @@ struct LiquidProgressView: View {
                 )
                 .shadow(color: Theme.shadowColor, radius: 8, x: 0, y: 4)
 
-            
+
             // The Liquid Fill
             GeometryReader { geo in
                 let height = geo.size.height
-                let width = geo.size.width
-                
+
                 let fillHeight = height * CGFloat(clampedProgress)
-                
+
                 ZStack {
                     // BACK LIQUID COLUMN
                     ZStack {
                         ForEach(layers) { layer in
                             let layerFillHeight = fillHeight * CGFloat(layer.proportionTop)
-                            
-                            Wave(phase: phase, strength: 8, frequency: 1.5)
+
+                            Wave(phase: phase, strength: waveStrengthBack, frequency: 1.5)
                                 .fill(layer.type.color)
                                 .offset(y: CGFloat(height - layerFillHeight))
                         }
                     }
                     .compositingGroup()
                     .opacity(0.6)
-                    
+
                     // FRONT LIQUID COLUMN
                     ZStack {
                         ForEach(layers) { layer in
                             let layerFillHeight = fillHeight * CGFloat(layer.proportionTop)
-                            
-                            Wave(phase: phase + .pi, strength: 12, frequency: 1.2)
+
+                            Wave(phase: phase + .pi, strength: waveStrengthFront, frequency: 1.2)
                                 .fill(layer.type.color)
                                 .offset(y: CGFloat(height - layerFillHeight))
                         }
@@ -73,8 +76,8 @@ struct LiquidProgressView: View {
                 }
                 .animation(.spring(response: 0.8, dampingFraction: 0.7), value: clampedProgress)
                 .animation(.spring(response: 0.8, dampingFraction: 0.7), value: layers)
-                // Apply rotation based on device motion (sloshing)
-                .rotationEffect(.radians(-motionManager.roll), anchor: .center)
+                // Apply rotation based on device motion (sloshing) — skip when reduce motion
+                .rotationEffect(reduceMotion ? .zero : .radians(-motionManager.roll), anchor: .center)
             }
             .mask(ContainerShape())
             // Progress Text Overlay
@@ -83,7 +86,7 @@ struct LiquidProgressView: View {
                     .font(.system(isRegular ? .largeTitle : .title, design: .rounded).weight(.heavy))
                     .foregroundColor(clampedProgress > 0.5 ? .white : Theme.textPrimary)
                     .contentTransition(.numericText())
-                
+
                 if clampedProgress >= 1.0 {
                     Image(systemName: "star.fill")
                         .font(isRegular ? .title3 : .subheadline)
@@ -99,6 +102,7 @@ struct LiquidProgressView: View {
         .accessibilityLabel("Hydration progress")
         .accessibilityValue("\(Int(clampedProgress * 100)) percent of daily goal")
         .onAppear {
+            guard !reduceMotion else { return }
             withAnimation(.linear(duration: 2.0).repeatForever(autoreverses: false)) {
                 phase = .pi * 2
             }
@@ -124,7 +128,7 @@ struct Wave: Shape {
     var phase: CGFloat
     var strength: CGFloat
     var frequency: CGFloat
-    
+
     var animatableData: AnimatablePair<CGFloat, CGFloat> {
         get { AnimatablePair(phase, strength) }
         set {
@@ -132,14 +136,14 @@ struct Wave: Shape {
             strength = newValue.second
         }
     }
-    
+
     func path(in rect: CGRect) -> Path {
         var path = Path()
         let width = rect.width
         let height = rect.height
-        
+
         path.move(to: CGPoint(x: 0, y: height))
-        
+
         let step = 5.0
         for x in stride(from: 0, through: width, by: step) {
             let relativeX = x / width
@@ -147,7 +151,7 @@ struct Wave: Shape {
             let y = sin(relativeX * .pi * 2 * frequency + phase) * strength
             path.addLine(to: CGPoint(x: x, y: y))
         }
-        
+
         path.addLine(to: CGPoint(x: width, y: height))
         path.addLine(to: CGPoint(x: 0, y: height))
         path.closeSubpath()
