@@ -7,13 +7,14 @@ import FoundationModels
 /// Intelligent notification scheduler that adapts to user activity.
 ///
 /// **Smart mode** (default):
-///   - Skips a reminder when the user logged water within the current interval.
-///   - Skips reminders once the daily goal is met.
-///   - Escalates the wait (up to 2× the normal interval) when the user has been
-///     quiet, then fires a single gentle nudge — never more than one escalated
-///     notification in a row.
+///   - Pre-schedules reminders as local notifications so they fire even
+///     when the app is backgrounded or suspended by iOS.
+///   - Skips scheduling when the daily goal is already met.
+///   - Reschedules whenever a new intake is logged or the app returns
+///     to the foreground, keeping reminders aligned with real activity.
 ///   - On Apple Intelligence devices, generates unique motivational copy via
-///     FoundationModels; falls back to curated messages otherwise.
+///     FoundationModels when the app is foregrounded; falls back to curated
+///     messages for background-scheduled notifications.
 ///
 /// **Classic mode** (smartRemindersEnabled = false):
 ///   - Behaves like the original fixed-schedule reminders.
@@ -28,13 +29,15 @@ final class NotificationScheduler: ObservableObject {
     /// How many seconds of silence before we consider the user "quiet".
     private let quietThresholdMultiplier: Double = 2.0
 
-    // MARK: - Internal state (not persisted; rebuilt on each schedule call)
+    // MARK: - Internal state
     /// Snapshot of entries used for the current scheduling pass.
     private var lastKnownEntries: [DateEntry] = []
     /// Whether we already fired an escalated nudge since the last log.
     private var didFireEscalation = false
-    /// The active background polling task.
-    private var pollingTask: Task<Void, Never>?
+    /// Stored profile for rescheduling from `onIntakeLogged`.
+    private var currentProfile: UserProfile?
+    /// Stored goal for rescheduling from `onIntakeLogged`.
+    private var currentGoalML: Double = 2000
 
     // MARK: - Authorization
 
@@ -54,104 +57,112 @@ final class NotificationScheduler: ObservableObject {
 
     // MARK: - Public scheduling entry-point
 
-    /// Call this whenever the profile or entries change.  It tears down any
-    /// previous classic notifications and (re-)starts the smart loop if needed.
+    /// Call this whenever the profile, entries, or app lifecycle change.
+    /// Tears down previous notifications and schedules fresh ones.
     func scheduleReminders(profile: UserProfile, entries: [HydrationEntry] = [], goalML: Double = 2000) {
         UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
-        pollingTask?.cancel()
-        pollingTask = nil
+
+        currentProfile = profile
+        currentGoalML = goalML
+        lastKnownEntries = entries.map { DateEntry(date: $0.date, volumeML: $0.effectiveML) }
+        didFireEscalation = false
 
         guard profile.remindersEnabled else { return }
 
         if profile.smartRemindersEnabled {
-            // Snapshot lightweight date+volume pairs for the polling loop.
-            lastKnownEntries = entries.map { DateEntry(date: $0.date, volumeML: $0.effectiveML) }
-            didFireEscalation = false
-            startSmartLoop(profile: profile, goalML: goalML)
+            scheduleSmartReminders(profile: profile, goalML: goalML)
         } else {
             scheduleClassicReminders(profile: profile)
         }
     }
 
-    /// Call this when a new intake is logged so the smart loop can react
-    /// immediately (cancel any pending escalation, reset state).
+    /// Call this when a new intake is logged so smart reminders reschedule
+    /// around the latest activity.
     func onIntakeLogged(entry: HydrationEntry) {
         lastKnownEntries.append(DateEntry(date: entry.date, volumeML: entry.effectiveML))
         didFireEscalation = false
-        // Remove any pending smart notification that hasn't fired yet.
-        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["thirsty.ai.smart"])
+
+        guard let profile = currentProfile, profile.remindersEnabled, profile.smartRemindersEnabled else { return }
+        // Cancel pending smart notifications and reschedule based on new state.
+        let smartIds = (0..<20).map { "thirsty.ai.smart.\($0)" }
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: smartIds)
+        scheduleSmartReminders(profile: profile, goalML: currentGoalML)
     }
 
-    // MARK: - Smart reminder loop
+    // MARK: - Smart reminders (pre-scheduled via UNNotification triggers)
 
-    private func startSmartLoop(profile: UserProfile, goalML: Double) {
-        let intervalSeconds = computeInterval(profile: profile)
-        pollingTask = Task { [weak self] in
-            while !Task.isCancelled {
-                await self?.evaluateAndMaybeNotify(profile: profile, goalML: goalML, intervalSeconds: intervalSeconds)
-                // Sleep until the next evaluation window.
-                do {
-                    try await Task.sleep(nanoseconds: UInt64(intervalSeconds * 1_000_000_000))
-                } catch {
-                    break // Task was cancelled
-                }
-            }
-        }
-    }
-
-    private func evaluateAndMaybeNotify(profile: UserProfile, goalML: Double, intervalSeconds: Double) async {
+    /// Schedules multiple upcoming notifications until sleep time so they
+    /// fire even when the app is suspended by iOS.  Re-evaluated each time
+    /// the app foregrounds, entries change, or settings change.
+    private func scheduleSmartReminders(profile: UserProfile, goalML: Double) {
         let now = Date()
+        let intervalSeconds = computeInterval(profile: profile)
+        let calendar = Calendar.current
 
-        // --- Outside the awake window? Do nothing. ---
-        let currentMinutes = Calendar.current.component(.hour, from: now) * 60
-            + Calendar.current.component(.minute, from: now)
-        guard currentMinutes >= profile.wakeMinutes && currentMinutes < profile.sleepMinutes else { return }
+        let currentMinutes = calendar.component(.hour, from: now) * 60
+            + calendar.component(.minute, from: now)
 
-        // --- Goal already met today? Skip. ---
+        // Past sleep time — nothing to schedule today.
+        guard currentMinutes < profile.sleepMinutes else { return }
+
+        // Goal already met — no reminders needed.
         let todayTotal = lastKnownEntries
             .filter { $0.date.isSameDay(as: now) }
             .reduce(0.0) { $0 + $1.volumeML }
         guard todayTotal < goalML else { return }
 
-        // --- Logged water recently (within one interval)? Skip. ---
+        // Determine next fire time based on most recent intake.
         let mostRecentEntry = lastKnownEntries
             .filter { $0.date.isSameDay(as: now) }
             .max(by: { $0.date < $1.date })
-        if let recent = mostRecentEntry {
-            let elapsed = now.timeIntervalSince(recent.date)
-            if elapsed < intervalSeconds { return }
-        }
 
-        // --- Determine whether this is a gentle nudge or an escalation nudge. ---
-        let isQuiet: Bool
+        var nextFireDate: Date
         if let recent = mostRecentEntry {
-            isQuiet = now.timeIntervalSince(recent.date) >= intervalSeconds * quietThresholdMultiplier
+            nextFireDate = recent.date.addingTimeInterval(intervalSeconds)
         } else {
-            // No entries at all today — first-of-day nudge, not an escalation.
-            isQuiet = false
+            // No entries today — fire one interval after wake time.
+            let wakeDate = calendar.date(bySettingHour: profile.wakeMinutes / 60,
+                                          minute: profile.wakeMinutes % 60,
+                                          second: 0, of: now) ?? now
+            nextFireDate = wakeDate.addingTimeInterval(intervalSeconds)
         }
 
-        // If quiet but we already fired one escalation, wait longer — skip this cycle.
-        if isQuiet && didFireEscalation { return }
+        // If overdue, fire soon.
+        if nextFireDate <= now {
+            nextFireDate = now.addingTimeInterval(60)
+        }
 
-        // --- Build and deliver the notification. ---
+        // End of awake window today.
+        guard let sleepDate = calendar.date(bySettingHour: profile.sleepMinutes / 60,
+                                             minute: profile.sleepMinutes % 60,
+                                             second: 0, of: now) else { return }
+
+        // Pre-schedule reminders until sleep time (capped at 20).
         let progress = goalML > 0 ? todayTotal / goalML : 0
-        let body = await generateMessage(progress: progress, todayTotalML: todayTotal, goalML: goalML, isEscalation: isQuiet)
+        var index = 0
+        var fireDate = nextFireDate
 
-        let content = UNMutableNotificationContent()
-        content.title = "Hydration Quest"
-        content.body = body
-        content.sound = .default
+        while fireDate < sleepDate && index < 20 {
+            let delay = fireDate.timeIntervalSince(now)
+            guard delay >= 1 else {
+                fireDate = fireDate.addingTimeInterval(intervalSeconds)
+                continue
+            }
 
-        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
-        let request = UNNotificationRequest(identifier: "thirsty.ai.smart", content: content, trigger: trigger)
-        do {
-            try await UNUserNotificationCenter.current().add(request)
-        } catch {
-            // Notification could not be scheduled; nothing to recover.
+            let body = curatedMessage(progress: progress, isEscalation: false)
+
+            let content = UNMutableNotificationContent()
+            content.title = "Hydration Quest"
+            content.body = body
+            content.sound = .default
+
+            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: delay, repeats: false)
+            let request = UNNotificationRequest(identifier: "thirsty.ai.smart.\(index)", content: content, trigger: trigger)
+            UNUserNotificationCenter.current().add(request)
+
+            fireDate = fireDate.addingTimeInterval(intervalSeconds)
+            index += 1
         }
-
-        if isQuiet { didFireEscalation = true }
     }
 
     /// Base interval between reminders, auto-calculated from awake hours.
@@ -296,5 +307,3 @@ private struct DateEntry {
     let date: Date
     let volumeML: Double
 }
-
-
