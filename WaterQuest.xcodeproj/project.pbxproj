@@ -28,6 +28,7 @@
 		524BE8DF8217231DA89BF9FE /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9CBD2C7DC27199FF61EB613 /* Theme.swift */; };
 		5315257190E860C18C6545B0 /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6862392928A13FBD5E45D6E3 /* LocationManager.swift */; };
 		5D5BF32CEAF21645C51E5442 /* GoalCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F38731A03D043511C9AAD4C2 /* GoalCalculator.swift */; };
+		6BBC3B922F4F6AC100F5525A /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 6BBC3B912F4F6AC100F5525A /* AppIcon.icon */; };
 		7077C5CF3469D64E94804983 /* FluidType.swift in Sources */ = {isa = PBXBuildFile; fileRef = A139EF313607077443D4FCFE /* FluidType.swift */; };
 		747A7C4F8A906C71164AB9DE /* NotificationScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA6BBE42CB2309F2A4A2380A /* NotificationScheduler.swift */; };
 		75107A8584630E7E2B030165 /* MascotView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACD53555ACD00A8A78268A7F /* MascotView.swift */; };
@@ -39,31 +40,74 @@
 		A543E5598AAD6E7D7CD5164C /* DateExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 161A82CD61225A1F302ECA9D /* DateExtensions.swift */; };
 		B45B8AFC80046E64CEA7EE18 /* UserProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50CF0F6325F9C80BFB71AA0D /* UserProfile.swift */; };
 		B67E99532D94983258FFDC94 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 39EF82B8B03A482B4BC8CBF9 /* LaunchScreen.storyboard */; };
-		D1A2B3C4E5F60718293A4B5C /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = E2B3C4D5F6071829A3B4C5D6 /* PrivacyInfo.xcprivacy */; };
 		BBBF0A2E700E876678D8DA69 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD0B42119D7BD312FCDAF766 /* SettingsView.swift */; };
 		C0AC658494F0FF61381C286D /* InsightsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB90E806138FFE1C09E7187A /* InsightsView.swift */; };
-		D1B2C3D4E5F6071829A3B4C5 /* DiaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6071829A3B4C5 /* DiaryView.swift */; };
 		C4B819181FF00CD089496479 /* Haptics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D58355784786E63DFFB9EC4 /* Haptics.swift */; };
 		CAA880E64AF96B5C0988D2A3 /* WorkoutSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BE15D5810B84C7C96E0EA4C /* WorkoutSummary.swift */; };
-
-
+		CCD4444444444444444444D4 /* PersistedState.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8888888888888888888888 /* PersistedState.swift */; };
+		D1A2B3C4E5F60718293A4B5C /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = E2B3C4D5F6071829A3B4C5D6 /* PrivacyInfo.xcprivacy */; };
+		D1B2C3D4E5F6071829A3B4C5 /* DiaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6071829A3B4C5 /* DiaryView.swift */; };
 		E054558C7B7CF349F6CDD709 /* SplashScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE848C59D9014D3ABE6E04BE /* SplashScreenView.swift */; };
 		E27FB3C46FDAA80AD7E43C6F /* Formatters.swift in Sources */ = {isa = PBXBuildFile; fileRef = F021A59BB7CB33328B5ABBC4 /* Formatters.swift */; };
 		E367CAB1741850BAFCE4F3F9 /* PrimaryButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B9CF2D397867B06457E11FA /* PrimaryButton.swift */; };
 		E5EDB875107A7CBE67F2F031 /* LiquidProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85C07CD814951765EE1A1499 /* LiquidProgressView.swift */; };
 		EB9033481146A1C9561176DB /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2126EAEDD87BD49B24C7BE2 /* MainTabView.swift */; };
 		F9760161C65BFA2368DB8094 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD7043107E62B2C04F4C58EB /* DashboardView.swift */; };
+		CC1111111111111111111111 /* SipliWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1111111111111111111111 /* SipliWidget.swift */; };
+		CC2222222222222222222222 /* WidgetDataProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA3333333333333333333333 /* WidgetDataProvider.swift */; };
+		CC3333333333333333333333 /* SipliTimelineProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA4444444444444444444444 /* SipliTimelineProvider.swift */; };
+		CC4444444444444444444444 /* SmallWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA5555555555555555555555 /* SmallWidgetView.swift */; };
+		CC5555555555555555555555 /* MediumWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA6666666666666666666666 /* MediumWidgetView.swift */; };
+		CC6666666666666666666666 /* LargeWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA7777777777777777777777 /* LargeWidgetView.swift */; };
+		CC7777777777777777777777 /* PersistenceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A37EBA9FC9F1233C2BC105DD /* PersistenceService.swift */; };
+		CC8888888888888888888888 /* GoalCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F38731A03D043511C9AAD4C2 /* GoalCalculator.swift */; };
+		CC9999999999999999999999 /* Formatters.swift in Sources */ = {isa = PBXBuildFile; fileRef = F021A59BB7CB33328B5ABBC4 /* Formatters.swift */; };
+		CCAAAAAAAAAAAAAAAAAAAAAA /* HydrationEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31A39E6DE51615F50BDEF6AD /* HydrationEntry.swift */; };
+		CCBBBBBBBBBBBBBBBBBBBBBB /* UserProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50CF0F6325F9C80BFB71AA0D /* UserProfile.swift */; };
+		CCCCCCCCCCCCCCCCCCCCCCCC /* FluidType.swift in Sources */ = {isa = PBXBuildFile; fileRef = A139EF313607077443D4FCFE /* FluidType.swift */; };
+		CCDDDDDDDDDDDDDDDDDDDD /* GoalBreakdown.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA3274E7BB562AF2F4517F9D /* GoalBreakdown.swift */; };
+		CCEEEEEEEEEEEEEEEEEEEEEE /* UnitSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 032684376DE05B0CC4838664 /* UnitSystem.swift */; };
+		CCFFFFFFFFFFFFFFFFFFFFFF /* WeatherSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ADBD4C5BD2E2C34CE93AC27 /* WeatherSnapshot.swift */; };
+		CCD1111111111111111111D1 /* WorkoutSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BE15D5810B84C7C96E0EA4C /* WorkoutSummary.swift */; };
+		CCD2222222222222222222D2 /* PersistedState.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8888888888888888888888 /* PersistedState.swift */; };
+		CCD3333333333333333333D3 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9CBD2C7DC27199FF61EB613 /* Theme.swift */; };
+		EE3333333333333333333333 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EE1111111111111111111111 /* WidgetKit.framework */; };
+		EE4444444444444444444444 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EE2222222222222222222222 /* SwiftUI.framework */; };
+		FF8888888888888888888888 /* SipliWidget.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = AA9999999999999999999999 /* SipliWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		FF3333333333333333333333 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D67A7263546728AB364FF765 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = FF1111111111111111111111;
+			remoteInfo = SipliWidget;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		FF7777777777777777777777 /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				FF8888888888888888888888 /* SipliWidget.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		032684376DE05B0CC4838664 /* UnitSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnitSystem.swift; sourceTree = "<group>"; };
 		161A82CD61225A1F302ECA9D /* DateExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateExtensions.swift; sourceTree = "<group>"; };
-		1BD898210B2BA8EE347F72F4 /* WaterQuest.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WaterQuest.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1BD898210B2BA8EE347F72F4 /* WaterQuest.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = WaterQuest.app; path = Sipli.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		22C158CF127D3436999E3C2B /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		31A39E6DE51615F50BDEF6AD /* HydrationEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HydrationEntry.swift; sourceTree = "<group>"; };
 		32F4A1403ABF41DCCE395C3D /* HydrationStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HydrationStore.swift; sourceTree = "<group>"; };
 		39EF82B8B03A482B4BC8CBF9 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
-		E2B3C4D5F6071829A3B4C5D6 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		3ABC282C313B061E1E34EDF7 /* StatPill.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatPill.swift; sourceTree = "<group>"; };
 		3BE15D5810B84C7C96E0EA4C /* WorkoutSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutSummary.swift; sourceTree = "<group>"; };
 		3D58355784786E63DFFB9EC4 /* Haptics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Haptics.swift; sourceTree = "<group>"; };
@@ -74,6 +118,7 @@
 		63F661B4016F8BE1E8DDA5B5 /* HealthKitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitManager.swift; sourceTree = "<group>"; };
 		6862392928A13FBD5E45D6E3 /* LocationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationManager.swift; sourceTree = "<group>"; };
 		69F362557BEECECFAA26285A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		6BBC3B912F4F6AC100F5525A /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		732CBE184502476DC56921F8 /* icon.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = icon.json; sourceTree = "<group>"; };
 		7ADBD4C5BD2E2C34CE93AC27 /* WeatherSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherSnapshot.swift; sourceTree = "<group>"; };
 		7B8BDAA9F823F748DDAD26EB /* ProgressRing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressRing.swift; sourceTree = "<group>"; };
@@ -86,7 +131,18 @@
 		9FBC0C7A2F89C0FD52822D48 /* AddIntakeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddIntakeView.swift; sourceTree = "<group>"; };
 		9FC934C6863AFC8E01D302CE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A139EF313607077443D4FCFE /* FluidType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FluidType.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6071829A3B4C5 /* DiaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryView.swift; sourceTree = "<group>"; };
 		A37EBA9FC9F1233C2BC105DD /* PersistenceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceService.swift; sourceTree = "<group>"; };
+		AA1111111111111111111111 /* SipliWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SipliWidget.swift; sourceTree = "<group>"; };
+		AA2222222222222222222222 /* SipliWidgetEntitlements.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SipliWidgetEntitlements.entitlements; sourceTree = "<group>"; };
+		AA3333333333333333333333 /* WidgetDataProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetDataProvider.swift; sourceTree = "<group>"; };
+		AA4444444444444444444444 /* SipliTimelineProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SipliTimelineProvider.swift; sourceTree = "<group>"; };
+		AA5555555555555555555555 /* SmallWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmallWidgetView.swift; sourceTree = "<group>"; };
+		AA6666666666666666666666 /* MediumWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediumWidgetView.swift; sourceTree = "<group>"; };
+		AA7777777777777777777777 /* LargeWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LargeWidgetView.swift; sourceTree = "<group>"; };
+		AA8888888888888888888888 /* PersistedState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistedState.swift; sourceTree = "<group>"; };
+		AA9999999999999999999999 /* SipliWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SipliWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		AABB1122CCDDEEFF /* Products.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = Products.storekit; sourceTree = "<group>"; };
 		ACD53555ACD00A8A78268A7F /* MascotView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MascotView.swift; sourceTree = "<group>"; };
 		B2126EAEDD87BD49B24C7BE2 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
 		B26785D44340E5C0A267B325 /* SubscriptionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionManager.swift; sourceTree = "<group>"; };
@@ -94,38 +150,52 @@
 		B9CBD2C7DC27199FF61EB613 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		BA6BBE42CB2309F2A4A2380A /* NotificationScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationScheduler.swift; sourceTree = "<group>"; };
 		BD7043107E62B2C04F4C58EB /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
-		C5DD4230940B25D30C9598B4 /* Gemini_Generated_Image_15xog715xog715xo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Gemini_Generated_Image_15xog715xog715xo.png"; sourceTree = "<group>"; };
+		C5DD4230940B25D30C9598B4 /* Gemini_Generated_Image_15xog715xog715xo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Gemini_Generated_Image_15xog715xog715xo.png; sourceTree = "<group>"; };
+		E2B3C4D5F6071829A3B4C5D6 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		E4A8068B4418852446BD78E6 /* MotionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MotionManager.swift; sourceTree = "<group>"; };
-		A1B2C3D4E5F6071829A3B4C5 /* DiaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryView.swift; sourceTree = "<group>"; };
 		EB90E806138FFE1C09E7187A /* InsightsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightsView.swift; sourceTree = "<group>"; };
+		EE1111111111111111111111 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		EE2222222222222222222222 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		F021A59BB7CB33328B5ABBC4 /* Formatters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Formatters.swift; sourceTree = "<group>"; };
 		F38731A03D043511C9AAD4C2 /* GoalCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalCalculator.swift; sourceTree = "<group>"; };
 		FA3274E7BB562AF2F4517F9D /* GoalBreakdown.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalBreakdown.swift; sourceTree = "<group>"; };
 		FD0B42119D7BD312FCDAF766 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		FE848C59D9014D3ABE6E04BE /* SplashScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashScreenView.swift; sourceTree = "<group>"; };
-		AABB1122CCDDEEFF /* Products.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = Products.storekit; sourceTree = "<group>"; };
-
 /* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		DD2222222222222222222222 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EE3333333333333333333333 /* WidgetKit.framework in Frameworks */,
+				EE4444444444444444444444 /* SwiftUI.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		0EBBC986DBD277FF7074538D = {
 			isa = PBXGroup;
 			children = (
 				120E9D2B9013FCD931926A20 /* WaterQuest */,
+				BB1111111111111111111111 /* SipliWidget */,
 				DA0C73A8FD8A545CB27D2691 /* Products */,
+				EE5555555555555555555555 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
 		120E9D2B9013FCD931926A20 /* WaterQuest */ = {
 			isa = PBXGroup;
 			children = (
+				6BBC3B912F4F6AC100F5525A /* AppIcon.icon */,
 				9FC934C6863AFC8E01D302CE /* Assets.xcassets */,
 				B34C79C5F2BC714D04DBDF95 /* App */,
 				6676ED6B664E8F56F653FFFF /* AppIcon.icon */,
 				8314F97AB0A474B5CB47AF27 /* Components */,
 				44EAA4E4ABDD288F8271E4DF /* Models */,
 				FFB2F05A9B4A3597CB9CEBB3 /* Services */,
-
 				9933CCDBB5AD1B9F1574F3ED /* Supporting */,
 				D5CFBAA6834C033BD13BB3DF /* Views */,
 			);
@@ -138,6 +208,7 @@
 				A139EF313607077443D4FCFE /* FluidType.swift */,
 				FA3274E7BB562AF2F4517F9D /* GoalBreakdown.swift */,
 				31A39E6DE51615F50BDEF6AD /* HydrationEntry.swift */,
+				AA8888888888888888888888 /* PersistedState.swift */,
 				032684376DE05B0CC4838664 /* UnitSystem.swift */,
 				50CF0F6325F9C80BFB71AA0D /* UserProfile.swift */,
 				7ADBD4C5BD2E2C34CE93AC27 /* WeatherSnapshot.swift */,
@@ -192,6 +263,28 @@
 			path = App;
 			sourceTree = "<group>";
 		};
+		BB1111111111111111111111 /* SipliWidget */ = {
+			isa = PBXGroup;
+			children = (
+				AA1111111111111111111111 /* SipliWidget.swift */,
+				AA2222222222222222222222 /* SipliWidgetEntitlements.entitlements */,
+				AA3333333333333333333333 /* WidgetDataProvider.swift */,
+				AA4444444444444444444444 /* SipliTimelineProvider.swift */,
+				BB2222222222222222222222 /* Views */,
+			);
+			path = SipliWidget;
+			sourceTree = "<group>";
+		};
+		BB2222222222222222222222 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				AA5555555555555555555555 /* SmallWidgetView.swift */,
+				AA6666666666666666666666 /* MediumWidgetView.swift */,
+				AA7777777777777777777777 /* LargeWidgetView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
 		BC5D505465A768A4E4640AB4 /* Assets */ = {
 			isa = PBXGroup;
 			children = (
@@ -220,11 +313,20 @@
 			isa = PBXGroup;
 			children = (
 				1BD898210B2BA8EE347F72F4 /* WaterQuest.app */,
+				AA9999999999999999999999 /* SipliWidget.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-
+		EE5555555555555555555555 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				EE1111111111111111111111 /* WidgetKit.framework */,
+				EE2222222222222222222222 /* SwiftUI.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		FFB2F05A9B4A3597CB9CEBB3 /* Services */ = {
 			isa = PBXGroup;
 			children = (
@@ -253,10 +355,12 @@
 			buildPhases = (
 				DF4D89045F6FF7DC59C91782 /* Sources */,
 				21F612D46A6DDAE6FA6387D5 /* Resources */,
+				FF7777777777777777777777 /* Embed App Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				FF2222222222222222222222 /* PBXTargetDependency */,
 			);
 			name = WaterQuest;
 			packageProductDependencies = (
@@ -264,6 +368,23 @@
 			productName = WaterQuest;
 			productReference = 1BD898210B2BA8EE347F72F4 /* WaterQuest.app */;
 			productType = "com.apple.product-type.application";
+		};
+		FF1111111111111111111111 /* SipliWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FF4444444444444444444444 /* Build configuration list for PBXNativeTarget "SipliWidget" */;
+			buildPhases = (
+				DD1111111111111111111111 /* Sources */,
+				DD2222222222222222222222 /* Frameworks */,
+				DD3333333333333333333333 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SipliWidget;
+			productName = SipliWidget;
+			productReference = AA9999999999999999999999 /* SipliWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -275,6 +396,9 @@
 				LastUpgradeCheck = 1620;
 				TargetAttributes = {
 					8696EFE2052B0D0EA16BCADF = {
+						ProvisioningStyle = Automatic;
+					};
+					FF1111111111111111111111 = {
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -293,6 +417,7 @@
 			projectRoot = "";
 			targets = (
 				8696EFE2052B0D0EA16BCADF /* WaterQuest */,
+				FF1111111111111111111111 /* SipliWidget */,
 			);
 		};
 /* End PBXProject section */
@@ -305,14 +430,47 @@
 				0252DDA30195EA614A439A3C /* Assets.xcassets in Resources */,
 				B67E99532D94983258FFDC94 /* LaunchScreen.storyboard in Resources */,
 				D1A2B3C4E5F60718293A4B5C /* PrivacyInfo.xcprivacy in Resources */,
+				6BBC3B922F4F6AC100F5525A /* AppIcon.icon in Resources */,
 				2935FCF5A46AC8630A581FE4 /* Gemini_Generated_Image_15xog715xog715xo.png in Resources */,
 				A1B2326FF853A75236509F2C /* icon.json in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DD3333333333333333333333 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		DD1111111111111111111111 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CC1111111111111111111111 /* SipliWidget.swift in Sources */,
+				CC2222222222222222222222 /* WidgetDataProvider.swift in Sources */,
+				CC3333333333333333333333 /* SipliTimelineProvider.swift in Sources */,
+				CC4444444444444444444444 /* SmallWidgetView.swift in Sources */,
+				CC5555555555555555555555 /* MediumWidgetView.swift in Sources */,
+				CC6666666666666666666666 /* LargeWidgetView.swift in Sources */,
+				CC7777777777777777777777 /* PersistenceService.swift in Sources */,
+				CC8888888888888888888888 /* GoalCalculator.swift in Sources */,
+				CC9999999999999999999999 /* Formatters.swift in Sources */,
+				CCAAAAAAAAAAAAAAAAAAAAAA /* HydrationEntry.swift in Sources */,
+				CCBBBBBBBBBBBBBBBBBBBBBB /* UserProfile.swift in Sources */,
+				CCCCCCCCCCCCCCCCCCCCCCCC /* FluidType.swift in Sources */,
+				CCDDDDDDDDDDDDDDDDDDDD /* GoalBreakdown.swift in Sources */,
+				CCEEEEEEEEEEEEEEEEEEEEEE /* UnitSystem.swift in Sources */,
+				CCFFFFFFFFFFFFFFFFFFFFFF /* WeatherSnapshot.swift in Sources */,
+				CCD1111111111111111111D1 /* WorkoutSummary.swift in Sources */,
+				CCD2222222222222222222D2 /* PersistedState.swift in Sources */,
+				CCD3333333333333333333D3 /* Theme.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		DF4D89045F6FF7DC59C91782 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -340,11 +498,10 @@
 				94AF3267A3C90279716F2BE6 /* MotionManager.swift in Sources */,
 				747A7C4F8A906C71164AB9DE /* NotificationScheduler.swift in Sources */,
 				0A5C95DCB74AE59638E495D3 /* OnboardingView.swift in Sources */,
+				CCD4444444444444444444D4 /* PersistedState.swift in Sources */,
 				83C67F5F3E24629A72299C6E /* PersistenceService.swift in Sources */,
 				E367CAB1741850BAFCE4F3F9 /* PrimaryButton.swift in Sources */,
 				449C15C42674C41122CC02B6 /* ProgressRing.swift in Sources */,
-
-
 				4E93E1598D092FFCC6C6381F /* RootView.swift in Sources */,
 				BBBF0A2E700E876678D8DA69 /* SettingsView.swift in Sources */,
 				E054558C7B7CF349F6CDD709 /* SplashScreenView.swift in Sources */,
@@ -362,6 +519,14 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		FF2222222222222222222222 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = FF1111111111111111111111 /* SipliWidget */;
+			targetProxy = FF3333333333333333333333 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		20E2B65A66C386AFC42D1A24 /* Debug */ = {
@@ -389,10 +554,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-	
 				CLANG_ANALYZER_NONNULL = YES;
-				DEAD_CODE_STRIPPING = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
 				CLANG_CXX_LIBRARY = "libc++";
@@ -423,9 +585,11 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -472,10 +636,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-	
 				CLANG_ANALYZER_NONNULL = YES;
-				DEAD_CODE_STRIPPING = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
 				CLANG_CXX_LIBRARY = "libc++";
@@ -506,9 +667,11 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -537,6 +700,64 @@
 			};
 			name = Debug;
 		};
+		FF5555555555555555555555 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = SipliWidget/SipliWidgetEntitlements.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = K6623R3GP5;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = SipliWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.waterquest.hydration.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		FF6666666666666666666666 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = SipliWidget/SipliWidgetEntitlements.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = K6623R3GP5;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = SipliWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.waterquest.hydration.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -554,6 +775,15 @@
 			buildConfigurations = (
 				DF6613927879B5E892F6AFBB /* Debug */,
 				24FECCCA307CCC388BB3706E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		FF4444444444444444444444 /* Build configuration list for PBXNativeTarget "SipliWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FF5555555555555555555555 /* Debug */,
+				FF6666666666666666666666 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
