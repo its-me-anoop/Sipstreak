@@ -16,7 +16,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "8696EFE2052B0D0EA16BCADF"
-               BuildableName = "Sipstreak.app"
+               BuildableName = "Sipli.app"
                BlueprintName = "WaterQuest"
                ReferencedContainer = "container:WaterQuest.xcodeproj">
             </BuildableReference>
@@ -46,7 +46,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "8696EFE2052B0D0EA16BCADF"
-            BuildableName = "Sipstreak.app"
+            BuildableName = "Sipli.app"
             BlueprintName = "WaterQuest"
             ReferencedContainer = "container:WaterQuest.xcodeproj">
          </BuildableReference>
@@ -63,7 +63,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "8696EFE2052B0D0EA16BCADF"
-            BuildableName = "Sipstreak.app"
+            BuildableName = "Sipli.app"
             BlueprintName = "WaterQuest"
             ReferencedContainer = "container:WaterQuest.xcodeproj">
          </BuildableReference>
