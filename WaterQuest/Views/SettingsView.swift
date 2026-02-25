@@ -318,7 +318,8 @@ struct SettingsView: View {
                     title: "HealthKit",
                     subtitle: healthStatusText,
                     systemImage: "heart.fill",
-                    tint: healthKit.isAuthorized ? Theme.mint : Theme.sun
+                    tint: healthKit.isAuthorized ? Theme.mint : Theme.sun,
+                    isDetermined: healthKit.isAuthorized
                 ) {
                     Task { await healthKit.requestAuthorization() }
                 }
@@ -360,7 +361,8 @@ struct SettingsView: View {
                     title: "Location",
                     subtitle: locationStatusText,
                     systemImage: "location.fill",
-                    tint: locationEnabled ? Theme.mint : Theme.sun
+                    tint: locationEnabled ? Theme.mint : Theme.sun,
+                    isDetermined: locationManager.authorizationStatus != .notDetermined
                 ) {
                     locationManager.requestPermission()
                 }
@@ -369,7 +371,8 @@ struct SettingsView: View {
                     title: "Notifications",
                     subtitle: notificationStatusText,
                     systemImage: "bell.badge.fill",
-                    tint: notificationEnabled ? Theme.mint : Theme.sun
+                    tint: notificationEnabled ? Theme.mint : Theme.sun,
+                    isDetermined: notifier.authorizationStatus != .notDetermined
                 ) {
                     Task { await notifier.requestAuthorization() }
                 }
@@ -498,11 +501,18 @@ struct SettingsView: View {
         subtitle: String,
         systemImage: String,
         tint: Color,
+        isDetermined: Bool = false,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: {
             Haptics.selection()
-            action()
+            if isDetermined {
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+            } else {
+                action()
+            }
         }) {
             HStack(spacing: 10) {
                 Image(systemName: systemImage)
