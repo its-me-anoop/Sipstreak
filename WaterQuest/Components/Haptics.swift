@@ -60,12 +60,16 @@ enum Haptics {
                 do {
                     try engine?.start()
                 } catch {
+                    #if DEBUG
                     print("Failed to restart haptic engine: \(error)")
+                    #endif
                 }
             }
             try engine?.start()
         } catch {
+            #if DEBUG
             print("Failed to initialize haptic engine: \(error)")
+            #endif
         }
     }
 
