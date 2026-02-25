@@ -96,11 +96,11 @@ struct LiquidGlassButton: View {
             }
         }
 
-        var fontSize: CGFloat {
+        var textStyle: Font.TextStyle {
             switch self {
-            case .small: return 13
-            case .medium: return 15
-            case .large: return 17
+            case .small: return .footnote
+            case .medium: return .subheadline
+            case .large: return .body
             }
         }
     }
@@ -127,10 +127,10 @@ struct LiquidGlassButton: View {
             HStack(spacing: 8) {
                 if let iconName = icon {
                     Image(systemName: iconName)
-                        .font(.system(size: size.fontSize, weight: .semibold))
+                        .font(.system(size.textStyle, design: .default).weight(.semibold))
                 }
                 Text(title)
-                    .font(Theme.bodyFont(size: size.fontSize))
+                    .font(Theme.bodyFont(size.textStyle))
                     .fontWeight(.medium)
             }
             .foregroundColor(style.textColor)
@@ -177,12 +177,12 @@ struct FluidStatCard: View {
                 HStack {
                     HStack(spacing: 8) {
                         Image(systemName: icon)
-                            .font(.system(size: 14, weight: .semibold))
+                            .font(.footnote.weight(.semibold))
                             .foregroundColor(accentColor)
                             .rotationEffect(.degrees(iconRotation))
 
                         Text(label)
-                            .font(Theme.bodyFont(size: 12))
+                            .font(Theme.captionFont(.caption))
                             .foregroundColor(Theme.textSecondary)
                     }
 
@@ -198,7 +198,7 @@ struct FluidStatCard: View {
                 }
 
                 Text(animatedValue)
-                    .font(Theme.titleFont(size: 20))
+                    .font(Theme.titleFont(.title3))
                     .foregroundColor(Theme.textPrimary)
                     .contentTransition(.numericText())
             }
@@ -246,7 +246,7 @@ struct QuickAddPill: View {
 
                 // Content
                 Text("+\(amount) \(unit)")
-                    .font(Theme.bodyFont(size: 14))
+                    .font(Theme.bodyFont(.footnote))
                     .fontWeight(.medium)
                     .foregroundColor(Theme.textPrimary)
                     .padding(.vertical, 12)
@@ -318,10 +318,10 @@ struct WaveDivider: View {
                 LiquidGlassCard {
                     VStack(spacing: 12) {
                         Text("Liquid Glass Card")
-                            .font(Theme.titleFont(size: 20))
+                            .font(Theme.titleFont(.title3))
                             .foregroundColor(Theme.textPrimary)
                         Text("Beautiful fluid effects")
-                            .font(Theme.bodyFont(size: 14))
+                            .font(Theme.bodyFont(.footnote))
                             .foregroundColor(Theme.textSecondary)
                     }
                     .padding(24)

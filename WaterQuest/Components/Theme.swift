@@ -105,21 +105,21 @@ enum Theme {
     static let fluidSpring = Animation.spring(response: 0.5, dampingFraction: 0.86)
     static let gentleSpring = Animation.easeInOut(duration: 0.35)
 
-    // MARK: Typography
-    static func displayFont(size: CGFloat) -> Font {
-        .system(size: size, weight: .bold, design: .default)
+    // MARK: Typography (Dynamic Type)
+    static func displayFont(_ style: Font.TextStyle = .title) -> Font {
+        .system(style, design: .default).weight(.bold)
     }
 
-    static func titleFont(size: CGFloat) -> Font {
-        .system(size: size, weight: .semibold, design: .default)
+    static func titleFont(_ style: Font.TextStyle = .headline) -> Font {
+        .system(style, design: .default).weight(.semibold)
     }
 
-    static func bodyFont(size: CGFloat) -> Font {
-        .system(size: size, weight: .regular, design: .default)
+    static func bodyFont(_ style: Font.TextStyle = .subheadline) -> Font {
+        .system(style, design: .default)
     }
 
-    static func captionFont(size: CGFloat) -> Font {
-        .system(size: size, weight: .regular, design: .default)
+    static func captionFont(_ style: Font.TextStyle = .caption) -> Font {
+        .system(style, design: .default)
     }
 
     static func glassCard(cornerRadius: CGFloat = 20) -> some View {

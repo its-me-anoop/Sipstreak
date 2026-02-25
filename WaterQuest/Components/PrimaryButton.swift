@@ -5,7 +5,7 @@ struct PrimaryButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(Theme.titleFont(size: 17))
+            .font(Theme.titleFont(.body))
             .padding(.vertical, 14)
             .frame(maxWidth: fullWidth ? .infinity : nil)
             .padding(.horizontal, fullWidth ? 0 : 32)
@@ -27,7 +27,7 @@ struct PrimaryButtonStyle: ButtonStyle {
 struct SecondaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(Theme.bodyFont(size: 15))
+            .font(Theme.bodyFont(.subheadline))
             .padding(.vertical, 12)
             .padding(.horizontal, 24)
             .background(
@@ -61,12 +61,12 @@ struct GlowingIconButton: View {
                         .fill(color.opacity(isActive ? 0.28 : 0.12))
                         .frame(width: 44, height: 44)
                     Image(systemName: icon)
-                        .font(.system(size: 18, weight: .semibold))
+                        .font(.body.weight(.semibold))
                         .foregroundColor(isActive ? color : Theme.textSecondary)
                 }
 
                 Text(label)
-                    .font(Theme.bodyFont(size: 15))
+                    .font(Theme.bodyFont(.subheadline))
                     .foregroundColor(Theme.textPrimary)
 
                 Spacer()

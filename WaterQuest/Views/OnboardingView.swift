@@ -578,7 +578,8 @@ private struct AnimatedOnboardingPage<Content: View>: View {
                     }
 
                     Image(systemName: iconName)
-                        .font(.system(size: 80, weight: .semibold))
+                        .font(.system(.largeTitle, design: .default).weight(.semibold))
+                        .imageScale(.large)
                         .foregroundStyle(iconColor)
                         .frame(width: 140, height: 140)
                         .background(
