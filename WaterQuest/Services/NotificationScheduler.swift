@@ -152,7 +152,7 @@ final class NotificationScheduler: ObservableObject {
             let body = curatedMessage(progress: progress, isEscalation: false)
 
             let content = UNMutableNotificationContent()
-            content.title = "Hydration Quest"
+            content.title = "Thirsty.ai"
             content.body = body
             content.sound = .default
 
@@ -284,7 +284,7 @@ final class NotificationScheduler: ObservableObject {
             dateComponents.minute = minutes % 60
 
             let content = UNMutableNotificationContent()
-            content.title = "Hydration Quest"
+            content.title = "Thirsty.ai"
             content.body = staticMessages[index % staticMessages.count]
             content.sound = .default
 
