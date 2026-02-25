@@ -88,11 +88,11 @@ We may update these Terms from time to time. The "Last updated" date at the top 
 
 ## 13. Governing Law
 
-These Terms are governed by and construed in accordance with the laws of India, without regard to conflict of law principles.
+These Terms are governed by and construed in accordance with the laws of England and Wales, without regard to conflict of law principles.
 
 ## 14. Contact
 
 If you have questions about these Terms, please contact:
 
 **Anoop Jose**
-Email: [anoopjose.dev@gmail.com](mailto:anoopjose.dev@gmail.com)
+Email: [anoop@flutterly.co.uk](mailto:anoop@flutterly.co.uk)

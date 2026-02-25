@@ -105,4 +105,4 @@ We may update this Privacy Policy from time to time. The "Last updated" date at 
 If you have questions about this Privacy Policy, please contact:
 
 **Anoop Jose**
-Email: [anoopjose.dev@gmail.com](mailto:anoopjose.dev@gmail.com)
+Email: [anoop@flutterly.co.uk](mailto:anoop@flutterly.co.uk)
