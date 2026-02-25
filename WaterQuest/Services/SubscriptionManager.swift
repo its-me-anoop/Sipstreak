@@ -3,7 +3,7 @@ import StoreKit
 
 // MARK: - Product IDs
 enum ProductID: String, CaseIterable {
-    case monthly = "com.sipstreak.monthly"
+    case monthly = "com.sipli.monthly"
 }
 
 // MARK: - SubscriptionManager
