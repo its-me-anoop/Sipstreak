@@ -202,7 +202,7 @@ struct InsightsView: View {
             }
             .padding(isRegular ? 24 : 16)
         }
-        .background(AppWaterBackground().ignoresSafeArea())
+        .background(Color.clear)
         .navigationTitle("Insights")
     }
 

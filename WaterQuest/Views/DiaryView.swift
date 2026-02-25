@@ -78,7 +78,7 @@ struct DiaryView: View {
             .padding(.bottom, 24)
         }
         .scrollIndicators(.automatic)
-        .background(AppWaterBackground().ignoresSafeArea())
+        .background(Color.clear)
     }
 
     // MARK: - iPad Layout
@@ -105,7 +105,7 @@ struct DiaryView: View {
         }
         .padding(.horizontal, 24)
         .padding(.top, 16)
-        .background(AppWaterBackground().ignoresSafeArea())
+        .background(Color.clear)
     }
 
     // MARK: - Components

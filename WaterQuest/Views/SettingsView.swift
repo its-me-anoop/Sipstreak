@@ -34,7 +34,7 @@ struct SettingsView: View {
         }
         .scrollIndicators(.automatic)
         .navigationTitle("Settings")
-        .background(AppWaterBackground().ignoresSafeArea())
+        .background(Color.clear)
         .task {
             await notifier.refreshAuthorizationStatus()
             await healthKit.refreshAuthorizationStatus()

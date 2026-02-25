@@ -132,7 +132,7 @@ struct DashboardView: View {
             .padding(.bottom, 24)
         }
         .scrollIndicators(.automatic)
-        .background(AppWaterBackground().ignoresSafeArea())
+        .background(Color.clear)
     }
 
     private var iPadLayout: some View {
@@ -197,7 +197,7 @@ struct DashboardView: View {
             .frame(maxWidth: 1200)
             .frame(maxWidth: .infinity)
         }
-        .background(AppWaterBackground().ignoresSafeArea())
+        .background(Color.clear)
     }
 
     private var iPadLogGrid: some View {
