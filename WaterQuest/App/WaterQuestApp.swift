@@ -13,6 +13,7 @@ struct WaterQuestApp: App {
     @StateObject private var locationManager: LocationManager
     @StateObject private var weatherClient: WeatherClient
     @StateObject private var subscriptionManager = SubscriptionManager()
+    @StateObject private var themeTransition = ThemeTransitionCoordinator()
 
     init() {
         let location = LocationManager()
@@ -34,6 +35,7 @@ struct WaterQuestApp: App {
             .environmentObject(weatherClient)
             .environmentObject(subscriptionManager)
             .preferredColorScheme(appTheme.colorScheme)
+            .themeTransitionOverlay(coordinator: themeTransition)
             .task {
                 store.notificationScheduler = notifier
                 await subscriptionManager.initialise()
