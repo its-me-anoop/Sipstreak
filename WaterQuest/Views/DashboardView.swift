@@ -72,7 +72,7 @@ struct DashboardView: View {
                     .padding(.top, 8)
 
                 if let tip = aiService.currentTip {
-                    DashboardCard(title: "Hydration Coach", icon: "sparkles") {
+                    DashboardCard(title: "Hydration Coach", icon: "sparkles", backgroundGradient: Theme.coachCard) {
                         tipSection(tip)
                     }
                 }
@@ -153,7 +153,7 @@ struct DashboardView: View {
                     // Left column: Hydration Coach (larger)
                     VStack(spacing: 16) {
                         if let tip = aiService.currentTip {
-                            DashboardCard(title: "Hydration Coach", icon: "sparkles") {
+                            DashboardCard(title: "Hydration Coach", icon: "sparkles", backgroundGradient: Theme.coachCard) {
                                 iPadTipSection(tip)
                             }
                         }
@@ -621,7 +621,7 @@ private struct HydrationSummaryCard: View {
         .padding(isRegular ? 24 : 20)
         .background(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(Theme.card)
+                .fill(Theme.summaryCard)
         )
         .shadow(color: Theme.shadowColor.opacity(0.6), radius: 15, x: 0, y: 8)
         .onPressingChanged { point in

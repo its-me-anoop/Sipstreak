@@ -84,6 +84,40 @@ enum Theme {
         endPoint: .bottomTrailing
     )
 
+    static let coachCard = LinearGradient(
+        colors: [
+            Color(uiColor: UIColor { traits in
+                traits.userInterfaceStyle == .dark
+                    ? UIColor(red: 0.12, green: 0.16, blue: 0.30, alpha: 1)
+                    : UIColor(red: 0.93, green: 0.95, blue: 1.0, alpha: 1)
+            }),
+            Color(uiColor: UIColor { traits in
+                traits.userInterfaceStyle == .dark
+                    ? UIColor(red: 0.16, green: 0.12, blue: 0.28, alpha: 1)
+                    : UIColor(red: 0.95, green: 0.93, blue: 1.0, alpha: 1)
+            })
+        ],
+        startPoint: .topLeading,
+        endPoint: .bottomTrailing
+    )
+
+    static let summaryCard = LinearGradient(
+        colors: [
+            Color(uiColor: UIColor { traits in
+                traits.userInterfaceStyle == .dark
+                    ? UIColor(red: 0.08, green: 0.16, blue: 0.24, alpha: 1)
+                    : UIColor(red: 0.92, green: 0.96, blue: 1.0, alpha: 1)
+            }),
+            Color(uiColor: UIColor { traits in
+                traits.userInterfaceStyle == .dark
+                    ? UIColor(red: 0.10, green: 0.20, blue: 0.28, alpha: 1)
+                    : UIColor(red: 0.88, green: 0.95, blue: 0.97, alpha: 1)
+            })
+        ],
+        startPoint: .top,
+        endPoint: .bottom
+    )
+
     static let glowGradient = LinearGradient(
         colors: [lagoon.opacity(0.9), mint.opacity(0.8), lavender.opacity(0.8)],
         startPoint: .topLeading,
