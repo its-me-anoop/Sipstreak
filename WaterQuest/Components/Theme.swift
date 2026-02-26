@@ -69,8 +69,16 @@ enum Theme {
 
     static let card = LinearGradient(
         colors: [
-            cardSurface,
-            cardElevated
+            Color(uiColor: UIColor { traits in
+                traits.userInterfaceStyle == .dark
+                    ? UIColor(red: 0.14, green: 0.18, blue: 0.26, alpha: 1)
+                    : UIColor(red: 0.96, green: 0.97, blue: 1.0, alpha: 1)
+            }),
+            Color(uiColor: UIColor { traits in
+                traits.userInterfaceStyle == .dark
+                    ? UIColor(red: 0.10, green: 0.14, blue: 0.22, alpha: 1)
+                    : UIColor(red: 0.90, green: 0.93, blue: 0.98, alpha: 1)
+            })
         ],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
