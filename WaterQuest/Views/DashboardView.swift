@@ -621,11 +621,11 @@ private struct HydrationSummaryCard: View {
         .padding(isRegular ? 24 : 20)
         .background(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(.thickMaterial)
+                .fill(Theme.cardSurface)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .stroke(Color.white.opacity(0.5), lineWidth: 1)
+                .stroke(Theme.glassBorder, lineWidth: 1)
         )
         .shadow(color: Theme.shadowColor.opacity(0.6), radius: 15, x: 0, y: 8)
         .onPressingChanged { point in
