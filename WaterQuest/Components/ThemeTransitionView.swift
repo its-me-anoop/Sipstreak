@@ -85,11 +85,9 @@ struct ThemeTransitionOverlay: View {
                     .aspectRatio(contentMode: .fill)
                     .frame(width: size.width, height: size.height)
                     .clipped()
-                    .mask {
+                    .clipShape(
                         InvertedCircle(center: coordinator.origin, radius: currentRadius)
-                            .fill(style: FillStyle(eoFill: true))
-                            .frame(width: size.width, height: size.height)
-                    }
+                    )
                     .layerEffect(
                         ShaderLibrary.themeRipple(
                             .float2(coordinator.origin.x, coordinator.origin.y),
@@ -109,7 +107,7 @@ struct ThemeTransitionOverlay: View {
 
 // MARK: - Inverted Circle Shape
 
-/// A shape that fills everything *outside* a circle using the even-odd fill rule.
+/// A shape that fills everything *outside* a circle.
 /// Used to "punch out" the revealed area from the old-theme snapshot.
 struct InvertedCircle: Shape {
     var center: CGPoint
@@ -121,9 +119,7 @@ struct InvertedCircle: Shape {
     }
 
     func path(in rect: CGRect) -> Path {
-        // Outer rectangle + inner ellipse with even-odd fill punches out the circle
-        var path = Path()
-        path.addRect(rect)
+        var path = Path(rect)
         path.addEllipse(in: CGRect(
             x: center.x - radius,
             y: center.y - radius,
@@ -131,8 +127,11 @@ struct InvertedCircle: Shape {
             height: radius * 2
         ))
         return path
+            .strokedPath(StrokeStyle()) // force even-odd by returning the compound path
     }
 
+    // Use even-odd fill to cut out the circle
+    static var role: ShapeRole { .fill }
 }
 
 // MARK: - View Extension
