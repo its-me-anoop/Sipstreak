@@ -347,21 +347,21 @@ struct AppWaterBackground: View {
 
         init(isLight: Bool) {
             if isLight {
-                topColor = Color(red: 1.0, green: 1.0, blue: 1.0)
-                bottomColor = Color(red: 0.90, green: 0.95, blue: 1.0)
-                blobA = Theme.lagoon.opacity(0.12)
-                blobB = Theme.mint.opacity(0.08)
-                blobC = Theme.lavender.opacity(0.06)
-                sheenTop = Color.white.opacity(0.3)
-                sheenBottom = Theme.lagoon.opacity(0.02)
+                topColor = Color(red: 0.93, green: 0.96, blue: 1.0)
+                bottomColor = Color(red: 0.82, green: 0.90, blue: 1.0)
+                blobA = Theme.lagoon.opacity(0.18)
+                blobB = Theme.mint.opacity(0.14)
+                blobC = Theme.lavender.opacity(0.10)
+                sheenTop = Color.white.opacity(0.4)
+                sheenBottom = Theme.lagoon.opacity(0.06)
             } else {
-                topColor = Color(red: 0.05, green: 0.14, blue: 0.24)
-                bottomColor = Color(red: 0.01, green: 0.06, blue: 0.13)
-                blobA = Theme.lagoon.opacity(0.34)
-                blobB = Theme.mint.opacity(0.24)
-                blobC = Theme.lavender.opacity(0.18)
-                sheenTop = Color.white.opacity(0.06)
-                sheenBottom = Theme.lagoon.opacity(0.12)
+                topColor = Color(red: 0.06, green: 0.16, blue: 0.28)
+                bottomColor = Color(red: 0.02, green: 0.08, blue: 0.18)
+                blobA = Theme.lagoon.opacity(0.38)
+                blobB = Theme.mint.opacity(0.28)
+                blobC = Theme.lavender.opacity(0.22)
+                sheenTop = Color.white.opacity(0.08)
+                sheenBottom = Theme.lagoon.opacity(0.14)
             }
         }
     }
