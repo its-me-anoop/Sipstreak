@@ -583,18 +583,21 @@ private struct HydrationSummaryCard: View {
 
     @Environment(\.horizontalSizeClass) private var sizeClass
 
+    @State private var rippleCounter: Int = 0
+    @State private var rippleOrigin: CGPoint = .zero
+
     private var isRegular: Bool { sizeClass == .regular }
 
     var body: some View {
         VStack(spacing: isRegular ? 28 : 24) {
-            
+
             // Header Text Area
             HStack {
                 VStack(alignment: .leading, spacing: isRegular ? 8 : 6) {
                     Text(greeting)
                         .font(.system(isRegular ? .title : .title2, design: .rounded).weight(.bold))
                         .foregroundStyle(Theme.textPrimary)
-                    
+
                     VStack(alignment: .leading, spacing: 2) {
                         Text(Formatters.volumeString(ml: todayTotalML, unit: unitSystem))
                             .font(.system(isRegular ? .title2 : .title3, design: .rounded).weight(.heavy))
@@ -625,6 +628,13 @@ private struct HydrationSummaryCard: View {
                 .stroke(Color.white.opacity(0.5), lineWidth: 1)
         )
         .shadow(color: Theme.shadowColor.opacity(0.6), radius: 15, x: 0, y: 8)
+        .onPressingChanged { point in
+            if let point {
+                rippleOrigin = point
+                rippleCounter += 1
+            }
+        }
+        .modifier(RippleEffect(at: rippleOrigin, trigger: rippleCounter))
         .accessibilityElement(children: .combine)
     }
 }
