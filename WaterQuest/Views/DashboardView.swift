@@ -582,6 +582,7 @@ private struct HydrationSummaryCard: View {
     let unitSystem: UnitSystem
 
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.colorScheme) private var colorScheme
 
     @State private var rippleCounter: Int = 0
     @State private var rippleOrigin: CGPoint = .zero
@@ -619,10 +620,7 @@ private struct HydrationSummaryCard: View {
             )
         }
         .padding(isRegular ? 24 : 20)
-        .background(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(Theme.summaryCard)
-        )
+        .background(cardBackground)
         .shadow(color: Theme.shadowColor.opacity(0.6), radius: 15, x: 0, y: 8)
         .onPressingChanged { point in
             if let point {
@@ -632,6 +630,69 @@ private struct HydrationSummaryCard: View {
         }
         .modifier(RippleEffect(at: rippleOrigin, trigger: rippleCounter))
         .accessibilityElement(children: .combine)
+    }
+
+    private var cardBackground: some View {
+        let shape = RoundedRectangle(cornerRadius: 24, style: .continuous)
+        let glowOpacity = colorScheme == .dark ? 0.24 : 0.16
+
+        return shape
+            .fill(Theme.summaryCard)
+            .overlay(
+                shape
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Color.white.opacity(colorScheme == .dark ? 0.12 : 0.42),
+                                Color.clear,
+                                Theme.lagoon.opacity(colorScheme == .dark ? 0.08 : 0.12)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+            )
+            .overlay(alignment: .topLeading) {
+                Circle()
+                    .fill(
+                        RadialGradient(
+                            colors: [Theme.lagoon.opacity(glowOpacity), .clear],
+                            center: .center,
+                            startRadius: 0,
+                            endRadius: isRegular ? 210 : 150
+                        )
+                    )
+                    .frame(width: isRegular ? 320 : 240, height: isRegular ? 240 : 180)
+                    .offset(x: -80, y: -70)
+            }
+            .overlay(alignment: .bottomTrailing) {
+                Circle()
+                    .fill(
+                        RadialGradient(
+                            colors: [Theme.mint.opacity(glowOpacity * 0.82), .clear],
+                            center: .center,
+                            startRadius: 0,
+                            endRadius: isRegular ? 190 : 140
+                        )
+                    )
+                    .frame(width: isRegular ? 300 : 220, height: isRegular ? 220 : 170)
+                    .offset(x: 70, y: 90)
+            }
+            .overlay(
+                shape
+                    .strokeBorder(
+                        LinearGradient(
+                            colors: [
+                                Color.white.opacity(colorScheme == .dark ? 0.2 : 0.5),
+                                Theme.lagoon.opacity(colorScheme == .dark ? 0.22 : 0.34),
+                                Color.white.opacity(colorScheme == .dark ? 0.08 : 0.2)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1.1
+                    )
+            )
     }
 }
 
