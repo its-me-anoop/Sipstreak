@@ -35,20 +35,6 @@ struct DiaryView: View {
             }
         }
         .navigationTitle("Diary")
-        .confirmationDialog("Delete this entry?", isPresented: Binding(
-            get: { entryToDelete != nil },
-            set: { if !$0 { entryToDelete = nil } }
-        ), titleVisibility: .visible) {
-            Button("Delete", role: .destructive) {
-                if let entry = entryToDelete {
-                    deleteEntry(entry)
-                    entryToDelete = nil
-                }
-            }
-            Button("Cancel", role: .cancel) {
-                entryToDelete = nil
-            }
-        }
         .sheet(item: $entryToEdit) { entry in
             EntryEditorSheet(entry: entry, unitSystem: store.profile.unitSystem) { updatedAmount, updatedFluidType, updatedNote in
                 store.updateEntry(
@@ -202,9 +188,31 @@ struct DiaryView: View {
                             Label("Delete", systemImage: "trash")
                         }
                     }
+                    .confirmationDialog("Delete this entry?", isPresented: deleteDialogBinding(for: entry), titleVisibility: .visible) {
+                        Button("Delete", role: .destructive) {
+                            deleteEntry(entry)
+                            entryToDelete = nil
+                        }
+                        Button("Cancel", role: .cancel) {
+                            entryToDelete = nil
+                        }
+                    }
                 }
             }
         }
+    }
+
+    private func deleteDialogBinding(for entry: HydrationEntry) -> Binding<Bool> {
+        Binding(
+            get: { entryToDelete?.id == entry.id },
+            set: { isPresented in
+                if isPresented {
+                    entryToDelete = entry
+                } else if entryToDelete?.id == entry.id {
+                    entryToDelete = nil
+                }
+            }
+        )
     }
 
     private func deleteEntry(_ entry: HydrationEntry) {

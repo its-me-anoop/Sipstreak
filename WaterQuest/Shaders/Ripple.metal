@@ -45,3 +45,4 @@ half4 Ripple(
 
     return color;
 }
+
